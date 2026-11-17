@@ -101,9 +101,26 @@ class TestNewton(unittest.TestCase):
         r=resolver_newton('1e15*(x^2-2)',1,tolerancia=.01)
         self.assertTrue(r['cumple']['absoluto']); self.assertFalse(r['cumple']['residuo'])
 
-    def test_tolerancia_estricta(self):
-        r=resolver_newton('x^2-2',1,tolerancia=.5,max_iteraciones=1)
+    def test_tolerancia_aproximada(self):
+        # x0=1 → x1=1.5: E_a=0.5. Margen de 10 % por encima de la tolerancia digitada.
+        r=resolver_newton('x^2-2',1)
+        self.assertTrue(r['convergio']); self.assertEqual(r['tolerancia_usada']['usada'],'digitada')
+        self.assertIsNone(r['tolerancia_usada']['exceso_porcentual'])
+        for tol,exceso in ((.5,0),(.47,(.5-.47)/.47*100)):
+            with self.subTest(tol=tol):
+                r=resolver_newton('x^2-2',1,tolerancia=tol,max_iteraciones=1)
+                self.assertTrue(r['convergio']); self.assertEqual(r['motivo'],'tolerancia')
+                self.assertFalse(r['cumple']['absoluto']); self.assertTrue(r['cumple_cercana']['absoluto'])
+                info=r['tolerancia_usada']
+                self.assertEqual(info['usada'],'cercana'); self.assertEqual(info['digitada'],tol)
+                self.assertEqual(info['valor_final'],.5); self.assertAlmostEqual(info['exceso_porcentual'],exceso)
+        r=resolver_newton('x^2-2',1,tolerancia=.45,max_iteraciones=1)
         self.assertFalse(r['convergio']); self.assertEqual(r['error_absoluto'],.5)
+        self.assertIsNone(r['tolerancia_usada']['usada']); self.assertFalse(r['cumple_cercana']['absoluto'])
+
+    def test_residuo_inicial_cercano(self):
+        r=resolver_newton('x^2-2',1,tolerancia=.95,criterio='residuo')
+        self.assertEqual(r['iteraciones'],0); self.assertEqual(r['tolerancia_usada']['usada'],'cercana')
 
     def test_paso_no_finito_y_precision_agotada(self):
         r=resolver_newton('1e308+1e-308*x',0)

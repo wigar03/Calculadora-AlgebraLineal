@@ -254,7 +254,8 @@
       [[r.convergio?"Raíz aproximada $x_n$":"Última aproximación $x_n$",r.raiz],["Residuo $|f(x_n)|$",r.residuo],["Error absoluto $E_a$",r.error_absoluto],["Error relativo $\\varepsilon_r$",r.error_relativo],["Iteraciones",r.iteraciones]].forEach(([titulo,valor])=>{const box=crear("div"), dd=crear("dd"); dd.title=String(valor??"No definido"); dd.append(math(num(valor),false)); box.append(mixto("dt",titulo),dd); dl.append(box);}); out.append(dl);
       out.append(crear("strong","Criterios al terminar"));
       const criterios={absoluto:"E_a",relativo:"\\varepsilon_r",residuo:"|f(x_n)|"};
-      Object.entries(criterios).forEach(([k,v])=>out.append(mixto("p",`${r.cumple[k]?"✓":"✗"} $${v}<\\varepsilon$${r.criterio===k?" (seleccionado)":""}${k!=="residuo"&&r[k==="absoluto"?"error_absoluto":"error_relativo"]===null?" · no definido":""}`,"bis-help")));
+      Object.entries(criterios).forEach(([k,v])=>out.append(mixto("p",`${G.simboloCriterio(r.cumple[k],r.cumple_cercana[k])} $${v}<\\varepsilon$${r.criterio===k?" (seleccionado)":""}${k!=="residuo"&&r[k==="absoluto"?"error_absoluto":"error_relativo"]===null?" · no definido":""}`,"bis-help")));
+      out.append(mixto("p",G.textoTolerancia(r.tolerancia_usada),r.tolerancia_usada.usada==="cercana"?"rf-note":"bis-help"));
       out.append(mixto("p",compararErrores(r.error_absoluto,r.error_relativo,r.raiz),"bis-help"),math(`f(x_n)\\approx ${num(r.f_raiz)}`));
       const grupos={}; r.advertencias.forEach(a=>(grupos[a.tipo]??=[]).push(a.n));
       if(grupos.derivada_pequena)out.append(mixto("p",`Derivada pequeña en $n=${grupos.derivada_pequena.join(",")}$: puede producir saltos grandes.`,"rf-note"));

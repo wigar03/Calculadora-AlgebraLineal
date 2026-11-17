@@ -1,6 +1,7 @@
 """Secante con dos puntos manuales, historial y control de fallos numéricos."""
 import math
 from ..biseccion.expresiones import Expresion, numero_real
+from ..core.tolerancia import clasificar, informe
 
 
 def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, criterio="absoluto"):
@@ -21,19 +22,22 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
     iniciales = [a,b]
 
     def resultado(motivo, convergio):
+        valores = {"absoluto": ea, "relativo": er, "residuo": abs(fb)}
+        clases = {k: clasificar(v, tol) for k, v in valores.items()}
         return {"funcion": f.texto, "funcion_latex": f.latex(), "iniciales": iniciales,
                 "raiz": b, "f_raiz": fb, "residuo": abs(fb), "error_absoluto": ea,
                 "error_relativo": er, "iteraciones": len(pasos), "pasos": pasos,
                 "convergio": convergio, "motivo": motivo, "advertencias": avisos,
                 "tolerancia": tol, "criterio": criterio,
-                "cumple": {"absoluto": ea is not None and ea < tol,
-                           "relativo": er is not None and er < tol, "residuo": abs(fb) < tol}}
+                "cumple": {k: c == "digitada" for k, c in clases.items()},
+                "cumple_cercana": {k: c == "cercana" for k, c in clases.items()},
+                "tolerancia_usada": informe(valores[criterio], tol)}
     if fa == 0:
         b, fb = a, fa
         return resultado("raiz_inicial", True)
     if fb == 0:
         return resultado("raiz_inicial", True)
-    if criterio == "residuo" and abs(fb) < tol:
+    if criterio == "residuo" and clasificar(abs(fb), tol):
         return resultado("tolerancia", True)
     vistos = {(a,b)}
     for n in range(1, int(limite)+1):
@@ -67,7 +71,8 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
         if (a,b) in vistos:
             return resultado("ciclo", False)
         valor = {"absoluto":ea,"relativo":er,"residuo":abs(fc)}[criterio]
-        if valor is not None and valor < tol:
+        # La tolerancia es aproximada: se acepta hasta MARGEN_TOLERANCIA por encima de ella.
+        if clasificar(valor, tol):
             return resultado("tolerancia", True)
         vistos.add((a,b))
     return resultado("max_iteraciones", False)

@@ -66,7 +66,8 @@
       const out=el("result");out.replaceChildren(node("h4",d.convergio?"Raíz calculada":"Sin convergencia"),node("p",MOTIVOS[d.motivo]));
       el("focus-root").disabled=false;
       out.append(math(`x_n\\approx ${num(d.raiz)}\\qquad |f(x_n)|=${num(d.residuo)}`),math(`E_a=${num(d.error_absoluto)}\\qquad \\varepsilon_r=${num(d.error_relativo)}`),mix(`Iteraciones: $${d.iteraciones}$.`));
-      for(const [k,t]of Object.entries({absoluto:"E_a",relativo:"\\varepsilon_r",residuo:"|f(x_n)|"}))out.append(mix(`${d.cumple[k]?"✓":"✗"} $${t}<\\varepsilon$${k===d.criterio?" (seleccionado)":""}`));
+      for(const [k,t]of Object.entries({absoluto:"E_a",relativo:"\\varepsilon_r",residuo:"|f(x_n)|"}))out.append(mix(`${G.simboloCriterio(d.cumple[k],d.cumple_cercana[k])} $${t}<\\varepsilon$${k===d.criterio?" (seleccionado)":""}`));
+      out.append(mix(G.textoTolerancia(d.tolerancia_usada)));
       if(d.advertencias.length)out.append(mix(`Denominador pequeño en las iteraciones $${d.advertencias.join(",")}$: puede causar saltos grandes.`));
       const t=node("table"),h=node("thead"),hr=node("tr"),body=node("tbody");const headers=["n","x_{n-1}","x_n","x_{n+1}","|f(x_{n+1})|","E_a","\\varepsilon_r"];
       headers.forEach(v=>{const th=node("th");th.scope="col";th.append(math(v,false));hr.append(th);});hr.append(node("th","Detalle"));h.append(hr);

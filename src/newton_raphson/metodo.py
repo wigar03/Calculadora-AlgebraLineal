@@ -3,6 +3,7 @@
 import math
 
 from ..biseccion.expresiones import Expresion, numero_real
+from ..core.tolerancia import clasificar, informe
 from ..derivadas import derivada_simbolica, analizar_derivada
 
 
@@ -59,19 +60,22 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
 
     def resultado(motivo, convergio):
         p = pasos[-1]
-        cumple = {"absoluto": p["error_absoluto"] is not None and p["error_absoluto"] < tol,
-                  "relativo": p["error_relativo"] is not None and p["error_relativo"] < tol,
-                  "residuo": abs(p["fx"]) < tol}
+        valores = {"absoluto": p["error_absoluto"], "relativo": p["error_relativo"],
+                   "residuo": abs(p["fx"])}
+        clases = {k: clasificar(v, tol) for k, v in valores.items()}
         return {**preparar_funcion(f.texto), "x0": pasos[0]["x"], "raiz": p["x"],
                 "f_raiz": p["fx"], "residuo": abs(p["fx"]),
                 "error_absoluto": p["error_absoluto"], "error_relativo": p["error_relativo"],
-                "criterio": criterio, "tolerancia": tol, "cumple": cumple,
+                "criterio": criterio, "tolerancia": tol,
+                "cumple": {k: c == "digitada" for k, c in clases.items()},
+                "cumple_cercana": {k: c == "cercana" for k, c in clases.items()},
+                "tolerancia_usada": informe(valores[criterio], tol),
                 "convergio": convergio, "motivo": motivo, "pasos": pasos,
                 "iteraciones": len(pasos) - 1, "advertencias": avisos}
 
     if inicial["f_x0"] == 0:
         return resultado("raiz_en_x0", True)
-    if criterio == "residuo" and abs(inicial["f_x0"]) < tol:
+    if criterio == "residuo" and clasificar(abs(inicial["f_x0"]), tol):
         return resultado("tolerancia", True)
     actual = inicial
     vistos = {x}
@@ -100,7 +104,8 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
         if nuevo in vistos:
             return resultado("ciclo", False)
         valor = {"absoluto": ea, "relativo": er, "residuo": abs(siguiente["f_x0"])}[criterio]
-        if valor is not None and valor < tol:
+        # La tolerancia es aproximada: se acepta hasta MARGEN_TOLERANCIA por encima de ella.
+        if clasificar(valor, tol):
             return resultado("tolerancia", True)
         vistos.add(nuevo)
         x, actual = nuevo, siguiente

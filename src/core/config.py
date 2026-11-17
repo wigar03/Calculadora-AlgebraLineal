@@ -20,4 +20,7 @@ INTEGRANTES = [
 
 # Configuración numérica para cálculos exactos
 TOLERANCIA_CERO = 1e-12
+# Newton-Raphson y secante aceptan la tolerancia digitada como aproximada:
+# un valor final hasta 10 % por encima de ella se acepta como "tolerancia cercana".
+MARGEN_TOLERANCIA = 0.10
 MAX_DIMENSION_SUGERIDA = 20  # Soporta dimensión arbitraria n >= 1

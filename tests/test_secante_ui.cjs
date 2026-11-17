@@ -35,3 +35,13 @@ test('las funciones inversas se insertan con argumento y multiplicación a ambos
     assert.equal(insert(`${f}(x)`,0,0,'2','digit').text,'2*');
   }
 });
+test('la tolerancia aproximada informa si se usó la digitada o una cercana',()=>{
+  const {simboloCriterio,textoTolerancia}=require('../src/ui/web/grafica-funciones.js');
+  assert.equal(simboloCriterio(true,false),'✓');assert.equal(simboloCriterio(false,true),'≈');assert.equal(simboloCriterio(false,false),'✗');
+  const base={digitada:0.5,margen:0.1,limite:0.55};
+  assert.match(textoTolerancia({...base,valor_final:0.1,usada:'digitada',exceso_porcentual:null}),/^Se usó la tolerancia digitada/);
+  const cercana=textoTolerancia({...base,valor_final:0.52,usada:'cercana',exceso_porcentual:4});
+  assert.match(cercana,/^Se usó una tolerancia cercana/);assert.ok(cercana.includes(String.raw`$4\%$ por encima`));assert.ok(cercana.includes(String.raw`margen de $10\%$`));
+  assert.match(textoTolerancia({...base,valor_final:0.9,usada:null,exceso_porcentual:80}),/^No se alcanzó/);
+  assert.match(textoTolerancia({...base,valor_final:null,usada:null,exceso_porcentual:null}),/no está definido/);
+});

@@ -48,3 +48,17 @@ class TestSecante(unittest.TestCase):
         for extras in [dict(x1=1),dict(x0=''),dict(x1=True),dict(tolerancia=0),dict(max_iteraciones=1.5),dict(criterio='otro')]:
             datos=dict(funcion='x^2-2',x0=1,x1=2);datos.update(extras)
             with self.subTest(extras=extras),self.assertRaises(ValueError):resolver_secante(**datos)
+
+    def test_tolerancia_aproximada(self):
+        # x0=1, x1=2 → x2=4/3: E_a=2/3. Margen de 10 % por encima de la tolerancia digitada.
+        self.assertEqual(resolver_secante('x^3-x-2',1,2)['tolerancia_usada']['usada'],'digitada')
+        r=resolver_secante('x^3-x-2',1,2,tolerancia=.65,max_iteraciones=1)
+        self.assertTrue(r['convergio']);self.assertEqual(r['motivo'],'tolerancia')
+        self.assertFalse(r['cumple']['absoluto']);self.assertTrue(r['cumple_cercana']['absoluto'])
+        info=r['tolerancia_usada']
+        self.assertEqual(info['usada'],'cercana');self.assertAlmostEqual(info['valor_final'],2/3)
+        self.assertAlmostEqual(info['exceso_porcentual'],(2/3-.65)/.65*100);self.assertAlmostEqual(info['limite'],.715)
+        r=resolver_secante('x^3-x-2',1,2,tolerancia=.6,max_iteraciones=1)
+        self.assertFalse(r['convergio']);self.assertIsNone(r['tolerancia_usada']['usada'])
+        r=resolver_secante('x^2-2',1,2,tolerancia=1.9,criterio='residuo')
+        self.assertEqual(r['iteraciones'],0);self.assertEqual(r['tolerancia_usada']['usada'],'cercana')

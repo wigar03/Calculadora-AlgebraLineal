@@ -175,7 +175,30 @@
     ['pointerup','pointercancel','lostpointercapture'].forEach(t=>contenedor.addEventListener(t,soltar));
     return {zoom,cancelar(){arrastre=null;contenedor.classList.remove('graph-panning');}};
   }
-const api = {MARCO, formatear, numeroLatex, marcas, rangoVertical, crearEscala, caminoCurva, interpolar, redondearSegunVista, vistaZoom, vistaDesplazada, crearNavegacionGrafica};
+  /* Tolerancia aproximada (Newton-Raphson y secante): ✓ digitada, ≈ cercana, ✗ no aceptada. */
+  function simboloCriterio(cumple, cercana) {
+    return cumple ? "✓" : cercana ? "≈" : "✗";
+  }
+
+  /* Texto mixto (con LaTeX) que dice si se usó la tolerancia digitada o una cercana. */
+  function textoTolerancia(info) {
+    if (!info) return "";
+    const eps = `$\\varepsilon=${numeroLatex(info.digitada)}$`;
+    const margen = `$${formatear(info.margen * 100, 4)}\\%$`;
+    const valor = info.valor_final === null || info.valor_final === undefined
+      ? "el criterio seleccionado no está definido al terminar"
+      : `el valor final del criterio es $${numeroLatex(info.valor_final)}$`;
+    if (info.usada === "digitada") return `Se usó la tolerancia digitada ${eps}: ${valor}, menor que ella.`;
+    if (info.usada === "cercana") {
+      return `Se usó una tolerancia cercana a la digitada ${eps}: ${valor}, `
+        + `$${formatear(info.exceso_porcentual, 3)}\\%$ por encima, dentro del margen de ${margen} `
+        + `(límite aceptado $${numeroLatex(info.limite)}$).`;
+    }
+    return `No se alcanzó la tolerancia digitada ${eps} ni una cercana (margen ${margen}, `
+      + `límite $${numeroLatex(info.limite)}$): ${valor}.`;
+  }
+
+const api = {MARCO, formatear, numeroLatex, simboloCriterio, textoTolerancia, marcas, rangoVertical, crearEscala, caminoCurva, interpolar, redondearSegunVista, vistaZoom, vistaDesplazada, crearNavegacionGrafica};
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 if (typeof window !== "undefined") window.GraficaFunciones = api;
 })();
