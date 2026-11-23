@@ -23,7 +23,7 @@ PUNTOS_GRAFICA_MAX = 2000
 
 # Números escritos por el usuario: se comprueban antes de construir Fraction.
 DIGITOS_MAX = 64
-EXPONENTE_MAX = 300
+EXPONENTE_MAX = 1000  # admite todo el rango de los dobles (1e308, subnormales); bloquea 1e5000000
 
 # Servidor y ejecución aislada.
 CUERPO_MAX_BYTES = 256 * 1024

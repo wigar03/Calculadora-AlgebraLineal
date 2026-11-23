@@ -25,7 +25,7 @@ Autor: integrador (Claude Business). Cambios solo mediante el integrador. Regla 
 | eficiencia-determinante | n ≤ 100, números grandes en notación científica (sin error de 4300 dígitos) |
 | raíces | f ≤ 500 caracteres, iteraciones ≤ 1000, puntos ≤ 2000 (ya existentes) |
 | iterativos | n ≤ 20, iteraciones ≤ 10 000 (ya existentes) |
-| celdas numéricas | ≤ 64 dígitos por entero y exponente |e| ≤ 300, comprobados ANTES de construir `Fraction` |
+| celdas numéricas | ≤ 64 dígitos por entero y exponente |e| ≤ 1000 (todo el rango de los dobles), comprobados ANTES de construir `Fraction` |
 | cuerpo HTTP | ≤ 256 KB (413) · lectura del socket con tiempo máximo de 10 s |
 
 Los límites de la API coinciden con los de la interfaz: nada de lo que hoy hace la UI deja de funcionar.
