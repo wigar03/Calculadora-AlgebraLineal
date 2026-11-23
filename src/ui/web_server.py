@@ -96,7 +96,29 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             body = {}
 
         try:
-            if parsed.path == "/api/derivadas/derivar":
+            if parsed.path in ("/api/iterativos/resolver", "/api/iterativos/comparar",
+                               "/api/iterativos/analizar"):
+                from src.iterativos.resolver import (
+                    resolver_iterativo, comparar_metodos, analizar_sistema,
+                )
+                if not isinstance(body, dict):
+                    raise ValueError("Envía un objeto JSON con A y b.")
+                datos = {"A": body.get("A"), "b": body.get("b"),
+                         "x0": body.get("x0"), "reordenar": body.get("reordenar", False)}
+                if parsed.path.endswith("/analizar"):
+                    datos["metodo"] = body.get("metodo", "jacobi")
+                    resultado = analizar_sistema(**datos)
+                else:
+                    datos.update({"tolerancia": body.get("tolerancia", 1e-6),
+                                  "max_iteraciones": body.get("max_iteraciones", 100),
+                                  "criterio": body.get("criterio", "ambos")})
+                    if parsed.path.endswith("/resolver"):
+                        datos["metodo"] = body.get("metodo")
+                        resultado = resolver_iterativo(**datos)
+                    else:
+                        resultado = comparar_metodos(**datos)
+                self._send_json(resultado)
+            elif parsed.path == "/api/derivadas/derivar":
                 if not isinstance(body, dict):
                     raise ValueError("Envíe un objeto JSON con la función.")
                 self._send_json(analizar_derivada(body.get("funcion")))

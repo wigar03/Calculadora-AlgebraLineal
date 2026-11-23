@@ -202,6 +202,8 @@ def detectar_parada(historial, vectores):
     claves = ("cambio_inf", "residuo_inf")
     if not all(isfinite(ultimo[c]) for c in claves):
         return "no_finito"
+    if len(vectores) >= 2 and vectores[-1] == vectores[-2]:
+        return "estancamiento"
     if len(historial) >= 7:
         tramo = historial[-7:]
         if all(all(b[c] > 1.05 * a[c] for a, b in zip(tramo, tramo[1:]))

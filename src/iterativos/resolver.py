@@ -135,3 +135,19 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
         "max_iteraciones": max_iteraciones, "iteraciones": historial, "solucion": x,
         "convergio": convergio, "motivo": motivo, "mensaje": MENSAJES[motivo],
         "verificacion": verificacion, "analisis": analisis, "convergencia": categoria})
+
+
+def comparar_metodos(A, b, x0=None, tolerancia=1e-6, max_iteraciones=100,
+                     criterio="ambos", reordenar=False):
+    """Mismos datos y parada para ambos; se informa lo realmente observado."""
+    resultados = {metodo: resolver_iterativo(A, b, metodo, x0, tolerancia,
+        max_iteraciones, criterio, reordenar) for metodo in ("jacobi", "gauss_seidel")}
+    j, gs = resultados["jacobi"], resultados["gauss_seidel"]
+    if j["convergio"] and gs["convergio"]:
+        nj, ng = len(j["iteraciones"]), len(gs["iteraciones"])
+        resumen = (f"Ambos alcanzaron la tolerancia: Jacobi en {nj} iteraciones "
+                   f"y Gauss-Seidel en {ng}. La rapidez depende del sistema.")
+    else:
+        resumen = (f"Jacobi: {j['mensaje']} Gauss-Seidel: {gs['mensaje']} "
+                   "Los dos métodos pueden tener distinta convergencia.")
+    return {**resultados, "resumen": resumen}
