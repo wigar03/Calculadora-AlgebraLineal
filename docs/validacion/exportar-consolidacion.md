@@ -1,6 +1,6 @@
 # Consolidación de `src/ui/web/exportar.js` (LaTeX y CSV con herramientas reales)
 
-Rama: `orca/consolidacion-chrome` (rebasada sobre `main` `69dac10`). Hash final: `exportar.js?v=a0a3d589eec5` (SHA-256 LF).
+Rama: `orca/consolidacion-chrome` (sobre `orca/integracion-exportar` `9b6d6f1`). Hash final: `exportar.js?v=85158b0f1fd5` (SHA-256 LF).
 Sin cambios de UX, sin funciones nuevas y sin editar oráculos ajenos (`tests/test_exportacion_modulos.py`, `tests/exportacion_verificar.cjs`).
 
 ## Correcciones aplicadas
@@ -14,7 +14,9 @@ Sin cambios de UX, sin funciones nuevas y sin editar oráculos ajenos (`tests/te
    - Fórmulas en línea largas con `\left` envueltas fuera de `$...$` con `\ajm{...}` (`0.98\linewidth`), resolviendo los vectores 20D de `jacobi_20x20_10000`.
    - Tablas cortas (`tabular`): `\footnotesize`, `\tabcolsep=4pt` y `\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{...}`.
    - Tablas largas (`longtable` > 30 filas): apaisado (`pdflscape`) si `>= 8` columnas, tipo de columna `C{...}` (`array` + `graphicx`) y tamaños `\footnotesize`/`\scriptsize`/`\tiny` según anchura.
-4. **Escape en una sola pasada:** `escaparTextoLatex` reemplaza `\`, `{`, `}`, `&`, `$`, `%`, `#`, `_`, `^`, `~` y símbolos Unicode en un único `replace(RE_ESCAPE_LATEX, ...)`, emitiendo `\textbackslash{}` sin llaves espurias `\textbackslash\{\}`.
+4. **Escape Unicode en una sola pasada (`escaparTextoLatex` + `normalizarMathLatex`):**
+   - Letras griegas mayúsculas y minúsculas (`α..ω`, `Α..Ω`, incl. `Ω -> \Omega`, `π -> \pi`, `ρ -> \rho`) y símbolos matemáticos habituales (`≤ ≥ ≠ ≈ ∞ √ · × − ± ² ³ ∀ ∃ ∈ ℝ ...`) se convierten a su comando LaTeX correcto tanto en texto como en matemáticas (en una sola pasada con `/gu`, sin llaves espurias `\textbackslash\{\}`).
+   - Cualquier otro carácter fuera de Latin-1/T1 (CJK como `你好`, emojis como `😀`, controles, etc.) se representa de forma visible y explícita como `\texttt{[U+XXXX]}` (`\texttt{[U+4F60]}`, `\texttt{[U+1F600]}`), con `\allowbreak` en texto, nunca omitido en silencio.
 
 ### B. CSV (`619898b`, ajustes finales en `6b608cc` y commit posterior)
 - **Prioridad alta — inyección con espacios/controles iniciales:** `PREFIJO_FORMULA = /^(?:[\t\r]|[\s\p{Z}\p{Cc}\uFEFF]*[=+\-@])/u` protege celdas, cabeceras y títulos con `LF`, espacio, `\t`, `\r`, `\v`, `NBSP (U+00A0)`, `U+2003`, `U+3000` o `BOM (U+FEFF)` antes de `= + - @`, conservando el texto original intacto.
@@ -29,9 +31,9 @@ Sin cambios de UX, sin funciones nuevas y sin editar oráculos ajenos (`tests/te
 |---|---|---|
 | `node --test tests/test_*.cjs` | 15 archivos (incluye `test_exportar.cjs` 7/7 y navegador real Chrome) | **70 / 70 OK** |
 | `node --test tests/exportacion_verificar.cjs` | Oráculo Node independiente de Codex 2 (sin editar) | **10 / 10 OK** |
-| `CSV_EXIGIR_PENDIENTES=1 python -m unittest tests.test_exportacion_modulos` | Oráculo Python independiente de Codex 2 (sin editar) | **23 / 23 OK** (`skipped=1` `pdflatex`) |
-| `tests/test_recursos_version.py` + `tests/test_golden_api.py` | Hash `exportar.js?v=a0a3d589eec5` y 43 respuestas congeladas | **3 / 3 OK** |
-| `pdflatex 1.40.29` (TinyTeX 2026), doble pasada `-no-shell-escape` | 36 procedimientos reales (incl. `jacobi_20x20_10000` 143 pág., `biseccion_1000`, `regla_falsa_1000`) + `especiales_utf8` | **37 / 37 OK** (`0.00 pt` Overfull hbox/vbox, 0 `Missing character`) |
+| `CSV_EXIGIR_PENDIENTES=1 python -m unittest tests.test_exportacion_modulos` | Oráculo Python + `pdflatex 1.40.29` real sobre 36 corpus + `adversario` (`ñ á Ω 你好`) | **23 / 23 OK** (`0` skips, `0.00 pt` Overfull en `adversario`) |
+| `tests/test_recursos_version.py` + `tests/test_golden_api.py` | Hash `exportar.js?v=85158b0f1fd5` y 43 respuestas congeladas | **3 / 3 OK** |
+| `REQUIERE_EXTERNOS=1 python -m unittest tests.test_externo_latex` | `pdflatex 1.40.29`, 37 PDF en doble pasada + `adversario` + `uni_stress` | **2 / 2 OK** (`37+2` PDF, `0.00 pt` Overfull hbox/vbox, 0 `Missing character`) |
 | `test_externo_csv.py` (`P2_EXPORTAR_JS`) | Gnumeric `1.12.62` (STF) + LibreOffice Calc `26.2.4` (`especiales=false` y `especiales=true`), 35 libros × importado/guardado/reabierto | **5 / 5 OK** (0 errores) |
 
 ## Commits de la rama (`60c6d0c..HEAD`)
