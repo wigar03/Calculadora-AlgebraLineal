@@ -65,3 +65,60 @@ test('LaTeX de matrices y matrices aumentadas renderiza racionales exactos', () 
   }
   assert.match(c.augmentedMatrixToLatex(a, 2), /\{cc\|c\}/);
 });
+
+test('resolver desde la vista envia las 25 celdas y cinco terminos sin redondeo', async () => {
+  const { el, contexto: c, renderizados } = pagina();
+  el('eq-rows-m').value = el('eq-cols-n').value = '5';
+  c.renderizarEcuacionMatricial();
+  ['1/3', '0.75', '-2.5', '181/60', ''].forEach((v, j) => { el(`eq-a-0-${j}`).value = v; });
+  el('eq-b-4').value = '181/60';
+  c.metodo = 'gauss';
+  c.respuesta = { tipo_sistema: 'SCD', vector_solucion: ['2', '-1', '3', '1', '-2'],
+    pasos: [{ step_number: 1, title: 'Inicio', description: 'Matriz', matrix: [['1/3', '2']] }],
+    sustitucion: ['Sustitución exacta visible'], verificacion: ['Fila 1: Satisface'] };
+  await c.resolverEcuacionMatricialUI();
+  assert.equal(c.enviado.url, '/api/ecuaciones/resolver');
+  assert.equal(c.enviado.datos.A.length, 5);
+  assert.deepEqual(Array.from(c.enviado.datos.A[0]), ['1/3', '0.75', '-2.5', '181/60', '0']);
+  assert.equal(c.enviado.datos.b[4], '181/60');
+  assert.equal(c.enviado.datos.usar_gauss_jordan, false);
+  assert.ok(renderizados.includes('Sustitución exacta visible'));
+  assert.ok(renderizados.some(tex => tex.includes('\\begin{array}{ccccc|')));
+});
+
+test('la vista SCI muestra parametro libre explicito, fracciones y verificacion', async () => {
+  const { el, contexto: c, renderizados } = pagina();
+  el('eq-rows-m').value = el('eq-cols-n').value = '4';
+  c.renderizarEcuacionMatricial();
+  c.respuesta = { tipo_sistema: 'SCI', parametros: ['t'],
+    vector_solucion: ['6 - 3t', '17/5 - 8/5t', '26/5 - 14/5t', 't'],
+    descripcion_sistema: 'x_4 = t', verificacion: ['Fila 1: Satisface para todo parámetro real'] };
+  await c.resolverEcuacionMatricialUI();
+  assert.match(el('eq-badge-status').innerText, /Infinitas/);
+  const tex = renderizados.find(t => t.includes('\\quad t \\in \\mathbb{R}'));
+  assert.ok(tex);
+  assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
+  assert.ok(renderizados.includes(c.respuesta.verificacion[0]));
+});
+
+test('la inversa presenta una sola comprobacion por entrada en ambos productos', async () => {
+  const { el, contexto: c, renderizados } = pagina();
+  el('inv-dim-n').value = '4'; c.renderizarMatrizInversaInput();
+  c.respuesta = { orden_n: 4, es_invertible: true, matriz_inversa: [['1']],
+    verificacion_A_por_Ainv: Array.from({ length: 16 }, (_, i) => `directa ${i}`),
+    verificacion_Ainv_por_A: Array.from({ length: 16 }, (_, i) => `inversa ${i}`) };
+  await c.calcularInversaUI();
+  assert.equal(c.enviado.url, '/api/matrices/inversa');
+  assert.equal(renderizados.filter(t => /^directa /.test(t)).length, 16);
+  assert.equal(renderizados.filter(t => /^inversa /.test(t)).length, 16);
+});
+
+test('el diagnostico singular recibido aparece en la vista de inversa', async () => {
+  const { el, contexto: c, renderizados } = pagina();
+  el('inv-dim-n').value = '3'; c.renderizarMatrizInversaInput();
+  c.respuesta = { orden_n: 3, es_invertible: false,
+    mensaje_diagnostico: 'No hay pivote no nulo; rango deficiente, no existe inversa.' };
+  await c.calcularInversaUI();
+  assert.match(el('inv-badge-status').innerText, /Singular/);
+  assert.ok(renderizados.includes(c.respuesta.mensaje_diagnostico));
+});
