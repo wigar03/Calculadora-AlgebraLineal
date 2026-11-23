@@ -4,7 +4,7 @@ Calculadora educativa con **11 módulos de álgebra lineal y métodos numéricos
 procedimientos paso a paso, gráficas y comprobación de resultados.
 La misma interfaz funciona en el navegador y en una aplicación de escritorio.
 
-[Descargar para Windows](https://github.com/wigar03/Calculadora-AlgebraLineal/releases/latest)
+[Descargar para Windows](https://github.com/wigar03/Calculadora-AlgebraLineal/releases)
 · [Guía matemática](docs/guia-matematica.md)
 · [Notas de versión](CHANGELOG.md)
 · [Reportar un problema](https://github.com/wigar03/Calculadora-AlgebraLineal/issues)
