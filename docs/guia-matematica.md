@@ -429,76 +429,31 @@ El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primer
 
 Nuevos archivos: `src/derivadas/{__init__,motor}.py`, `src/secante/{__init__,metodo}.py`, `src/ui/web/secante.js`, `tests/test_secante.py` y `tests/test_secante_ui.cjs`. Para la revisión manual pruebe el ejemplo, `x^2+1` con puntos `-1` y `1` (denominador nulo), la vista móvil y ambos temas.
 
-## 4. Estructura del Código
+## 4. Estructura del código
 
 ```text
 Programa Vectores/
-├── main.py                         # Punto de entrada principal con selector (--gui o web)
-├── README.md                       # Documentación institucional completa
-├── .gitignore                      # Exclusiones de control de versiones
+├── main.py                # Servidor e interfaz en el navegador
+├── desktop.py             # Ventana de escritorio para Windows
+├── README.md              # Presentación, descarga e inicio
+├── docs/                  # Guías, contratos y evidencia
 ├── src/
-│   ├── core/                       # Núcleo aritmético y validaciones
-│   │   ├── arithmetic.py           # Parser exacto de fracciones, validación y formateo
-│   │   └── config.py               # Metadatos institucionales y constantes
-│   ├── vectores/                   # Módulo 1 y evaluación de combinaciones lineales
-│   │   ├── operaciones.py          # Suma, resta, escalar, producto punto y norma
-│   │   └── combinacion_lineal.py   # Resolución de c_1*v_1 + ... + c_k*v_k = b
-│   ├── matrices/                   # Módulos 3, 4 y 6: Operaciones, inversa y determinantes
-│   │   ├── operaciones.py          # Suma, resta, escalar, producto A * B y transpuesta A^T
-│   │   ├── inversa.py              # Inversa A^(-1) por Gauss / Gauss-Jordan y verificación dual
-│   │   └── determinante.py         # Determinantes exactos (Cofactores vs LU) y análisis de eficiencia
-│   ├── solver/                     # Módulo del solucionador y enlace
-│   │   ├── gauss_solver.py         # Motor Gauss / Gauss-Jordan paso a paso
-│   │   └── anterior_programa.py    # Invocación del programa de la Semana #3
-│   ├── ecuaciones/                 # Módulo 5: Ecuaciones matriciales
-│   │   └── ecuacion_matricial.py   # Resolución computacional y residuo de Ax = b
-│   ├── biseccion/                  # Módulo 7: Búsqueda numérica de raíces
-│   │   ├── expresiones.py         # Evaluación controlada de funciones reales
-│   │   └── metodo.py              # Algoritmo, historial, errores y muestreo gráfico
-│   ├── regla_falsa/                # Módulo 8: Regla falsa paso a paso
-│   │   ├── metodo.py              # Falsa posición, validación del intervalo e iteraciones
-│   │   └── continuidad.py         # Discontinuidades detectadas e intervalos candidatos
-│   ├── newton_raphson/             # Módulo 9: Método abierto con punto inicial manual
-│   │   ├── derivada.py            # Derivación simbólica del AST validado
-│   │   └── metodo.py              # Evaluación inicial, historial y criterios de parada
-│   └── ui/                         # Interfaz web de usuario de alta estética
-│       ├── web_server.py           # Servidor local estándar en Python (cero dependencias externas)
-│       └── web/                    # Frontend SPA moderno (HTML5, CSS, JS reactivo, Modo Claro/Oscuro)
-│           ├── index.html          # Estructura semántica accesible con iconografía Lucide
-│           ├── styles.css          # Paleta visual minimalista y diseño responsivo
-│           ├── app.js              # Controlador cliente reactivo y renderizado KaTeX
-│           ├── sidebar.js          # Menú lateral y navegación móvil con teclado
-│           ├── biseccion.js        # Formulario, resultados, tabla y gráfica de bisección
-│           ├── biseccion.css       # Estilos limitados a la nueva sección
-│           ├── formula-keyboard.js # Teclado matemático de los editores de funciones
-│           ├── regla-falsa.js      # Flujo de cuatro pasos, gráfica interactiva y tabla
-│           ├── regla-falsa.css     # Indicador de pasos, validación y capas de la gráfica
-│           ├── grafica-funciones.js # Geometría pura para la gráfica de Newton
-│           ├── newton-raphson.js   # Cuatro pasos, tangentes y tabla con KaTeX
-│           ├── newton-raphson.css  # Estilos del módulo de Newton-Raphson
-│           └── lucide.min.js       # Librería de iconos minimalistas (offline, open source)
-└── tests/                          # Suite completa de pruebas unitarias automatizadas
-    ├── test_vectores.py            # Tests de operaciones vectoriales
-    ├── test_matrices.py            # Tests de álgebra de matrices
-    ├── test_inversa.py             # Tests de matriz inversa y transpuesta
-    ├── test_determinante.py        # Tests de determinantes (1x1 a 4x4, singularidad y eficiencia)
-    ├── test_combinacion_lineal.py  # Tests de combinación lineal (SCD, SCI, SI)
-    ├── test_ecuaciones.py          # Tests de Ax = b y compatibilidad
-    ├── test_api_latex.py           # Tests de integración API y formateo matemático
-    ├── test_biseccion.py           # Convergencia, errores y precisión
-    ├── test_biseccion_expresiones.py # Sintaxis, dominio y entradas del evaluador
-    ├── test_biseccion_api.py       # API HTTP de bisección y recursos de interfaz
-    ├── test_biseccion_ui.cjs       # Utilidades de gráfica y formato (Node.js)
-    ├── test_regla_falsa.py         # Fórmula, reemplazo, error aproximado y estancamiento
-    ├── test_regla_falsa_continuidad.py # Discontinuidades e intervalos sugeridos
-    ├── test_regla_falsa_api.py     # API HTTP de los cuatro pasos y recursos de interfaz
-    ├── test_regla_falsa_ui.cjs     # Utilidades de la gráfica de regla falsa (Node.js)
-    ├── test_newton_raphson.py      # Derivada, diferencias finitas y convergencia/fallos
-    ├── test_newton_raphson_api.py  # Flujo HTTP y recursos de la interfaz
-    └── test_newton_raphson_ui.cjs  # Entrada manual y sustituciones LaTeX (Node.js)
+│   ├── core/              # Aritmética, límites y ejecución aislada
+│   ├── vectores/          # Operaciones y combinación lineal
+│   ├── matrices/          # Operaciones, inversa y determinantes
+│   ├── solver/            # Eliminación de Gauss y Gauss-Jordan
+│   ├── ecuaciones/        # Sistemas lineales y residuo
+│   ├── biseccion/         # Expresiones seguras y bisección
+│   ├── regla_falsa/       # Falsa posición y continuidad
+│   ├── newton_raphson/    # Método con derivada simbólica
+│   ├── derivadas/         # Motor de derivación compartido
+│   ├── secante/           # Método con dos puntos iniciales
+│   ├── iterativos/        # Jacobi, Gauss-Seidel y convergencia
+│   ├── procedimientos/   # Formato común de las respuestas
+│   └── ui/               # API JSON y recursos web locales
+├── scripts/               # Distribución, mediciones y verificación Markdown
+└── tests/                 # Pruebas Python, Node y referencias independientes
 ```
-
----
 
 ## 5. Instrucciones de Instalación y Uso
 
