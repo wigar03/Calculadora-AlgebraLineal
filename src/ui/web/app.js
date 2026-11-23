@@ -1425,11 +1425,39 @@ async function calcularInversaUI() {
 let eqM = 3;
 let eqN = 3;
 
-function vectorSolucionLinealToLatex(valores) {
-  // Una componente paramétrica puede contener varias fracciones: 5/2 - 3/2t.
-  return vectorToLatexCol(valores.map(v => String(v).replace(
-    /(-?\d+)\/(\d+)/g, (_, num, den) => formatLatexFrac(`${num}/${den}`))))
-    .replaceAll(" \\\\ ", " \\\\[0.5em] ");
+function vectorSolucionLinealToLatex({ solucion_particular, base_nucleo, parametros }) {
+  if (!Array.isArray(solucion_particular) || !Array.isArray(base_nucleo) ||
+      !Array.isArray(parametros) || base_nucleo.length !== parametros.length ||
+      base_nucleo.some(v => !Array.isArray(v) || v.length !== solucion_particular.length)) {
+    throw new Error("La solución paramétrica requiere sus coeficientes y parámetros separados.");
+  }
+  const racional = valor => {
+    const token = String(valor);
+    if (!/^-?\d+(?:\/[1-9]\d*)?$/.test(token)) {
+      throw new Error("Se esperaba un coeficiente racional exacto, no una expresión textual.");
+    }
+    return token;
+  };
+  const nombres = parametros.map(nombre => {
+    if (typeof nombre !== "string" || !/^[a-zA-Z]+(?:_\d+)?$/.test(nombre)) {
+      throw new Error("Nombre de parámetro inválido.");
+    }
+    return formatLatexFrac(nombre);
+  });
+  const componentes = solucion_particular.map((valor, i) => {
+    const constante = racional(valor);
+    let expresion = constante === "0" ? "" : formatLatexFrac(constante);
+    base_nucleo.forEach((vector, k) => {
+      const coef = racional(vector[i]);
+      if (coef === "0") return;
+      const negativo = coef.startsWith("-");
+      const magnitud = negativo ? coef.slice(1) : coef;
+      expresion += negativo ? (expresion ? " - " : "-") : (expresion ? " + " : "");
+      expresion += (magnitud === "1" ? "" : formatLatexFrac(magnitud)) + nombres[k];
+    });
+    return expresion || "0";
+  });
+  return `\\begin{pmatrix} ${componentes.join(" \\\\[0.5em] ")} \\end{pmatrix}`;
 }
 
 function inicializarModuloEcuaciones() {
@@ -1599,7 +1627,7 @@ async function resolverEcuacionMatricialUI() {
         latexSol = `\\vec{x}^* = ${vectorToLatexCol(data.vector_solucion)}`;
       }
     } else if (data.tipo_sistema === "SCI") {
-      latexSol = `\\vec{x} = ${vectorSolucionLinealToLatex(data.vector_solucion)} \\quad ${data.parametros.map(formatLatexFrac).join(", ")} \\in \\mathbb{R}`;
+      latexSol = `\\vec{x} = ${vectorSolucionLinealToLatex(data)} \\quad ${data.parametros.map(formatLatexFrac).join(", ")} \\in \\mathbb{R}`;
     } else {
       latexSol = `\\text{No existe } \\vec{x} \\in \\mathbb{R}^${eqN} \\text{ tal que } A\\vec{x} = \\vec{b}`;
     }

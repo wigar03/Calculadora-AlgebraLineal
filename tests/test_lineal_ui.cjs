@@ -50,7 +50,8 @@ test('las grillas 5x5 conservan fracciones y decimales como texto', () => {
 
 test('LaTeX parametrico conserva cada fraccion y el parametro fuera del denominador', () => {
   const { contexto: c } = pagina();
-  const tex = c.vectorSolucionLinealToLatex(['6 - 3t', '17/5 - 8/5t', '26/5 - 14/5t', 't']);
+  const tex = c.vectorSolucionLinealToLatex({ solucion_particular: ['6', '17/5', '26/5', '0'],
+    base_nucleo: [['-3', '-8/5', '-14/5', '1']], parametros: ['t'] });
   assert.match(tex, /\\frac\{17\}\{5\} - \\frac\{8\}\{5\}t/);
   assert.match(tex, /\\frac\{26\}\{5\} - \\frac\{14\}\{5\}t/);
   assert.equal((tex.match(/\[0\.5em\]/g) || []).length, 3);
@@ -92,6 +93,7 @@ test('la vista SCI muestra parametro libre explicito, fracciones y verificacion'
   el('eq-rows-m').value = el('eq-cols-n').value = '4';
   c.renderizarEcuacionMatricial();
   c.respuesta = { tipo_sistema: 'SCI', parametros: ['t'],
+    solucion_particular: ['6', '17/5', '26/5', '0'], base_nucleo: [['-3', '-8/5', '-14/5', '1']],
     vector_solucion: ['6 - 3t', '17/5 - 8/5t', '26/5 - 14/5t', 't'],
     descripcion_sistema: 'x_4 = t', verificacion: ['Fila 1: Satisface para todo parámetro real'] };
   await c.resolverEcuacionMatricialUI();
@@ -144,7 +146,9 @@ test('la lista de diez parametros agrupa el indice completo para KaTeX', async (
   const { el, contexto: c, renderizados } = pagina();
   el('eq-rows-m').value = '1'; el('eq-cols-n').value = '10'; c.renderizarEcuacionMatricial();
   const parametros = ['t', 's', 'r', 'u', 'v', 't_6', 't_7', 't_8', 't_9', 't_10'];
-  c.respuesta = { tipo_sistema: 'SCI', parametros, vector_solucion: parametros };
+  c.respuesta = { tipo_sistema: 'SCI', parametros, vector_solucion: parametros,
+    solucion_particular: Array(10).fill('0'),
+    base_nucleo: Array.from({ length: 10 }, (_, i) => Array.from({ length: 10 }, (_, j) => String(+(i === j)))) };
   await c.resolverEcuacionMatricialUI();
   const tex = renderizados.find(t => t.includes('\\quad t, s'));
   assert.ok(tex);
