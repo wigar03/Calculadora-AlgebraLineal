@@ -113,7 +113,7 @@ class TestRobustezServidor(unittest.TestCase):
 
     def test_json_invalido_y_cuerpo_no_objeto(self):
         with servidor_local() as url:
-            for cuerpo in (b"{no json", b"[1,2]"):
+            for cuerpo in (b"{no json", b"[1,2]", b'{"u":[NaN]}', b'"\xff"', b"[" * 2000):
                 with self.subTest(cuerpo=cuerpo):
                     estado, datos, _ = post(url, cuerpo)
                     self.assertEqual(estado, 400)
@@ -136,9 +136,12 @@ class TestRobustezServidor(unittest.TestCase):
             self.assertIn("default-src 'self'", cabeceras["Content-Security-Policy"])
             with urlopen(url) as respuesta:
                 self.assertEqual(respuesta.headers["Cache-Control"], "no-cache")
-            with self.assertRaises(HTTPError) as error:
+            try:
                 urlopen(url + "/vendor/")
-            self.assertEqual(error.exception.code, 404)
+                self.fail("Se publicó el listado del directorio")
+            except HTTPError as error:
+                with error:
+                    self.assertEqual(error.code, 404)
 
     def test_cuerpo_grande_y_lectura_con_plazo(self):
         with mock.patch.object(limites, "LECTURA_SOCKET_S", 0.15), servidor_local() as url:
