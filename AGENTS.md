@@ -50,6 +50,18 @@ python tests/validacion/generar_referencias.py   # regenera referencias (requier
 - Cada ejercicio se prueba también por la vía del usuario (API de la página y, donde aplique, la interfaz).
 - Quien implementa no aprueba solo su trabajo: el integrador revisa y ejecuta la batería completa.
 
+## Módulo 11: Jacobi y Gauss-Seidel (etapa 2)
+- Contrato de archivos, API y respuesta: `docs/contratos/iterativos.md`. Paquete `src/iterativos/`.
+- Responsables: Codex 1 (entrada, matriz, Jacobi), Codex 2 (Gauss-Seidel, convergencia, resolver, API),
+  Antigravity (sistema en texto, vista `iterativos.js`, KaTeX, gráficas con componentes existentes, regresión).
+- Referencias: `tests/validacion/banco_iterativos.py` y `referencias_iterativos.json` (Fraction y SymPy).
+  El radio espectral de referencia sale del polinomio característico exacto, no de autovalores en flotante.
+- Validación obligatoria: tres primeras iteraciones exactas de ambos métodos, solución, residuo, motivo de parada y
+  clasificación de la convergencia («demostrada», «observada», «no_asegurada») en todos los casos del banco.
+- La presentación de la clase tiene errores en las diapositivas 15, 20 y 21; las tablas 16 y 22 son correctas.
+- Interfaz: un módulo nuevo con el patrón de navegación existente (entrada lateral, tarjeta de inicio y sección);
+  no se modifican los módulos anteriores. Al cambiar un recurso web, actualizar su `?v=` (SHA-256, 12 caracteres).
+
 ## UX
 No cambiar navegación, disposición, colores, tipografía, controles ni flujos sin autorización del propietario.
 Permitido: corregir errores internos, ampliar capacidades matemáticas y mejorar los mensajes de error.
