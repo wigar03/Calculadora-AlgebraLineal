@@ -16,6 +16,8 @@
     raiz_evaluada: "$f(x_r)$ se evaluó como cero con la precisión de punto flotante utilizada.",
     max_iteraciones: "Se alcanzó el máximo de iteraciones sin cumplir la tolerancia. Puede aumentar el límite o revisar la tolerancia.",
     precision_agotada: "La precisión de punto flotante impide seguir acercando $x_r$ a la raíz. Revise la tolerancia o la escala de la función.",
+    sin_progreso: "La precisión de punto flotante impide que $x_r$ siga avanzando. Revise la tolerancia o la escala de la función.",
+    raiz_no_admisible: "La aproximación obtenida no cumple la condición pedida (raíz positiva o positiva no nula); por ejemplo, converge a la raíz excluida x = 0. Elija otros datos iniciales.",
   };
 
   function formatear(valor, cifras = 10) {
@@ -135,7 +137,7 @@
       MARCO, formatear, numeroLatex, marcas, rangoVertical, crearEscala, caminoCurva,
       interpolar, redondearSegunVista,
       describirDiscontinuidad, textoTramos,
-      EJEMPLOS,
+      EJEMPLOS, MOTIVOS,
     };
   }
   if (typeof document === "undefined") return;

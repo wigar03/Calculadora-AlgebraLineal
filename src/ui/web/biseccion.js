@@ -18,6 +18,7 @@
     raiz_evaluada: "$f(c)$ se evaluó como cero con la precisión de punto flotante utilizada.",
     max_iteraciones: "Se alcanzó el máximo de iteraciones sin cumplir la tolerancia. Puede aumentar el límite o revisar la tolerancia.",
     precision_agotada: "La precisión de punto flotante impide seguir reduciendo el intervalo. Revise la tolerancia o la escala de la función.",
+    raiz_no_admisible: "La aproximación obtenida no cumple la condición pedida (raíz positiva o positiva no nula); por ejemplo, converge a la raíz excluida x = 0. Elija otros datos iniciales.",
   };
 
   function formatear(valor) {
@@ -64,7 +65,7 @@
 
   // Exporta solo las utilidades puras para verificarlas con el runner estándar de Node.
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { formatear, numeroLatex, datosGrafica, EJEMPLOS };
+    module.exports = { formatear, numeroLatex, datosGrafica, EJEMPLOS, MOTIVOS };
   }
   if (typeof document === "undefined") return;
 

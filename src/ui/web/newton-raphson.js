@@ -20,6 +20,8 @@
     ciclo: "Las aproximaciones se repiten: el método entró en un ciclo. Elija otro valor inicial.",
     sin_progreso: "La precisión de punto flotante impide seguir avanzando. El criterio elegido no acredita convergencia.",
     max_iteraciones: "Se alcanzó el máximo de iteraciones sin cumplir la tolerancia. Revise el punto inicial o el límite.",
+    raiz_no_admisible: "La aproximación obtenida no cumple la condición pedida (raíz positiva o positiva no nula); por ejemplo, converge a la raíz excluida x = 0. Elija otros datos iniciales.",
+    no_certificada: "El criterio de parada se alcanzó, pero no se pudo certificar una raíz admisible cercana con un cambio de signo en un intervalo continuo; puede tratarse de una raíz múltiple, un extremo o un límite sin raíz. Revise la semilla o use un intervalo que encierre la raíz.",
   };
   function leerNumero(texto) {
     if (!String(texto).trim()) return null;
