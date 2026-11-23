@@ -26,7 +26,7 @@ function extraerMatematicas(texto) {
 function latexPython(expresiones) {
   const py = 'import json,sys; from src.biseccion.expresiones import Expresion; '
     + 'print(json.dumps([Expresion(e).latex() for e in json.loads(sys.stdin.read())]))';
-  return JSON.parse(execFileSync('python', ['-c', py], { cwd: ROOT, input: JSON.stringify(expresiones), encoding: 'utf8' }));
+  return JSON.parse(execFileSync('python', ['-c', py], { cwd: ROOT, input: JSON.stringify(expresiones), encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } }));
 }
 
 test('KaTeX renderiza las 18 ecuaciones, derivadas y 2 incompletas del banco sin errores', () => {
@@ -43,7 +43,7 @@ test('KaTeX renderiza las 18 ecuaciones, derivadas y 2 incompletas del banco sin
     'for k, d in INCOMPLETOS.items(): items.append((k, Expresion(ex(d["expresion"])).latex()))',
     'print(json.dumps(items))',
   ].join('\n');
-  const items = JSON.parse(execFileSync('python', ['-c', py], { cwd: ROOT, encoding: 'utf8' }));
+  const items = JSON.parse(execFileSync('python', ['-c', py], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } }));
   assert.equal(items.length, 56);
   for (const [id, latex] of items) {
     const html = renderEstricto(id.endsWith('_d') ? `f'(x) = ${latex}` : `f(x) = ${latex}`, true);

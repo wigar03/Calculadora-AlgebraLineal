@@ -10,7 +10,7 @@ const esperar = () => new Promise(r => setImmediate(r));
 
 function errorReal(expr) {
   const py = 'import sys; from src.biseccion.expresiones import Expresion\ntry: Expresion(sys.argv[1])\nexcept ValueError as e: print(e, end="")';
-  return execFileSync('python', ['-c', py, expr], { cwd: ROOT, encoding: 'utf8' });
+  return execFileSync('python', ['-c', py, expr], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
 }
 
 function crearEntorno(mensajeError) {
