@@ -157,58 +157,58 @@ El programa analiza exhaustivamente sus propiedades teóricas:
 - **Invarianza de la traza**: $`\mathrm{tr}(A^T) = \mathrm{tr}(A) = \sum_{i=1}^n a_{ii}`$.
 - **Invertibilidad de la transpuesta (Teorema Unidad 2.2 c)**: $`(A^T)^{-1} = (A^{-1})^T`$.
 
-### Módulo 4: Inversa de una Matriz $A^{-1}$
+### Módulo 4: Inversa de una Matriz $`A^{-1}`$
 
 Este módulo implementa el cálculo y análisis formal de la inversa de una matriz:
 
 #### 1. Definición Formal
-Sea $A$ una matriz cuadrada de orden $n \times n$. Se dice que $A$ es **invertible** (o no singular) si existe una matriz $C$ de orden $n \times n$ tal que:
+Sea $`A`$ una matriz cuadrada de orden $`n \times n`$. Se dice que $`A`$ es **invertible** (o no singular) si existe una matriz $`C`$ de orden $`n \times n`$ tal que:
 
-$$
+```math
 C \cdot A = I_n \quad \text{y} \quad A \cdot C = I_n
-$$
+```
 
-Donde $I_n$ es la matriz identidad de orden $n \times n$. Dicha matriz $C$ es única y se denota como $C = A^{-1}$. Una matriz que no posee inversa se denomina **matriz singular** ($\det(A) = 0$).
+Donde $`I_n`$ es la matriz identidad de orden $`n \times n`$. Dicha matriz $`C`$ es única y se denota como $`C = A^{-1}`$. Una matriz que no posee inversa se denomina **matriz singular** ($`\det(A) = 0`$).
 
-#### 2. Teorema de Inversión para Matrices $2 \times 2$
-Sea $A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}$. Si $ad - bc \neq 0$, entonces $A$ es invertible y:
+#### 2. Teorema de Inversión para Matrices $`2 \times 2`$
+Sea $`A = \begin{bmatrix} a & b \\ c & d \end{bmatrix}`$. Si $`ad - bc \neq 0`$, entonces $`A`$ es invertible y:
 
-$$
+```math
 A^{-1} = \frac{1}{ad - bc} \begin{bmatrix} d & -b \\ -c & a \end{bmatrix}
-$$
+```
 
-Si $ad - bc = 0$, entonces la matriz $A$ no es invertible.
+Si $`ad - bc = 0`$, entonces la matriz $`A`$ no es invertible.
 
-#### 3. Algoritmo de Reducción por Renglones $[A \mid I_n] \sim [I_n \mid A^{-1}]$
-Una matriz $A$ de $n \times n$ es invertible si y solo si es equivalente por filas a la matriz identidad $I_n$. Cualquier secuencia de operaciones elementales de renglón que transforme $A$ en $I_n$ transforma simultáneamente $I_n$ en $A^{-1}$:
+#### 3. Algoritmo de Reducción por Renglones $`[A \mid I_n] \sim [I_n \mid A^{-1}]`$
+Una matriz $`A`$ de $`n \times n`$ es invertible si y solo si es equivalente por filas a la matriz identidad $`I_n`$. Cualquier secuencia de operaciones elementales de renglón que transforme $`A`$ en $`I_n`$ transforma simultáneamente $`I_n`$ en $`A^{-1}`$:
 
-$$
+```math
 [A \mid I_n] \sim \dots \sim [I_n \mid A^{-1}]
-$$
+```
 
 El programa ofrece dos métodos de cálculo:
-- **Método Gauss-Jordan**: eliminación de renglones simultánea (hacia adelante y hacia atrás en cada columna pivote), normalizando cada renglón pivote $R_i \leftarrow \frac{1}{p} R_i$ y anulando todos los elementos restantes de la columna ($R_k \leftarrow R_k - c R_i$).
-- **Método de Gauss**: eliminación gaussiana hacia adelante hasta obtener la matriz triangular superior $[U \mid B]$. Se comprueba que ningún pivote diagonal sea nulo ($\mathrm{rg}(A) = n$), y posteriormente se ejecuta la fase regresiva de normalización unitaria y anulación sobre la diagonal.
+- **Método Gauss-Jordan**: eliminación de renglones simultánea (hacia adelante y hacia atrás en cada columna pivote), normalizando cada renglón pivote $`R_i \leftarrow \frac{1}{p} R_i`$ y anulando todos los elementos restantes de la columna ($`R_k \leftarrow R_k - c R_i`$).
+- **Método de Gauss**: eliminación gaussiana hacia adelante hasta obtener la matriz triangular superior $`[U \mid B]`$. Se comprueba que ningún pivote diagonal sea nulo ($`\mathrm{rg}(A) = n`$), y posteriormente se ejecuta la fase regresiva de normalización unitaria y anulación sobre la diagonal.
 
 #### 4. Verificación Rigurosa Dual
 Conforme a la exigencia didáctica del curso (*"No basta con obtener una matriz"*), el sistema comprueba automáticamente ambas identidades conmutativas en aritmética fraccionaria exacta:
 
-$$
+```math
 A \cdot A^{-1} = I_n \quad \text{y} \quad A^{-1} \cdot A = I_n
-$$
+```
 
 Verificando además que el residuo matricial sea nulo:
 
-$$
+```math
 R = A \cdot A^{-1} - I_n = 0_{n \times n}
-$$
+```
 
 #### 5. Propiedades Teóricas y Teorema de la Matriz Invertible
-- $(A^{-1})^{-1} = A$
-- $(A \cdot B)^{-1} = B^{-1} \cdot A^{-1}$
-- $(A^T)^{-1} = (A^{-1})^T$
-- Si $A$ es invertible, la ecuación matricial $Ax = b$ posee solución única $x = A^{-1}b$.
-- Caracterizaciones equivalentes: $\mathrm{rg}(A) = n$, $n$ posiciones pivote, columnas linealmente independientes y núcleo trivial ($Ax = 0 \implies x = 0$).
+- $`(A^{-1})^{-1} = A`$
+- $`(A \cdot B)^{-1} = B^{-1} \cdot A^{-1}`$
+- $`(A^T)^{-1} = (A^{-1})^T`$
+- Si $`A`$ es invertible, la ecuación matricial $`Ax = b`$ posee solución única $`x = A^{-1}b`$.
+- Caracterizaciones equivalentes: $`\mathrm{rg}(A) = n`$, $`n`$ posiciones pivote, columnas linealmente independientes y núcleo trivial ($`Ax = 0 \implies x = 0`$).
 
 ### Módulo 5: Ecuaciones Matriciales $Ax = b$ y Enlace al Programa Anterior
 
