@@ -174,8 +174,57 @@ class Supervisor:
         for proceso, conexion in activos:
             self._retirar(proceso, conexion)
 
+    def ejecutar(self, referencia, *args, tiempo=None, **kwargs):
+        """La referencia importable es fija en el servidor, nunca en el cuerpo HTTP."""
+        if self._cerrado:
+            raise ErrorEjecucion("El servidor está cerrando.")
+        plazo = time.monotonic() + (tiempo if tiempo is not None else limites.TIEMPO_CALCULO_S)
+        try:
+            proceso, conexion = self._disponibles.get(timeout=max(0, plazo - time.monotonic()))
+        except queue.Empty:
+            raise ErrorEjecucion("Los procesos de cálculo están ocupados. Inténtelo de nuevo.",
+                                 "tiempo", "trabajadores_ocupados", 503) from None
+        reemplazar = False
+        try:
+            conexion.send((referencia, args, kwargs))
+            if not conexion.poll(max(0, plazo - time.monotonic())):
+                reemplazar = True
+                raise ErrorEjecucion("El cálculo superó el tiempo máximo permitido.",
+                                     "tiempo", "tiempo_agotado", 503)
+            mensaje = conexion.recv_bytes(limites.RESPUESTA_MAX_BYTES + 1)
+            datos = json.loads(mensaje[1:])
+            if mensaje[:1] == b"e":
+                error, estado = datos
+                raise ErrorEjecucion(error["error"], error["tipo"], error["codigo"], estado)
+            return datos
+        except (EOFError, OSError) as exc:
+            reemplazar = True
+            raise ErrorEjecucion("El proceso de cálculo se interrumpió al alcanzar sus recursos.",
+                                 "limite", "trabajador_interrumpido", 400) from exc
+        finally:
+            if reemplazar:
+                self._retirar(proceso, conexion)
+                if not self._cerrado:
+                    proceso, conexion = self._crear()
+            if not self._cerrado:
+                self._disponibles.put((proceso, conexion))
+
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
         self.cerrar()
+
+
+_compartido = None
+_candado_compartido = threading.Lock()
+
+
+def supervisor_compartido():
+    """Compatibilidad con anfitriones que construyen su propio HTTPServer."""
+    global _compartido
+    with _candado_compartido:
+        if _compartido is None:
+            _compartido = Supervisor()
+            atexit.register(_compartido.cerrar)
+    return _compartido
