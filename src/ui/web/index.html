@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="biseccion.css?v=5f6326f92448">
   <link rel="stylesheet" href="regla-falsa.css?v=d85b03cb0518">
   <link rel="stylesheet" href="newton-raphson.css?v=61e9ee7719cf">
+  <link rel="stylesheet" href="iterativos.css?v=000000000000">
 </head>
 <body>
   <div class="app-container">
@@ -90,6 +91,7 @@
       </button>
       <button class="nav-tab" data-tab="tab-newton-raphson"><span class="nav-chapter" aria-hidden="true">09</span><span class="tab-label">Método de Newton-Raphson</span></button>
       <button class="nav-tab" data-tab="tab-secante"><span class="nav-chapter">10</span><span class="tab-label">Método de la secante</span></button>
+      <button class="nav-tab" data-tab="tab-iterativos"><span class="nav-chapter">11</span><span class="tab-label">Jacobi y Gauss-Seidel</span></button>
     </nav>
       <p class="sidebar-footer">Álgebra lineal y métodos numéricos</p>
     </aside>
@@ -145,6 +147,7 @@
             </button>
             <button class="home-module" type="button" data-open-module="tab-newton-raphson"><span class="home-number">09</span><span class="home-module-copy"><strong>Método de Newton-Raphson</strong><span>Derivada, gráfica, valor inicial manual e iteraciones.</span></span><span class="home-formula" data-math>$f'(x)$</span><span aria-hidden="true">↗</span></button>
 <button class="home-module" type="button" data-open-module="tab-secante"><span class="home-number">10</span><span class="home-module-copy"><strong>Método de la secante</strong><span>Dos puntos iniciales, rectas secantes y tabla de iteraciones.</span></span><span class="home-formula" data-math>$x_{n+1}$</span><span aria-hidden="true">↗</span></button>
+<button class="home-module" type="button" data-open-module="tab-iterativos"><span class="home-number">11</span><span class="home-module-copy"><strong>Jacobi y Gauss-Seidel</strong><span>Sistemas lineales iterativos, dominancia diagonal y convergencia.</span></span><span class="home-formula" data-math>$x^{(k+1)}$</span><span aria-hidden="true">↗</span></button>
           </div>
         </div>
         <p class="home-note">Puede volver a este índice desde «Menú principal». Sus entradas se conservan al cambiar de módulo.</p>
@@ -1226,6 +1229,80 @@
         <div id="sc-table-card" class="card bis-table-card" hidden><div class="card-header"><h3><span class="bis-section-number">05</span>Tabla de iteraciones</h3></div><p class="bis-help" data-math>Cada fila aplica la fórmula y actualiza las dos aproximaciones. $E_a$ y $\varepsilon_r$ son cambios aproximados, no cotas del error verdadero. El relativo no está definido si la nueva aproximación es cero.</p><div id="sc-table" class="bis-table-scroll" tabindex="0" role="region" aria-label="Iteraciones de la secante"></div></div>
       </section>
 
+      <section id="tab-iterativos" class="tab-pane biseccion-pane regla-falsa-pane newton-pane iterativos-pane" aria-labelledby="it-title">
+        <header class="bis-notebook-heading"><div><p class="bis-eyebrow">Métodos iterativos · Sistemas lineales</p><h2 id="it-title">Jacobi y Gauss-Seidel</h2><p class="bis-intro" data-math>Resuelva sistemas cuadrados $Ax=b$, analice dominancia diagonal y radio espectral $\rho(T)$, y compare la convergencia.</p></div><span class="bis-chapter" aria-label="Módulo 11">11</span></header>
+        <div class="rf-layout">
+          <div class="rf-column">
+            <div class="card rf-card" id="it-card-1">
+              <div class="card-header"><h3><span class="bis-section-number">01</span><span data-math>Sistema $Ax=b$ y vector inicial</span></h3></div>
+              <div class="selector-row">
+                <label for="it-dim-n" class="field-label" data-math>Dimensión ($n\times n$):</label>
+                <div class="stepper-box"><button type="button" id="it-dim-dec" class="btn-step" title="Disminuir dimensión" aria-label="Disminuir dimensión"><i data-lucide="minus"></i></button><input type="number" id="it-dim-n" min="2" max="10" value="4"><button type="button" id="it-dim-inc" class="btn-step" title="Aumentar dimensión" aria-label="Aumentar dimensión"><i data-lucide="plus"></i></button></div>
+              </div>
+              <div class="augmented-matrix-wrapper"><div class="section-subtitle">Matriz aumentada [A │ b] (admite enteros, fracciones y decimales):</div><div class="it-grid-scroll"><div id="it-augmented-grid" class="it-augmented-grid"></div></div></div>
+              <div><div class="section-subtitle" data-math>Vector inicial $x^{(0)}$ (cero por defecto):</div><div id="it-x0-grid" class="it-x0-grid"></div></div>
+              <details class="it-text-box"><summary>Pegar ecuaciones como texto (opcional)</summary>
+                <div class="it-text-inner">
+                  <label for="it-texto" class="bis-help">Una ecuación lineal por línea (ej. 10x1 - x2 + 2x3 = 6, admite x1, x₁, x_1 y fracciones como (1/2)x_2).</label>
+                  <textarea id="it-texto" class="bis-input bis-expression it-textarea" spellcheck="false" placeholder="10x1 - x2 + 2x3 = 6&#10;-x1 + 11x2 - x3 + 3x4 = 25&#10;2x1 - x2 + 10x3 - x4 = -11&#10;3x2 - x3 + 8x4 = 15"></textarea>
+                  <div class="it-actions-row"><button type="button" id="it-cargar-texto" class="btn-secondary">Cargar ecuaciones en la rejilla</button><span id="it-texto-status" class="bis-help" role="status" aria-live="polite"></span></div>
+                </div>
+              </details>
+              <div class="card-footer-actions"><div class="sample-actions">
+                <button type="button" class="btn-text" data-it-example="principal">Presentación (4×4)</button>
+                <button type="button" class="btn-text" data-it-example="practica">Práctica (4×4)</button>
+                <button type="button" class="btn-text" data-it-example="reordenable">Reordenable (3×3)</button>
+                <button type="button" class="btn-text" data-it-example="jacobi_si_gs_no">Jacobi sí / GS no</button>
+              </div><button id="it-clear" type="button" class="btn-clear">Limpiar</button></div>
+              <p id="it-hint" class="bis-help"></p>
+            </div>
+            <div class="card rf-card" id="it-card-2">
+              <div class="card-header"><h3><span class="bis-section-number">02</span>Método y parámetros</h3></div>
+              <form id="it-solve-form" class="rf-form">
+                <fieldset class="nr-criteria"><legend>Esquema iterativo</legend>
+                  <label><input type="radio" name="it-method" value="jacobi" checked><span>Método de Jacobi (actualización simultánea)</span></label>
+                  <label><input type="radio" name="it-method" value="gauss_seidel"><span>Método de Gauss-Seidel (actualización inmediata)</span></label>
+                  <label><input type="radio" name="it-method" value="comparar"><span>Comparar ambos (Jacobi vs. Gauss-Seidel)</span></label>
+                </fieldset>
+                <div class="bis-fields">
+                  <div><label for="it-tolerance" class="field-label" data-math>Tolerancia $\varepsilon$</label><input id="it-tolerance" class="bis-input" type="text" value="1e-6" required></div>
+                  <div><label for="it-max-iter" class="field-label">Máximo de iteraciones</label><input id="it-max-iter" class="bis-input" type="number" min="1" max="10000" value="100" required></div>
+                </div>
+                <fieldset class="nr-criteria"><legend>Criterio de parada</legend>
+                  <label><input type="radio" name="it-criterion" value="ambos" checked><span data-math>Ambos: cambio $\|x^{(k)}-x^{(k-1)}\|_\infty$ y residuo relativo</span></label>
+                  <label><input type="radio" name="it-criterion" value="cambio"><span data-math>Cambio entre iteraciones $\|x^{(k)}-x^{(k-1)}\|_\infty &lt; \varepsilon$</span></label>
+                  <label><input type="radio" name="it-criterion" value="residuo"><span data-math>Residuo relativo $\|r^{(k)}\|_\infty / (\|b\|_\infty+\|A\|_\infty\|x^{(k)}\|_\infty) \le \varepsilon$</span></label>
+                </fieldset>
+                <label class="it-checkbox"><input type="checkbox" id="it-reordenar"><span data-math>Reordenar ecuaciones (permutar filas de $A$ y $b$) para evitar ceros en la diagonal y buscar dominancia por filas.</span></label>
+                <div class="it-actions-row">
+                  <button type="submit" id="it-resolver" class="btn-primary rf-action">Resolver sistema</button>
+                  <button type="button" id="it-analizar" class="btn-secondary">Solo analizar matriz</button>
+                </div>
+              </form>
+              <p id="it-error" class="rf-verdict is-warning" role="alert" hidden></p>
+            </div>
+          </div>
+          <div class="it-results-col">
+            <div class="card rf-card" id="it-analysis-card" hidden><div class="card-header"><h3><span class="bis-section-number">03</span>Análisis de convergencia</h3></div><div id="it-analysis" class="nr-math" aria-live="polite"></div></div>
+            <div class="card rf-card" id="it-result-card" hidden><div class="card-header"><h3><span class="bis-section-number">04</span>Solución y verificación</h3></div><div id="it-result" class="nr-math" aria-live="polite"></div></div>
+            <div class="card rf-card" id="it-charts-card" hidden>
+              <div class="card-header"><h3><span class="bis-section-number">05</span>Gráficas de evolución y convergencia</h3></div>
+              <div class="it-chart-block">
+                <div class="it-chart-bar"><strong class="field-label">Evolución de las incógnitas por iteración</strong><select id="it-evo-method" class="bis-input" style="width:auto;margin:0;padding:.3rem .5rem" hidden aria-label="Método para evolución"><option value="jacobi">Jacobi</option><option value="gauss_seidel">Gauss-Seidel</option></select></div>
+                <div id="it-plot-vars" class="bis-plot"></div><ul id="it-legend-vars" class="it-legend"></ul>
+              </div>
+              <div class="it-chart-block">
+                <div class="it-chart-bar"><strong class="field-label" data-math>Convergencia ($\log_{10}$ frente a $k$)</strong><select id="it-conv-metric" class="bis-input" style="width:auto;margin:0;padding:.3rem .5rem" aria-label="Métrica de convergencia"><option value="residuo">Residuo ||r||∞</option><option value="cambio">Cambio ||Δx||∞</option></select></div>
+                <div id="it-plot-conv" class="bis-plot"></div><ul id="it-legend-conv" class="it-legend"></ul>
+                <p id="it-conv-note" class="bis-help"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="it-steps-card" class="card bis-table-card" hidden><div class="card-header"><h3><span class="bis-section-number">06</span>Desarrollo paso a paso (primeras iteraciones)</h3></div><div id="it-steps" class="nr-math"></div></div>
+        <div id="it-table-card" class="card bis-table-card" hidden><div class="card-header"><h3><span class="bis-section-number">07</span>Tabla completa de iteraciones</h3></div><p class="bis-help" data-math>Incluye aproximaciones $x^{(k)}$, cambio $\|x^{(k)}-x^{(k-1)}\|_\infty$, cambio relativo, residuo $\|r^{(k)}\|_\infty$ y residuo relativo. Sitúe el cursor sobre una celda para ver el valor completo.</p><div id="it-table"></div></div>
+      </section>
+
     </main>
 
     <!-- Modal para Notificaciones y Alertas -->
@@ -1242,5 +1319,6 @@
   <script src="grafica-funciones.js?v=7153790db9c1"></script>
   <script src="newton-raphson.js?v=05c06b9ebac4"></script>
   <script src="secante.js?v=19f3f7be9b3f"></script>
+  <script src="iterativos.js?v=000000000000"></script>
 </body>
 </html>
