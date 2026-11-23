@@ -37,6 +37,7 @@ donde:
 """
 
 from fractions import Fraction
+from src.core.limites import SISTEMA_MAX
 from typing import Any, List, Dict, Tuple, Optional, Union
 
 from src.core.arithmetic import (
@@ -118,8 +119,8 @@ def resolver_ecuacion_matricial(
     Lanza:
         ValueError: Si las dimensiones no concuerdan o las entradas son inconsistentes.
     """
-    A = validar_matriz_numerica(A_in)
-    b = validar_vector_numerico(b_in)
+    A = validar_matriz_numerica(A_in, max_filas=SISTEMA_MAX, max_columnas=SISTEMA_MAX)
+    b = validar_vector_numerico(b_in, maximo=SISTEMA_MAX)
     
     m = len(A)
     n = len(A[0])

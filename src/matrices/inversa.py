@@ -49,6 +49,7 @@ RESTRICCIÓN DIDÁCTICA:
 """
 
 from fractions import Fraction
+from src.core.limites import INVERSA_MAX
 from typing import Any, List, Tuple, Dict, Optional, Union
 
 from src.core.arithmetic import (
@@ -114,7 +115,7 @@ def calcular_inversa_matriz(
     Lanza:
         ValueError: Si la matriz no es cuadrada o está vacía.
     """
-    A = validar_matriz_numerica(A_in)
+    A = validar_matriz_numerica(A_in, max_filas=INVERSA_MAX, max_columnas=INVERSA_MAX)
     m, n = obtener_dimensiones_matriz(A)
     
     if m != n:

@@ -37,6 +37,7 @@ sin librerías matriciales externas como NumPy o SciPy.
 """
 
 from fractions import Fraction
+from src.core.limites import MATRIZ_OPERAR_MAX, exigir_dimension
 from typing import Any, List, Tuple, Dict
 
 from src.core.arithmetic import (
@@ -110,8 +111,8 @@ def suma_matrices(A_in: Any, B_in: Any) -> List[List[Fraction]]:
     Retorna:
         Matriz suma de orden m x n (lista de listas de Fraction).
     """
-    A = validar_matriz_numerica(A_in)
-    B = validar_matriz_numerica(B_in)
+    A = validar_matriz_numerica(A_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
+    B = validar_matriz_numerica(B_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
     m, n = validar_compatibilidad_suma(A, B, operacion="Suma de Matrices")
     
     C: List[List[Fraction]] = []
@@ -142,8 +143,8 @@ def resta_matrices(A_in: Any, B_in: Any) -> List[List[Fraction]]:
     Retorna:
         Matriz diferencia de orden m x n (lista de listas de Fraction).
     """
-    A = validar_matriz_numerica(A_in)
-    B = validar_matriz_numerica(B_in)
+    A = validar_matriz_numerica(A_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
+    B = validar_matriz_numerica(B_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
     m, n = validar_compatibilidad_suma(A, B, operacion="Resta de Matrices")
     
     C: List[List[Fraction]] = []
@@ -173,7 +174,7 @@ def multiplicar_escalar_matriz(c_in: Any, A_in: Any) -> List[List[Fraction]]:
         Matriz ponderada c·A en M_(m x n).
     """
     c = parse_number(c_in)
-    A = validar_matriz_numerica(A_in)
+    A = validar_matriz_numerica(A_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
     m, n = obtener_dimensiones_matriz(A)
     
     C: List[List[Fraction]] = []
@@ -209,8 +210,8 @@ def multiplicar_matrices(A_in: Any, B_in: Any) -> Tuple[List[List[Fraction]], Li
     Lanza:
         ValueError: Si columnas(A) != filas(B).
     """
-    A = validar_matriz_numerica(A_in)
-    B = validar_matriz_numerica(B_in)
+    A = validar_matriz_numerica(A_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
+    B = validar_matriz_numerica(B_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
     
     m, n_A = obtener_dimensiones_matriz(A)
     m_B, p = obtener_dimensiones_matriz(B)
@@ -273,7 +274,7 @@ def transpuesta_matriz(A_in: Any) -> List[List[Fraction]]:
     de A se convierten en las columnas de A^T:
         (A^T)_ji = a_ij,   para todo 1 <= i <= m, 1 <= j <= n.
     """
-    A = validar_matriz_numerica(A_in)
+    A = validar_matriz_numerica(A_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
     m, n = obtener_dimensiones_matriz(A)
     
     A_T: List[List[Fraction]] = []
@@ -312,7 +313,7 @@ def analizar_transpuesta_matriz(A_in: Any) -> ResultadoTranspuesta:
     - Cálculo de traza Tr(A) = Tr(A^T) si es cuadrada
     - Propiedades teóricas de la Unidad 2.2: ((A^T)^-1 = (A^-1)^T)
     """
-    A = validar_matriz_numerica(A_in)
+    A = validar_matriz_numerica(A_in, max_filas=MATRIZ_OPERAR_MAX, max_columnas=MATRIZ_OPERAR_MAX)
     m, n = obtener_dimensiones_matriz(A)
     A_T = transpuesta_matriz(A)
     
