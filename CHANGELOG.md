@@ -7,7 +7,7 @@ Candidata de robustez; resultados y procedimientos de los once módulos sin camb
 ### Incluido
 
 - Cálculos en procesos aislados con tiempo, memoria y tamaño de respuesta acotados.
-- Límites iguales en interfaz, servidor y motores; cofactores hasta 6×6 con LU recomendado; Bareiss como comprobación.
+- Límites iguales en interfaz, servidor y motores; cofactores hasta $`6\times6`$ con LU recomendado; Bareiss como comprobación.
 - Errores uniformes en español sin texto interno; cabeceras de seguridad y peticiones solo locales.
 - Formato común de procedimientos en la API y biblioteca de exportación preparada (sin cambios visibles).
 
@@ -26,7 +26,7 @@ ejecutable falló porque su diagnóstico esperaba exactamente 10 módulos; corre
 
 ### Límites
 
-- Análisis espectral exacto hasta n = 12; la presentación de clase tiene errores en las diapositivas 15, 20 y 21.
+- Análisis espectral exacto hasta $`n = 12`$; la presentación de clase tiene errores en las diapositivas 15, 20 y 21.
 
 ## 1.0.0-rc.2
 
@@ -48,6 +48,9 @@ Segunda candidata: resuelve y verifica los 47 ejercicios con enunciado completo 
 ## 1.0.0-rc.1
 
 Primera candidata pública de la Calculadora de Álgebra Lineal.
+
+[Publicación original de v1.0.0-rc.1](https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.1)
+· [Notas históricas](docs/notas-v1.0.0-rc.1.md).
 
 ### Incluido
 

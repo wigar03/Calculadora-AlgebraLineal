@@ -64,7 +64,7 @@ reinstala y desinstala la calculadora. Puede reemplazar el registro de instalaci
 de una copia existente del mismo producto. GitHub Actions lo ejecuta en un runner
 Windows desechable, después de comprobar cálculos y construir los binarios.
 
-El diagnóstico del escritorio abre un WebView2 real oculto y comprueba diez módulos,
+El diagnóstico del escritorio abre un WebView2 real oculto y comprueba los 11 módulos,
 renderizado de fórmulas, ausencia de recursos externos y un cálculo mediante la API:
 
 ```powershell
@@ -88,7 +88,7 @@ en una máquina que todavía no tenga ese componente.
 
 El workflow construye y valida; no publica releases automáticamente.
 Conserva las notas en un archivo UTF-8 y pásalo mediante `gh release --notes-file`;
-las [notas de esta candidata](notas-v1.0.0-rc.1.md) están versionadas para evitar
+las [notas de la candidata de robustez](notas-v1.0.0-rc.5.md) están versionadas para evitar
 conversiones de caracteres al generarlas mediante tuberías de la terminal.
 
 ## Datos y diagnóstico de errores

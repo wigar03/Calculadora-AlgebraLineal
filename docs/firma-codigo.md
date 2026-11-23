@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-La distribución `v1.0.0-rc.1` no tiene firma digital del equipo. Puede ser bloqueada
+Las candidatas publicadas no tienen firma digital del equipo. Pueden ser bloqueadas
 por Smart App Control. No se ha solicitado ni obtenido la aprobación de SignPath
 Foundation; este documento prepara los requisitos para evaluar esa solicitud.
 
@@ -32,7 +32,7 @@ designado. Se firmarán únicamente los artefactos propios autorizados del proye
 se conservarán las firmas y atribuciones de los componentes de terceros.
 
 Los paquetes finales se comprobarán con Smart App Control activado, incluida la
-instalación, apertura de los diez módulos y desinstalación. Las sumas de descarga
+instalación, apertura de los 11 módulos y desinstalación. Las sumas de descarga
 se calcularán después de firmar. Una firma no sustituye las pruebas de funcionamiento.
 
 ## Privacidad y componentes externos
