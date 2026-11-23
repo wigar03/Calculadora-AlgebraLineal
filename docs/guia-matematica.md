@@ -433,12 +433,26 @@ Nuevos archivos: `src/derivadas/{__init__,motor}.py`, `src/secante/{__init__,met
 
 Con $A = D + L + U$ (diagonal, estrictamente inferior y estrictamente superior):
 
-- **Jacobi**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)$; todas las componentes usan $x^{(k)}$. Matriz de iteración $T_J = -D^{-1}(L+U)$.
-- **Gauss-Seidel**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}\right)$; usa de inmediato los valores nuevos. $T_{GS} = -(D+L)^{-1}U$.
+**Jacobi.** Todas las componentes usan $x^{(k)}$:
+
+```math
+x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right),
+\qquad T_J = -D^{-1}(L+U).
+```
+
+**Gauss-Seidel.** Usa de inmediato los valores nuevos:
+
+```math
+x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}\right),
+\qquad T_{GS} = -(D+L)^{-1}U.
+```
 
 **Convergencia.** El método converge para todo $x^{(0)}$ si y solo si $\rho(T) < 1$. La calculadora obtiene el polinomio característico exacto de $T$ (Faddeev-LeVerrier con fracciones) y decide $\rho(T) < 1$ con la prueba de Schur-Cohn en aritmética racional, sin redondeo. Son condiciones suficientes la dominancia diagonal estricta por filas (ambos métodos) y, solo para Gauss-Seidel, que $A$ sea simétrica definida positiva. La dominancia **no es necesaria** y Gauss-Seidel **no siempre** es más rápido: en $A = \begin{pmatrix}1&2&-2\1&1&1\2&2&1\end{pmatrix}$, $\rho(T_J) = 0$ (Jacobi converge) y $\rho(T_{GS}) = 2$ (diverge).
 
 **Parada.** Cambio $\|x^{(k+1)} - x^{(k)}\|_\infty$ y residuo $\|b - Ax^{(k+1)}\|_\infty$, ambos relativos. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
+
+La interfaz admite sistemas de orden 2 a 10 y la API hasta 20. El análisis espectral exacto general llega a orden 12;
+los casos triangulares o nilpotentes pueden demostrarse hasta orden 20.
 
 **Nota sobre la presentación de clase.** Las tablas de las diapositivas 16 y 22 son correctas; los desarrollos de las diapositivas 15, 20 y 21 contienen errores aritméticos (ver [INCIDENCIAS.md](INCIDENCIAS.md), INC-012).
 
