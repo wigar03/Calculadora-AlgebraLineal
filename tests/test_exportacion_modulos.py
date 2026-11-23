@@ -44,15 +44,6 @@ def texto_protegido(texto):
     return "'" + texto if PREFIJO_PELIGROSO.match(texto) and not numerico else texto
 
 
-def pendiente_csv(motivo):
-    """Una biblioteca candidata se prueba estrictamente, sin ocultar sus fallos."""
-    def decorar(prueba):
-        prueba.__doc__ = "Pendiente Antigravity: " + motivo
-        estricto = os.environ.get("P2_EXPORTAR_JS") or os.environ.get("CSV_EXIGIR_PENDIENTES") == "1"
-        return prueba if estricto else unittest.expectedFailure(prueba)
-    return decorar
-
-
 def problemas_csv(texto, tabla):
     """Relee con csv estándar y compara cada celda, sin usar el exportador como oráculo."""
     errores = []
@@ -313,27 +304,22 @@ class TestCSVContratoRevisado(unittest.TestCase):
         errores = problemas_csv(salida, tabla)
         self.assertEqual(errores, [], "\n".join(errores[:12]))
 
-    @pendiente_csv("CSV aún conserva -0; el contrato exige 0")
     def test_cero_negativo_normalizado(self):
         self.comprobar({"columnas": ["x"], "filas": [[v] for v in (-0.0, "-0", "-0.00", "-0e8")]})
 
-    @pendiente_csv("Enteros mayores de 15 cifras aún salen como números")
     def test_enteros_largos_como_texto_validado(self):
         valores = ("9007199254740993123456789", "1234567890123456", "-1234567890123456", "0001234567890123456")
         self.comprobar({"columnas": ["n"], "filas": [[v] for v in valores]})
 
-    @pendiente_csv("Fracciones con denominador cero aún generan fórmula fija")
     def test_denominador_cero_no_autoriza_formula(self):
         self.comprobar({"columnas": ["q"], "filas": [[v] for v in ("1/0", "-1/0", "0/0", "17/000", "-17/000")]})
 
-    @pendiente_csv("Falta buscar el primer carácter significativo en celdas y cabeceras")
     def test_prefijos_ocultos_sin_alterar_texto(self):
         inicios = (" ", "\n", "\r", "\t", "\v", "\f", "\x00", "\x1f", "\x7f",
                    "\u00a0", "\u2003", "\u3000", "\ufeff", " \n\t\u00a0\u2003\u3000")
         valores = [s + f for s in inicios for f in ("=1+1", "+SUM(A1)", "-SUM(A1)", "@SUM(A1)")]
         self.comprobar({"columnas": valores, "filas": [valores]})
 
-    @pendiente_csv("Cabeceras racionales/enteros largos deben mostrar el texto exacto sin apóstrofo")
     def test_cabeceras_exactas_sin_apostrofo_visible(self):
         valores = ["1/2", "-17/19", "0003/0007", "9007199254740993123456789", "-1234567890123456"]
         self.comprobar({"columnas": valores, "filas": [valores]})

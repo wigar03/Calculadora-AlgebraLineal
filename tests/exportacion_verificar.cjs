@@ -56,7 +56,6 @@ if (process.argv.includes('--stdin')) {
   process.stdout.write(JSON.stringify(datos.map(exportar)));
 } else {
   const { test } = require('node:test');
-  const pendienteCSV = motivo => ({ skip: process.env.P2_EXPORTAR_JS || process.env.CSV_EXIGIR_PENDIENTES === '1' ? false : `Pendiente Antigravity: ${motivo}` });
   test('P2: BOM, punto y coma, coma decimal y CRLF según contrato', () => {
     const csv = api.tablaACSV({ columnas: ['k', 'x'], filas: [[1, 1.25]] },
       { separador: ';', decimal: ',' });
@@ -94,28 +93,24 @@ if (process.argv.includes('--stdin')) {
       }
     }
   });
-  test('P2: el cero negativo se normaliza a 0 para las hojas reales',
-    pendienteCSV('El exportador aún conserva -0'), () => {
+  test('P2: el cero negativo se normaliza a 0 para las hojas reales', () => {
     const valores = [-0.0, '-0', '-0.00', '-0e8'];
     const texto = api.tablaACSV({ columnas: ['x'], filas: valores.map(v => [v]) });
     assert.equal(texto, '\ufeffx\r\n0\r\n0\r\n0\r\n0');
   });
-  test('P2: enteros de más de 15 cifras se conservan como texto validado',
-    pendienteCSV('Falta proteger los enteros largos contra redondeo'), () => {
+  test('P2: enteros de más de 15 cifras se conservan como texto validado', () => {
     for (const valor of ['9007199254740993123456789', '1234567890123456', '-1234567890123456', '0001234567890123456']) {
       const texto = api.tablaACSV({ columnas: ['n'], filas: [[valor]] });
       assert.equal(texto, `\ufeffn\r\n"=""${valor}"""`);
     }
   });
-  test('P2: denominador cero impide generar una fórmula de fracción',
-    pendienteCSV('Todavía acepta q=0 como fracción validada'), () => {
+  test('P2: denominador cero impide generar una fórmula de fracción', () => {
     const pares = [['1/0', '1/0'], ['-1/0', "'-1/0"], ['0/0', '0/0'], ['17/000', '17/000'], ['-17/000', "'-17/000"]];
     for (const [valor, esperado] of pares) {
       assert.equal(api.tablaACSV({ columnas: ['q'], filas: [[valor]] }), `\ufeffq\r\n${esperado}`);
     }
   });
-  test('P2: prefijo seguro tras controles y espacios sin cambiar celdas ni cabeceras',
-    pendienteCSV('Falta inspeccionar el primer carácter significativo'), () => {
+  test('P2: prefijo seguro tras controles y espacios sin cambiar celdas ni cabeceras', () => {
     const inicios = [' ', '\n', '\r', '\t', '\v', '\f', '\x00', '\x1f', '\x7f', '\u00a0', '\u2003', '\u3000', '\ufeff', ' \n\t\u00a0\u2003\u3000'];
     for (const inicio of inicios) for (const formula of ['=1+1', '+SUM(A1)', '-SUM(A1)', '@SUM(A1)']) {
       const valor = inicio + formula, protegido = "'" + valor;
@@ -124,8 +119,7 @@ if (process.argv.includes('--stdin')) {
       assert.equal(texto, `\ufeff${campo}\r\n${campo}`, `Texto alterado o inseguro: ${JSON.stringify(valor)}`);
     }
   });
-  test('P2: cabeceras racionales y enteros largos muestran su texto exacto sin apóstrofo',
-    pendienteCSV('Usar constantes de texto validadas también en cabeceras'), () => {
+  test('P2: cabeceras racionales y enteros largos muestran su texto exacto sin apóstrofo', () => {
     for (const valor of ['1/2', '-17/19', '0003/0007', '9007199254740993123456789']) {
       const celda = `"=""${valor}"""`;
       assert.equal(api.tablaACSV({ columnas: [valor], filas: [[valor]] }), `\ufeff${celda}\r\n${celda}`);
