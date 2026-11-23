@@ -80,6 +80,41 @@ def _candidatas(A, estrictas):
     return resultado
 
 
+def reordenar(A, b):
+    """Permuta filas de A y b conjuntamente; nunca columnas ni componentes de x.
+
+    Primero busca dominancia estricta. Si no existe, conserva un orden sin
+    ceros diagonales o busca uno; si es imposible, devuelve copias originales.
+    permutacion[k] identifica la ecuación original situada ahora en la fila k.
+    """
+    A, b, _ = leer_sistema(A, b)
+    identidad = list(range(len(A)))
+    estrategia = ("búsqueda exhaustiva acotada" if len(A) <= 8 else
+                  "preferencia heurística y asignación por caminos aumentantes")
+    if dominancia_diagonal(A)["estricta"]:
+        permutacion = identidad
+        motivo = "El orden original ya tiene dominancia diagonal estricta."
+    else:
+        permutacion = _asignacion(_candidatas(A, estrictas=True))
+        if permutacion is not None:
+            motivo = f"Se obtuvo dominancia diagonal estricta mediante {estrategia}."
+        elif not diagonal_nula(A):
+            permutacion = identidad
+            motivo = ("La diagonal original no tiene ceros; ninguna permutación "
+                      "de ecuaciones proporciona dominancia diagonal estricta.")
+        else:
+            permutacion = _asignacion(_candidatas(A, estrictas=False))
+            if permutacion is None:
+                permutacion = identidad
+                motivo = ("No existe una permutación de ecuaciones que elimine la diagonal "
+                          "nula: no hay asignación completa de coeficientes no nulos.")
+            else:
+                motivo = (f"Se eliminó la diagonal nula mediante {estrategia}; ninguna "
+                          "permutación proporciona dominancia diagonal estricta.")
+    return ([A[i][:] for i in permutacion], [b[i] for i in permutacion],
+            {"aplicado": permutacion != identidad, "permutacion": permutacion, "motivo": motivo})
+
+
 def rangos(A, b):
     """Rangos y singularidad por el motor Gauss racional ya existente."""
     A, b, _ = leer_sistema(A, b)
