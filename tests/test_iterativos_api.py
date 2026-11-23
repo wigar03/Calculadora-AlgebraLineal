@@ -181,3 +181,21 @@ class APIIterativos(unittest.TestCase):
                     for resultado in resultados:
                         self.assertEqual(resultado["max_iteraciones"], int(maximo))
                         self.assertLessEqual(len(resultado["iteraciones"]), int(maximo))
+
+    def test_opciones_de_texto_invalidas_indican_como_corregir(self):
+        invalidas = [("max_iteraciones", v, "entero decimal entre 1 y 10000")
+                     for v in ("abc", "10.5", "1e2", "0", "-1", "10001", "", 0, -1, 10001, True)]
+        invalidas += [("tolerancia", v, "número positivo finito")
+                      for v in ("abc", "nan", "inf", "0", "-1", "1e-400", 0, -1)]
+        for ruta in ("resolver", "comparar"):
+            for campo, valor, mensaje in invalidas:
+                with self.subTest(ruta=ruta, campo=campo, valor=valor):
+                    r = self.post(ruta, {"A": [["4", "1"], ["2", "3"]],
+                        "b": ["1", "2"], "x0": ["0", "0"], "metodo": "jacobi",
+                        "tolerancia": "1e-6", "max_iteraciones": "100",
+                        "criterio": "ambos", "reordenar": "false", campo: valor}, estado=400)
+                    self.assertIn(mensaje, r["error"])
+        for ruta in ("resolver", "comparar", "analizar"):
+            r = self.post(ruta, {"A": [["1"]], "b": ["1"], "x0": ["0"],
+                          "metodo": "jacobi", "reordenar": "abc"}, estado=400)
+            self.assertIn("verdadero o falso", r["error"])
