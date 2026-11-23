@@ -13,7 +13,7 @@ from src.ui.web_server import servidor_local
 from tests.validacion.banco_lineales import SISTEMAS
 from tests.validacion.banco_matrices import MATRICES
 from tests.validacion.banco_raices import ECUACIONES
-from tests.validacion.funciones_independientes import F, INICIALES
+from tests.validacion.funciones_independientes import ENTRADAS_DOCUMENTO, F, IMPLICITOS, INICIALES
 
 RUTA = os.path.join(os.path.dirname(__file__), "validacion", "referencias.json")
 with open(RUTA, encoding="utf-8") as fh:
@@ -78,9 +78,23 @@ class TestValidacionBanco(unittest.TestCase):
         self.assertLess(abs(F[clave](x)), 1e-4)
 
     def test_raices_con_datos_iniciales_realistas(self):
-        for clave, e in ECUACIONES.items():
+        self._resolver_banco(lambda clave: ECUACIONES[clave]["funcion"])
+
+    def test_raices_escritas_como_en_el_documento(self):
+        self._resolver_banco(ENTRADAS_DOCUMENTO.get)
+
+    def test_producto_implicito_del_documento_se_diagnostica(self):
+        for clave, (factor, siguiente) in IMPLICITOS.items():
+            with self.subTest(clave):
+                r = post(self.url, "/api/biseccion/resolver",
+                         {"funcion": ECUACIONES[clave]["ecuacion"], "a": 0, "b": 1, "tolerancia": 1e-6})
+                self.assertEqual(r.get("http"), 400)
+                self.assertRegex(r["error"], rf"multiplicación entre '?{factor}'? y '?{siguiente}")
+
+    def _resolver_banco(self, entrada):
+        for clave in ECUACIONES:
             a, b = INICIALES[clave]
-            f = e["funcion"]
+            f = entrada(clave)
             casos = {
                 "biseccion": ("/api/biseccion/resolver", {"funcion": f, "a": a, "b": b, "tolerancia": 1e-6}),
                 "regla_falsa": ("/api/regla-falsa/resolver", {"funcion": f, "xl": a, "xu": b, "tolerancia": 1e-6}),
