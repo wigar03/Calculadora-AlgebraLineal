@@ -6,14 +6,18 @@ por sí solo no certifica continuidad ni unicidad de la raíz.
 
 import math
 
-from .expresiones import Expresion, numero_real
+from .expresiones import numero_real
+from ..regla_falsa.dominio import (
+    ExpresionNumerica as Expresion, validar_continuidad, validar_condicion,
+    raiz_admisible, verificar_raiz,
+)
 
 
 CRITERIOS = {"intervalo", "relativo", "residuo"}
 
 
 def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
-                      max_iteraciones=100, criterio="intervalo"):
+                      max_iteraciones=100, criterio="intervalo", condicion="real"):
     """Reduce el intervalo preservando signos opuestos, sin multiplicarlos.
 
     intervalo: ancho b-a <= tolerancia (cota de error en c: ancho/2).
@@ -22,6 +26,7 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
     No se redondean los valores usados en las iteraciones.
     """
     f = Expresion(funcion)
+    validar_condicion(condicion)
     a, b = numero_real(a, "a"), numero_real(b, "b")
     tolerancia = numero_real(tolerancia, "La tolerancia")
     limite = numero_real(max_iteraciones, "El máximo de iteraciones")
@@ -36,9 +41,12 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
 
     inicial = [a, b]
     fa, fb = f(a), f(b)
+    validar_continuidad(f, a, b)
     pasos = []
 
     def resultado(c, fc, motivo, convergio, cota):
+        if convergio and not raiz_admisible(c, condicion):
+            motivo, convergio = "raiz_no_admisible", False
         return {
             "funcion": f.texto, "intervalo_inicial": inicial,
             "intervalo_final": [a, b], "raiz": c, "f_raiz": fc,
@@ -46,6 +54,7 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
             "criterio": criterio, "tolerancia": tolerancia,
             "convergio": convergio, "motivo": motivo,
             "iteraciones": len(pasos), "pasos": pasos,
+            "condicion": condicion, "verificacion": verificar_raiz(f, c, tolerancia),
         }
 
     if fa == 0 or fb == 0:

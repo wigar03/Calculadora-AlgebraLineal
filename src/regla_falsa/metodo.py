@@ -7,7 +7,11 @@ el punto medio de la bisección por el corte con el eje X de la recta que une
 
 import math
 
-from ..biseccion.expresiones import Expresion, numero_real
+from ..biseccion.expresiones import numero_real
+from .dominio import (
+    ExpresionNumerica as Expresion, validar_continuidad, validar_condicion,
+    raiz_admisible, verificar_raiz,
+)
 from .continuidad import analizar_continuidad
 
 # Iteraciones consecutivas con el mismo extremo fijo a partir de las cuales se avisa.
@@ -77,7 +81,8 @@ def preparar_intervalo(funcion, xl, xu):
     return res
 
 
-def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100):
+def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100,
+                         condicion="real"):
     """Itera la falsa posición hasta que ε_a ≤ tolerancia o se agota el límite.
 
     ε_a = |x_r − x_r_anterior| / |x_r| · 100 %; la tolerancia se expresa en %.
@@ -89,6 +94,7 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
     la racha más larga cuando alcanza UMBRAL_ESTANCAMIENTO iteraciones seguidas.
     """
     f = Expresion(funcion)
+    validar_condicion(condicion)
     tolerancia = numero_real(tolerancia, "La tolerancia")
     limite = numero_real(max_iteraciones, "El máximo de iteraciones")
     if tolerancia <= 0:
@@ -97,11 +103,14 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
         raise ValueError("El máximo de iteraciones debe ser un entero entre 1 y 1000.")
     previa = validar_intervalo(f, xl, xu)
     xl, xu, f_xl, f_xu = previa["xl"], previa["xu"], previa["f_xl"], previa["f_xu"]
+    validar_continuidad(f, xl, xu)
     inicial = [xl, xu]
     pasos = []
     racha = {"extremo": None, "actual": 0, "mayor": 0, "extremo_mayor": None}
 
     def resultado(xr, f_xr, motivo, convergio, error):
+        if convergio and not raiz_admisible(xr, condicion):
+            motivo, convergio = "raiz_no_admisible", False
         estancamiento = None
         if racha["mayor"] >= UMBRAL_ESTANCAMIENTO:
             estancamiento = {"extremo": racha["extremo_mayor"], "iteraciones": racha["mayor"]}
@@ -109,6 +118,9 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
             "funcion": f.texto, "intervalo_inicial": inicial,
             "intervalo_final": [xl, xu], "raiz": xr, "f_raiz": f_xr,
             "residuo": abs(f_xr), "error_relativo": error,
+            "error_absoluto": pasos[-1]["error_absoluto"] if pasos else None,
+            "criterio": "relativo_porcentual", "condicion": condicion,
+            "verificacion": verificar_raiz(f, xr, tolerancia),
             "tolerancia": tolerancia, "convergio": convergio, "motivo": motivo,
             "estancamiento": estancamiento,
             "iteraciones": len(pasos), "pasos": pasos,
@@ -137,10 +149,12 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
         signo = _signo_producto(f_xl, f_xr)
         if f_xr == 0:
             motivo, convergio = "raiz_evaluada", True
-        elif error_rel is not None and error_rel <= tolerancia:
-            motivo, convergio = "tolerancia", True
         elif agotado:
             motivo, convergio = "precision_agotada", False
+        elif anterior == xr:
+            motivo, convergio = "sin_progreso", False
+        elif error_rel is not None and error_rel <= tolerancia:
+            motivo, convergio = "tolerancia", True
         elif numero == int(limite):
             motivo, convergio = "max_iteraciones", False
         else:
