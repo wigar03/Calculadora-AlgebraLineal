@@ -80,3 +80,67 @@ def escapado(texto, posicion):
         posicion -= 1
     return barras % 2 == 1
 
+
+def anclas(texto):
+    # Los títulos pueden contener código o fórmulas: se conservan sus palabras.
+    sin_bloques, cerca = [], None
+    for linea in texto.splitlines(keepends=True):
+        marca = CERCA.match(linea)
+        if cerca:
+            if re.fullmatch(r" {0,3}" + re.escape(cerca[0]) +
+                            "{" + str(len(cerca)) + r",}\s*", linea):
+                cerca = None
+        elif marca:
+            cerca = marca[1]
+        else:
+            sin_bloques.append(linea)
+    vista = "".join(sin_bloques)
+    resultado, usados = set(), {}
+    for titulo in TITULO.finditer(vista):
+        valor = re.sub(r"\[([^]]+)\]\([^)]*\)", r"\1", titulo[2])
+        valor = re.sub(r"<[^>]*>", "", valor).lower()
+        base = re.sub(r"[^\w\- ]", "", valor).replace(" ", "-")
+        ancla, numero = base, 0
+        while ancla in usados:
+            numero += 1
+            ancla = f"{base}-{numero}"
+        usados[ancla] = True
+        resultado.add(ancla)
+    resultado.update(re.findall(r'<[^>]+\b(?:id|name)=["\']([^"\']+)', vista))
+    return resultado
+
+
+def destinos(vista):
+    referencias = {" ".join(m[1].lower().split()): m[2].strip("<>")
+                   for m in REFERENCIA.finditer(vista)}
+    for referencia in REFERENCIA.finditer(vista):
+        yield referencia.start(), referencia[2].strip("<>")
+    for enlace in ENLACE.finditer(vista):
+        destino = enlace[2]
+        if destino is None:
+            clave = " ".join((enlace[3] or enlace[1]).lower().split())
+            destino = referencias.get(clave)
+        if destino:
+            yield enlace.start(), destino.strip("<>")
+    for enlace in re.finditer(r'<[^>]+\b(?:href|src)=["\']([^"\']+)', vista):
+        yield enlace.start(), enlace[1]
+
+
+def comprobar_destino(destino, archivo, raiz):
+    try:
+        url = urlsplit(destino)
+    except ValueError:
+        return "enlace mal formado: " + destino
+    if url.scheme or url.netloc:
+        return None
+    ruta = unquote(url.path)
+    base = raiz if ruta.startswith("/") else archivo.parent
+    objetivo = (base / ruta.lstrip("/")).resolve() if ruta else archivo
+    if not objetivo.exists():
+        return "enlace inexistente: " + destino
+    if url.fragment and objetivo.suffix.lower() == ".md":
+        if unquote(url.fragment) not in anclas(objetivo.read_text(encoding="utf-8")):
+            return "ancla inexistente: " + destino
+    return None
+
+
