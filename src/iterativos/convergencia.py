@@ -143,3 +143,77 @@ def analizar_espectro(A):
             estables[metodo] = schur_estable(p)
             radios[metodo] = radio_polinomio(p)
     return {**radios, "metodo_calculo": calculo}, estables
+
+
+def definida_positiva(A):
+    """Simetría y pivotes LDL^T positivos, con Fraction (criterio de Sylvester)."""
+    n = len(A)
+    if any(A[i][j] != A[j][i] for i in range(n) for j in range(i)):
+        return False
+    M = [[F(v) for v in fila] for fila in A]
+    for k in range(n):
+        pivote = M[k][k]
+        if pivote <= 0:
+            return False
+        for i in range(k + 1, n):
+            for j in range(k + 1, n):
+                M[i][j] -= M[i][k] * M[k][j] / pivote
+    return True
+
+
+def garantia_convergencia(A, metodo, estricta, estable):
+    razones = []
+    if estable is True:
+        razones.append("Radio espectral menor que 1 demostrado por Schur-Cohn exacto.")
+    if estricta:
+        razones.append("Matriz estrictamente dominante por filas.")
+    if metodo == "gauss_seidel" and definida_positiva(A):
+        razones.append("Matriz simétrica definida positiva verificada exactamente.")
+    return ("demostrada" if razones else "no_asegurada"), razones
+
+
+def medir_cambio(anterior, actual):
+    cambio = max(abs(a - b) for a, b in zip(anterior, actual))
+    escala = max(abs(v) for v in actual)
+    return cambio, cambio / escala if escala else cambio
+
+
+def cumple_tolerancia(cambio_rel, residuo_rel, tolerancia, criterio):
+    """El residuo relativo es obligatorio, incluso al pedir solo cambio."""
+    if not all(isfinite(v) for v in (cambio_rel, residuo_rel)):
+        return False
+    cambio_ok = cambio_rel <= tolerancia
+    residuo_ok = residuo_rel <= tolerancia
+    pedido = {"cambio": cambio_ok, "residuo": residuo_ok,
+              "ambos": cambio_ok and residuo_ok}[criterio]
+    return pedido and residuo_ok
+
+
+def detectar_parada(historial, vectores):
+    """Diagnósticos conservadores; no sustituyen el criterio de tolerancia.
+
+    Divergencia: seis crecimientos consecutivos >5% tanto en cambio como
+    en residuo absoluto, y crecimiento total >2. Estancamiento: ocho pasos
+    sin progreso medible. Ciclos: vector repetido (periodos 2..8) exactamente.
+    """
+    ultimo = historial[-1]
+    if not all(isfinite(v) for v in vectores[-1]):
+        return "no_finito"
+    claves = ("cambio_inf", "residuo_inf")
+    if not all(isfinite(ultimo[c]) for c in claves):
+        return "no_finito"
+    if len(historial) >= 7:
+        tramo = historial[-7:]
+        if all(all(b[c] > 1.05 * a[c] for a, b in zip(tramo, tramo[1:]))
+               and tramo[-1][c] > 2 * tramo[0][c] for c in claves):
+            return "divergencia"
+    for periodo in range(2, min(9, len(vectores))):
+        if vectores[-1] == vectores[-1-periodo]:
+            return "oscilacion"
+    if len(historial) >= 8:
+        tramo = historial[-8:]
+        if ultimo["cambio_inf"] == 0 or all(
+            abs(t["residuo_inf"] - tramo[0]["residuo_inf"])
+            <= 1e-15 * tramo[0]["residuo_inf"] for t in tramo):
+            return "estancamiento"
+    return None
