@@ -1,5 +1,21 @@
 # Historial de versiones
 
+## 1.0.0-rc.3
+
+Tercera candidata: módulo 11, Jacobi y Gauss-Seidel.
+
+### Incluido
+
+- Jacobi y Gauss-Seidel con entrada por rejilla o texto, vector inicial, tolerancia, máximo de iteraciones y criterio.
+- Desarrollo paso a paso, tabla con 10 cifras, residuo, verificación por sustitución y comparación con gráficas.
+- Análisis exacto de convergencia: dominancia, diagonal nula, reordenamiento, rango y radio espectral exacto.
+- Verificación exacta del residuo antes de declarar convergencia; detección de divergencia, oscilación y estancamiento.
+- Versiones de recursos web ligadas al contenido para evitar copias antiguas en caché.
+
+### Límites
+
+- Análisis espectral exacto hasta n = 12; la presentación de clase tiene errores en las diapositivas 15, 20 y 21.
+
 ## 1.0.0-rc.2
 
 Segunda candidata: resuelve y verifica los 47 ejercicios con enunciado completo del banco de ejercicios.
