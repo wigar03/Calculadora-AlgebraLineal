@@ -349,6 +349,82 @@
       el("steps-card").hidden = !hay;
     }
 
+    function renderTabla(entradas) {
+      const box = el("table"); box.replaceChildren();
+      let hay = false;
+      entradas.forEach(({ titulo, datos }) => {
+        if (!datos || !Array.isArray(datos.iteraciones) || !datos.iteraciones.length) return;
+        hay = true;
+        const sec = node("div", "", "it-subtable");
+        if (entradas.length > 1) sec.append(node("h4", titulo));
+        const nombres = Array.isArray(datos.nombres) ? datos.nombres : Array.from({ length: datos.n || 0 }, (_, i) => `x_${i + 1}`);
+        const headers = ["k", ...nombres.map((nb, i) => `${nombreVarLatex(nb, i)}^{(k)}`), "\\|x^{(k)}-x^{(k-1)}\\|_\\infty", "\\Delta_{\\text{rel}}", "\\|r^{(k)}\\|_\\infty", "r_{\\text{rel}}"];
+        const table = node("table"), thead = node("thead"), hr = node("tr"), tbody = node("tbody");
+        headers.forEach(h => { const th = node("th"); th.scope = "col"; th.append(math(h, false)); hr.append(th); });
+        thead.append(hr);
+        datos.iteraciones.forEach(p => {
+          const tr = node("tr");
+          const vals = [p.k, ...(Array.isArray(p.x) ? p.x : []), p.cambio_inf, p.cambio_rel, p.residuo_inf, p.residuo_rel];
+          vals.forEach((v, i) => {
+            const td = node("td", "", "bis-cell"); td.title = String(v ?? "No definido");
+            const lbl = node("span", "", "bis-cell-label"); lbl.append(math(headers[i], false));
+            td.append(lbl, math(i === 0 ? String(v) : numeroLatex(v, 6), false));
+            tr.append(td);
+          });
+          tbody.append(tr);
+        });
+        table.append(thead, tbody);
+        const scroll = node("div", "", "bis-table-scroll it-table-wide");
+        scroll.setAttribute("tabindex", "0"); scroll.setAttribute("role", "region");
+        scroll.setAttribute("aria-label", `Tabla de iteraciones de ${titulo}`);
+        scroll.append(table); sec.append(scroll); box.append(sec);
+      });
+      el("table-card").hidden = !hay;
+    }
+
+    function dibujarSvg(host, legendEl, datos, { etiquetaX, etiquetaY, lineaRef = null, ariaLabel }) {
+      host.replaceChildren(); legendEl.replaceChildren();
+      if (!datos || !datos.vista || !datos.series.length) {
+        host.append(node("p", "No hay puntos finitos positivos suficientes para trazar esta gráfica.", "bis-help"));
+        return;
+      }
+      const M = G.MARCO, v = datos.vista, e = G.crearEscala(v);
+      const ns = "http://www.w3.org/2000/svg";
+      const svgEl = (tag, attrs = {}, txt) => {
+        const n = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, val]) => n.setAttribute(k, String(val)));
+        if (txt !== undefined) n.textContent = txt;
+        return n;
+      };
+      const s = svgEl("svg", { viewBox: "0 0 600 330", role: "img", "aria-label": ariaLabel });
+      for (const x of G.marcas(v.xMin, v.xMax, 6)) {
+        if (Math.abs(x - Math.round(x)) > 1e-6 && v.xMax - v.xMin >= 2) continue;
+        s.append(svgEl("line", { x1: e.x(x), x2: e.x(x), y1: M.y, y2: M.y + M.alto, class: "rf-grid" }),
+          svgEl("text", { x: e.x(x), y: 304, "text-anchor": "middle", class: "rf-tick" }, G.formatear(x, 5)));
+      }
+      for (const y of G.marcas(v.yMin, v.yMax, 5)) {
+        s.append(svgEl("line", { x1: M.x, x2: M.x + M.ancho, y1: e.y(y), y2: e.y(y), class: "rf-grid" }),
+          svgEl("text", { x: M.x - 6, y: e.y(y) + 3, "text-anchor": "end", class: "rf-tick" }, G.formatear(y, 4)));
+      }
+      if (v.yMin < 0 && v.yMax > 0) s.append(svgEl("line", { x1: M.x, x2: M.x + M.ancho, y1: e.y(0), y2: e.y(0), class: "bis-axis-zero" }));
+      if (lineaRef !== null && Number.isFinite(lineaRef) && lineaRef >= v.yMin && lineaRef <= v.yMax) {
+        s.append(svgEl("line", { x1: M.x, x2: M.x + M.ancho, y1: e.y(lineaRef), y2: e.y(lineaRef), stroke: "var(--accent-emerald)", "stroke-dasharray": "5 4", "stroke-width": 1.3 }));
+      }
+      datos.series.forEach(ser => {
+        const d = G.caminoCurva(ser.puntos, e);
+        if (d) s.append(svgEl("path", { d, fill: "none", stroke: ser.color, "stroke-width": 2, ...(ser.guion ? { "stroke-dasharray": ser.guion } : {}) }));
+        if (ser.puntos.length <= 26) {
+          ser.puntos.forEach(p => { if (Number.isFinite(p.y)) s.append(svgEl("circle", { cx: e.x(p.x), cy: e.y(p.y), r: 3, fill: ser.color })); });
+        }
+        const li = node("li"); const sw = node("span", "", "it-swatch"); sw.style.background = ser.color;
+        li.append(sw, ser.esTexto ? node("span", ser.etiqueta) : math(ser.etiqueta, false));
+        legendEl.append(li);
+      });
+      s.append(svgEl("text", { x: M.x + M.ancho, y: 324, "text-anchor": "end", class: "rf-tick" }, etiquetaX));
+      s.append(svgEl("text", { x: M.x, y: 11, "text-anchor": "start", class: "rf-tick" }, etiquetaY));
+      host.append(s);
+    }
+
     el("dim-dec").addEventListener("click", () => renderGrid(dimN - 1));
     el("dim-inc").addEventListener("click", () => renderGrid(dimN + 1));
     el("dim-n").addEventListener("change", () => renderGrid(el("dim-n").value));
