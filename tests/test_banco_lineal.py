@@ -4,6 +4,7 @@ import ast
 import operator
 import re
 import unittest
+from itertools import permutations
 from fractions import Fraction as F
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -43,6 +44,17 @@ def evaluar_parametrica(texto, parametros):
     return valor(arbol.body)
 
 
+def determinante_independiente(a):
+    total = F(0)
+    for p in permutations(range(len(a))):
+        signo = (-1) ** sum(p[i] > p[j] for i in range(len(p)) for j in range(i + 1, len(p)))
+        termino = F(signo)
+        for i, j in enumerate(p):
+            termino *= a[i][j]
+        total += termino
+    return total
+
+
 class TestBancoLineal(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -59,6 +71,27 @@ class TestBancoLineal(unittest.TestCase):
         with urlopen(req, timeout=10) as respuesta:
             return json.load(respuesta)
 
+    def comprobar_pasos(self, pasos, inicial):
+        anterior = fracciones(inicial)
+        self.assertEqual(fracciones(pasos[0]["matrix"]), anterior)
+        for paso in pasos[1:]:
+            actual = [fila[:] for fila in anterior]
+            op = paso["operation_code"]
+            filas = [int(v) - 1 for v in re.findall(r"F_(\d+)", op)]
+            if "<->" in op:
+                i, j = filas
+                actual[i], actual[j] = actual[j], actual[i]
+            else:
+                factor = F(re.search(r"\(([^)]+)\)", op).group(1))
+                if len(filas) == 2:
+                    actual[filas[0]] = [factor * x for x in actual[filas[0]]]
+                else:
+                    i, _, j = filas
+                    factor *= -1 if " - " in op else 1
+                    actual[i] = [x + factor * y for x, y in zip(actual[i], anterior[j])]
+            self.assertEqual(fracciones(paso["matrix"]), actual, op)
+            anterior = actual
+
     def comprobar_sistema(self, clave):
         datos, ref = SISTEMAS[clave], REFERENCIAS["lineales"][clave]
         for jordan in (True, False):
@@ -69,6 +102,7 @@ class TestBancoLineal(unittest.TestCase):
                 self.assertEqual(res["rango_aumentada"], ref["rango_aumentada"])
                 self.assertGreater(len(res["pasos"]), 1)
                 self.assertTrue(res["sustitucion"])
+                self.comprobar_pasos(res["pasos"], [fila + [b] for fila, b in zip(datos["A"], datos["b"])])
                 if ref["tipo"] == "unica":
                     x = [F(v) for v in res["vector_solucion"]]
                     self.assertEqual(x, [F(v) for v in ref["solucion"]])
@@ -96,6 +130,11 @@ class TestBancoLineal(unittest.TestCase):
                 self.assertEqual(F(res["determinante"]), F(ref["det"]))
                 self.assertEqual(res["es_invertible"], ref["invertible"])
                 self.assertTrue(res["pasos"])
+                if metodo == "lu":
+                    self.assertEqual(fracciones(res["pasos"][0]["matriz_estado"]), fracciones(a))
+                    for paso in res["pasos"]:
+                        self.assertEqual(abs(determinante_independiente(fracciones(paso["matriz_estado"]))),
+                                         abs(F(ref["det"])))
         for metodo in ("gauss_jordan", "gauss"):
             with self.subTest(ejercicio=clave, inversa=metodo):
                 res = self.post("matrices/inversa", {"A": a, "metodo": metodo})
@@ -104,6 +143,10 @@ class TestBancoLineal(unittest.TestCase):
                 identidad = [[F(i == j) for j in range(len(a))] for i in range(len(a))]
                 self.assertEqual(producto(fracciones(a), inv), identidad)
                 self.assertEqual(producto(inv, fracciones(a)), identidad)
+                inicial = [fila + identidad[i] for i, fila in enumerate(a)]
+                self.comprobar_pasos(res["pasos"], inicial)
+                self.assertEqual(fracciones(res["matriz_aumentada_final"]),
+                                 [fila + inv[i] for i, fila in enumerate(identidad)])
                 self.assertTrue(res["residuo_cero"])
                 for campo in ("verificacion_A_por_Ainv", "verificacion_Ainv_por_A"):
                     self.assertEqual(len(res[campo]), len(a) ** 2)
