@@ -102,7 +102,10 @@ test('series de gráficas de evolución y convergencia log10 reutilizan grafica-
 const { execFileSync } = require('node:child_process');
 const vm = require('node:vm');
 
-test('regresión: index.html conserva intactos los módulos existentes respecto a main y valida el LaTeX nuevo', () => {
+// Huella de index.html de la release v1.0.0-rc.2 (sin módulo 11, ?v= normalizados). Cambiarla exige revisar la UX.
+const HUELLA_SIN_MODULO_11 = '00c313d8e38776d46c827f91063b9bfe8ab6249024d652139a9b14a82a994f48';
+
+test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y valida el LaTeX nuevo', () => {
   const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
   const base = execFileSync('git', ['show', 'main:src/ui/web/index.html'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
@@ -112,7 +115,8 @@ test('regresión: index.html conserva intactos los módulos existentes respecto 
     .replace(/\n<button class="home-module" type="button" data-open-module="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n\n      <section id="tab-iterativos"[\s\S]*?<\/section>/, '')
     .replace(/\n  <script src="iterativos\.js\?v=[0-9a-f]+"><\/script>/, '');
-  assert.equal(normalizarV(sinModulo11), normalizarV(base), 'Se alteró marcado existente fuera del módulo 11');
+  const huella = require('node:crypto').createHash('sha256').update(normalizarV(sinModulo11)).digest('hex');
+  assert.equal(huella, HUELLA_SIN_MODULO_11, 'Se alteró marcado existente fuera del módulo 11');
 
   const sec = actual.match(/<section id="tab-iterativos"[\s\S]*?<\/section>/);
   assert.ok(sec, 'Falta la sección #tab-iterativos');
