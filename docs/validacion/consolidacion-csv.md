@@ -89,3 +89,24 @@ Ejecución externa: cuatro métodos, cero fallos no esperados, ocho omisiones ex
 Ejecutar `python -m unittest tests.test_externo_csv -v`, con `SOFFICE` y `SSCONVERT` apuntando a los ejecutables
 portables o instalados. `REQUIERE_EXTERNOS=1` exige ambos; sin él, las ausencias se omiten indicando motivo.
 `CSV_EVIDENCIA_DIR` conserva CSV, TXT, libros y `informe.json`; `CSV_CALC_ESPECIALES=1` selecciona el segundo perfil.
+
+## Batería y cambio adicional Markdown
+
+`python -m unittest discover tests -v`: 481 métodos en 40.571 s, OK, tres omisiones:
+motor LaTeX ausente (preexistente) y las dos herramientas CSV sin configurar en PATH.
+Con ejecutables portables configurados, los cuatro métodos externos terminan OK con las ocho marcas anteriores;
+con `CSV_EXIGIR_PENDIENTES=1`, esos ocho casos son fallos reproducibles. No se afirma validación final de P2.
+Ausencias forzadas: `REQUIERE_EXTERNOS=0` → dos omisiones, salida 0;
+`REQUIERE_EXTERNOS=1` → dos fallos, salida 1. Golden: sin modificación; las 43 consultas congeladas pasan.
+
+Node, todos los `tests/*.cjs`: 75 pruebas, 74 pasan y una falla al arrancar Edge (salida 0 antes de CDP).
+El subconjunto `tests/test_*.cjs` es 67/68 y las siete pruebas auxiliares pasan.
+Es el problema de auto de elevación ya corregido por el integrador en `main` `4f9eb9b`;
+no está relacionado con CSV y esta rama aún no incorpora ese cambio ajeno.
+
+Por encargo adicional del integrador se añadió la regla del verificador Markdown: dentro de `$…$`, `$`backticks`$`,
+`$$…$$` y bloques `math`, detectar `<` seguido de letra o `>` precedido de letra/`}` sin espacio.
+La regresión usa los sumatorios antiguos de Gauss-Seidel, comprueba `\lt`/`\gt`, líneas y código literal.
+`tests.test_markdown`: diez pruebas OK. Verificador público: 11 documentos públicos, 31 internos, cero problemas.
+Se incorporó exclusivamente la corrección documental aprobada `0b04d8e` como `edae11b`;
+el integrador omitirá ese duplicado al integrar. El exportador y sus referencias permanecen intactos.
