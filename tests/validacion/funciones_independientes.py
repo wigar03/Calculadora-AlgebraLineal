@@ -19,3 +19,17 @@ INICIALES = {
     "III-7": (0, 1), "III-8": (0, 1), "III-9": (0, 1), "III-10": (1, 3), "III-11": (1, 2), "III-12": (1, 2),
     "III-13": (1.5, 2.5), "III-14": (2, 3), "III-15": (2, 3), "IV-1": (2, 3), "IV-3": (1.4, 1.55), "IV-4": (0, 1),
 }
+
+# Notación del documento tal cual, con '*' solo donde el documento escribe un producto implícito (4x → 4*x).
+ENTRADAS_DOCUMENTO = {
+    "III-1": "x³ − 4*x − 9 = 0", "III-2": "e^x − 3*x^2 = 0", "III-3": "cos(x) − x·e^x = 0",
+    "III-4": "x·ln(x) − 1 = 0", "III-5": "x⁴ − 3*x² − 3 = 0", "III-6": "ln(x+2) + x² − 2 = 0",
+    "III-7": "e^(−x) − x² + 0.5 = 0", "III-8": "x³ + x − 1 = 0", "III-9": "x·e^(−x) − 0.2 = 0",
+    "III-10": "x² − 5·sin(x) = 0", "III-11": "ln(x) + sen(x) = 1.2", "III-12": "e^(−x) + cos(x) = 0.5",
+    "III-13": "x² − 3*sen(x) − ln(x + 2) = 0", "III-14": "e^(x/2) + sen(2*x) = 3",
+    "III-15": "ln(x + 3) + cos(x) = x/2", "IV-1": "sen(x) / ln(x) = 1", "IV-3": "e^(1/x) + 2*x / tan(x) = 2",
+    "IV-4": "ln(x + 1) / (x² − 4) = −0.1",
+}
+# Producto implícito tal como aparece en el documento: debe diagnosticarse, nunca corregirse en silencio.
+IMPLICITOS = {"III-1": ("4", "x"), "III-2": ("3", "x"), "III-5": ("3", "x"), "III-13": ("3", "sen"),
+              "III-14": ("2", "x"), "IV-3": ("2", "x")}
