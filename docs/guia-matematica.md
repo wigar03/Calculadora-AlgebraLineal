@@ -444,7 +444,7 @@ x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)
 **Gauss-Seidel.** Usa de inmediato los valores nuevos:
 
 ```math
-x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}\right),
+x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \lt i} a_{ij} x_j^{(k+1)} - \sum_{j \gt i} a_{ij} x_j^{(k)}\right),
 \qquad T_{GS} = -(D+L)^{-1}U.
 ```
 
