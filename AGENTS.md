@@ -71,6 +71,15 @@ python tests/validacion/generar_referencias.py   # regenera referencias (requier
 - P2 (copiar, exportar, imprimir) solo tras P1 y tras aprobar la propuesta visual. P3 no autorizado.
 - IV-2 e IV-5: limitación del enunciado original (INC-001 cerrada); no se resuelven ni se igualan a cero.
 
+## Etapa 4: P2 (exportar) y auditoría de la documentación pública
+- Contrato: `docs/contratos/exportacion.md`. Un componente reutilizable `exportar-ui.js`; CSV `;`, coma decimal, BOM,
+  CRLF, fracciones `="p/q"` validadas y prefijo `'` contra inyección; subtítulo general aprobado por el propietario.
+- Responsables: Antigravity (componente, `exportar.js`, impresión, subtítulo), Codex 2 (verificación independiente de
+  las exportaciones de los 11 módulos), Codex 1 (único editor del Markdown público y de `scripts/verificar_markdown.py`).
+- Markdown público: fórmulas con `$…$` o bloques ```math, sin cambiar el contenido matemático; README breve, enlace a la
+  última release; sin emojis ni insignias. Verificación visual en github.com tras publicar.
+- No se implementan módulos matemáticos nuevos. No se declara 1.0.0 estable.
+
 ## UX
 No cambiar navegación, disposición, colores, tipografía, controles ni flujos sin autorización del propietario.
 Permitido: corregir errores internos, ampliar capacidades matemáticas y mejorar los mensajes de error.
