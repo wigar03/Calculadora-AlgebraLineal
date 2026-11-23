@@ -53,6 +53,7 @@ test('LaTeX parametrico conserva cada fraccion y el parametro fuera del denomina
   const tex = c.vectorSolucionLinealToLatex(['6 - 3t', '17/5 - 8/5t', '26/5 - 14/5t', 't']);
   assert.match(tex, /\\frac\{17\}\{5\} - \\frac\{8\}\{5\}t/);
   assert.match(tex, /\\frac\{26\}\{5\} - \\frac\{14\}\{5\}t/);
+  assert.equal((tex.match(/\[0\.5em\]/g) || []).length, 3);
   assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
 });
 

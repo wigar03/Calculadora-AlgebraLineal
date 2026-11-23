@@ -1428,7 +1428,8 @@ let eqN = 3;
 function vectorSolucionLinealToLatex(valores) {
   // Una componente paramétrica puede contener varias fracciones: 5/2 - 3/2t.
   return vectorToLatexCol(valores.map(v => String(v).replace(
-    /(-?\d+)\/(\d+)/g, (_, num, den) => formatLatexFrac(`${num}/${den}`))));
+    /(-?\d+)\/(\d+)/g, (_, num, den) => formatLatexFrac(`${num}/${den}`))))
+    .replaceAll(" \\\\ ", " \\\\[0.5em] ");
 }
 
 function inicializarModuloEcuaciones() {
