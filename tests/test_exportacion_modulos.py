@@ -147,3 +147,68 @@ def ejecutar_node(procedimientos):
     if proceso.returncode:
         raise AssertionError(f"exportar.js no pudo generar el corpus: {proceso.stderr[-6000:]}")
     return json.loads(proceso.stdout)
+
+
+def adversario():
+    textos = ["=cmd|' /C calc'!A0", "@SUM(1+1)", "+SUM(A1)", "-SUM(A1)",
+              "\t=cmd|x", "\r=cmd|x", 'comillas "dobles"; fin', "línea 1\nlínea 2",
+              "  bordes  ", "Unicode: ñ á Ω 你好", r"\input{ajeno}", "=1/2", "-1/2;=cmd|x"]
+    tabla = {"titulo": "Funciones y nombres del usuario", "columnas": [textos[0]],
+             "filas": [[s] for s in textos + ["1/2", "-17/19", "0003/0007", "1/2x", "NaN",
+                         1e-300, -0.0, 1.2345678901234567, -3.5e-7, "9007199254740993123456789",
+                         "0.12345678901234567890123456789", None]]}
+    return {"version": 1, "modulo": "adversario", "titulo": textos[6],
+            "entrada": [{"etiqueta": s, "latex": "x^2+1"} for s in textos],
+            "pasos": [{"titulo": textos[8], "texto": s, "latex": [r"\frac{1}{2}"],
+                       "matriz": None, "detalles": []} for s in textos],
+            "resultado": [{"etiqueta": "f(x)", "latex": "2"}],
+            "verificacion": textos, "avisos": textos, "tablas": [tabla]}
+
+
+def fragmentos_fuente(proc):
+    for campo in ("entrada", "resultado"):
+        for item in proc[campo]:
+            yield item["latex"]
+    for paso in proc["pasos"]:
+        yield from paso["latex"]
+
+
+class TestExportacionModulos(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.casos, cls.consultas = corpus_real()
+        cls.casos.append({"id": "adversario", "procedimiento": adversario()})
+        cls.salidas = ejecutar_node([c["procedimiento"] for c in cls.casos])
+
+    def test_cobertura_corpus_y_limites_reales(self):
+        self.assertEqual(len(self.consultas), 43 + 3)
+        self.assertEqual(len(self.casos), 33 + 3 + 1)
+        modulos = {c["procedimiento"]["modulo"] for c in self.casos[:-4]}
+        # Combinación lineal es una ruta propia del módulo de vectores.
+        self.assertGreaterEqual(len(modulos), 11)
+        for caso, salida in zip(self.casos, self.salidas):
+            with self.subTest(caso=caso["id"]):
+                self.assertFalse(salida["mutado"], "La exportación mutó el procedimiento mostrado")
+
+    def test_csv_corpus_todas_las_filas_y_precision(self):
+        for caso, salida in zip(self.casos, self.salidas):
+            for i, (tabla, texto) in enumerate(zip(caso["procedimiento"]["tablas"], salida["csv"])):
+                with self.subTest(caso=caso["id"], tabla=i):
+                    errores = problemas_csv(texto, tabla)
+                    self.assertFalse(errores, f"{len(errores)} incumplimientos CSV: " + "; ".join(errores[:12]))
+            self.assertEqual(len(salida["csv"]), len(caso["procedimiento"]["tablas"]))
+
+    def test_csv_espacios_extremos_citados_y_escapes(self):
+        texto = self.salidas[-1]["csv"][0]
+        self.assertIn('"  bordes  "', texto, "Los espacios extremos requieren comillas RFC 4180")
+        self.assertIn('"comillas ""dobles""; fin"', texto)
+        self.assertIn('"línea 1\nlínea 2"', texto)
+
+    def test_latex_entornos_y_cada_fragmento_katex_estricto(self):
+        for caso, salida in zip(self.casos, self.salidas):
+            with self.subTest(caso=caso["id"]):
+                validacion = salida["validacion"]
+                self.assertEqual(validacion["fallos"], 0, "\n".join(validacion["errores"]))
+                self.assertGreater(validacion["fragmentos"], 0)
+                for latex in fragmentos_fuente(caso["procedimiento"]):
+                    self.assertIn(latex, salida["latex"], f"Fragmento original alterado: {latex}")
