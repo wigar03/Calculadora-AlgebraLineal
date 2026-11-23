@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NUMERO = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z")
 FRACCION = re.compile(r"-?\d+/\d+\Z")
 ENTERO = re.compile(r"-?\d+\Z")
+ENTERO_FIJO = re.compile(r'=\"(-?\d+)\"\Z')
 PREFIJO_PELIGROSO = re.compile(r"^[\s\x00-\x1f\x7f-\x9f\ufeff]*[=+\-@]")
 
 
@@ -82,7 +83,9 @@ def problemas_csv(texto, tabla):
                     errores.append(f"Entero de más de 15 cifras sin texto validado {lugar}")
             elif isinstance(valor, (int, float)) and not isinstance(valor, bool):
                 try:
-                    n = celda.replace(",", ".")
+                    fijo = ENTERO_FIJO.fullmatch(celda)
+                    n = (fijo[1] if isinstance(valor, float) and valor.is_integer()
+                         and fijo and entero_largo(fijo[1]) else celda.replace(",", "."))
                     igual = (celda == "0" if valor == 0 else Decimal(n) == valor if isinstance(valor, int)
                              else float(n).hex() == valor.hex())
                 except (ValueError, ArithmeticError):
@@ -369,6 +372,13 @@ class TestOraculoCSV(unittest.TestCase):
         for valor in ("123456789012345", "000123456789012345", "-123456789012345"):
             tabla = {"columnas": ["x"], "filas": [[valor]]}
             self.assertEqual(problemas_csv(self.codificar(["x"], [[valor]]), tabla), [])
+
+    def test_float_entero_grande_admite_texto_validado_si_conserva_el_mismo_double(self):
+        tabla = {"columnas": ["x"], "filas": [[6.747006683667535e20]]}
+        correcto = self.codificar(["x"], [['="674700668366753500000"']])
+        self.assertEqual(problemas_csv(correcto, tabla), [])
+        for falso in ('="674700668366753000000"', '=1+1', '="674700668366753500000/0"'):
+            self.assertTrue(problemas_csv(self.codificar(["x"], [[falso]]), tabla))
 
     def test_fracciones_con_denominador_cero_nunca_son_formulas_validadas(self):
         for valor in ("1/0", "-1/0", "0/0", "17/000", "-17/000", "1/-0"):
