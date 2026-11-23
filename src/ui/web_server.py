@@ -96,6 +96,13 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             body = {}
 
         try:
+            if parsed.path == "/api/iterativos/texto":
+                from src.iterativos.sistema_texto import leer_ecuaciones
+                if not isinstance(body, dict):
+                    raise ValueError("Envía un objeto JSON con el texto del sistema.")
+                A, b, nombres = leer_ecuaciones(body.get("texto"))
+                return self._send_json({"A": [[str(v) for v in fila] for fila in A],
+                                        "b": [str(v) for v in b], "nombres": nombres})
             if parsed.path in ("/api/iterativos/resolver", "/api/iterativos/comparar",
                                "/api/iterativos/analizar"):
                 from src.iterativos.resolver import (
