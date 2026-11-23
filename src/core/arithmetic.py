@@ -133,7 +133,7 @@ def format_latex_scalar(frac_in: Any, parenthesize_if_negative: bool = False) ->
     return latex_str
 
 
-def validar_vector_numerico(vector: Any) -> List[Fraction]:
+def validar_vector_numerico(vector: Any, *, maximo=None) -> List[Fraction]:
     """
     Valida y convierte una lista o secuencia de valores a un vector algebraico en Q^n.
     
@@ -152,6 +152,8 @@ def validar_vector_numerico(vector: Any) -> List[Fraction]:
     """
     if not isinstance(vector, (list, tuple)):
         raise TypeError(f"El vector debe ser una lista o tupla, recibido: {type(vector).__name__}")
+    if maximo is not None:
+        exigir_dimension("La dimensión del vector", len(vector), maximo)
     if len(vector) == 0:
         raise ValueError("El vector no puede ser vacío (la dimensión n debe ser mayor o igual a 1).")
         
@@ -159,13 +161,15 @@ def validar_vector_numerico(vector: Any) -> List[Fraction]:
     for idx, item in enumerate(vector):
         try:
             resultado.append(parse_number(item))
+        except LimiteExcedido:
+            raise
         except Exception as e:
             raise ValueError(f"Componente {idx + 1} inválida en el vector ({item}): {e}") from e
             
     return resultado
 
 
-def validar_matriz_numerica(matriz: Any) -> List[List[Fraction]]:
+def validar_matriz_numerica(matriz: Any, *, max_filas=None, max_columnas=None) -> List[List[Fraction]]:
     """
     Valida y normaliza una matriz en R^(m x n).
     
@@ -185,6 +189,13 @@ def validar_matriz_numerica(matriz: Any) -> List[List[Fraction]]:
     """
     if not isinstance(matriz, (list, tuple)):
         raise TypeError(f"La matriz debe ser una lista de listas, recibido: {type(matriz).__name__}")
+    if max_filas is not None:
+        exigir_dimension("El número de filas", len(matriz), max_filas)
+    if max_columnas is not None:
+        for fila in matriz:
+            if not isinstance(fila, (list, tuple)):
+                raise ValueError("Cada fila de la matriz debe ser una lista de números.")
+            exigir_dimension("El número de columnas", len(fila), max_columnas)
     if len(matriz) == 0:
         raise ValueError("La matriz debe contener al menos una fila (m >= 1).")
         
