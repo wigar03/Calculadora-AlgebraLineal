@@ -130,6 +130,10 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
                 motivo, convergio = "tolerancia", True
                 break
             detectado = detectar_parada(historial, vectores)
+            if detectado == "divergencia" and analisis["garantia"] == "demostrada":
+                # Una matriz no normal estable puede tener transitorios crecientes.
+                # La garantía exacta prevalece sobre esta heurística de crecimiento.
+                detectado = None
             if detectado:
                 motivo = detectado
                 break

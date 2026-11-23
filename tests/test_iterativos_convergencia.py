@@ -227,3 +227,16 @@ class ResolucionIterativa(unittest.TestCase):
         self.assertTrue(r["jacobi"]["convergio"])
         self.assertFalse(r["gauss_seidel"]["convergio"])
         self.assertIn("distinta convergencia", r["resumen"])
+
+    def test_transitorio_creciente_nilpotente_no_es_divergencia(self):
+        from src.iterativos.resolver import resolver_iterativo
+        A = [[int(i == j) - 100 * int(j == i + 1) for j in range(10)]
+             for i in range(10)]
+        esperado = [sum(100 ** k for k in range(10 - i)) for i in range(10)]
+        for metodo in ("jacobi", "gauss_seidel"):
+            r = resolver_iterativo(A, [1] * 10, metodo, tolerancia=1e-12)
+            self.assertTrue(r["convergio"])
+            self.assertEqual(r["convergencia"], "demostrada")
+            self.assertEqual(r["analisis"]["radio_espectral"][metodo], 0)
+            for x, exacto in zip(r["solucion"], esperado):
+                self.assertAlmostEqual(x / exacto, 1, places=14)
