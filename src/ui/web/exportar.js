@@ -85,7 +85,94 @@
     return out.join("\n").trim();
   }
 
-  const api = { tablaACSV, textoPlano };
+  const SIMBOLOS_UNICODE = {
+    "←": "$\\leftarrow$", "→": "$\\rightarrow$", "−": "-", "—": "---", "–": "--", "…": "\\ldots{}",
+    "✓": "$\\checkmark$", "✗": "$\\times$", "≈": "$\\approx$", "≤": "$\\le$", "≥": "$\\ge$",
+    "≠": "$\\ne$", "·": "$\\cdot$", "×": "$\\times$", "∞": "$\\infty$", "ρ": "$\\rho$", "ε": "$\\varepsilon$", "Δ": "$\\Delta$",
+  };
+
+  function escaparTextoLatex(texto) {
+    return String(texto ?? "").replace(/\\/g, "\\textbackslash{}").replace(/([{}&$%#_])/g, "\\$1")
+      .replace(/\^/g, "\\^{}").replace(/~/g, "\\~{}")
+      .replace(/[←→−—–…✓✗≈≤≥≠·×∞ρεΔ]/g, ch => SIMBOLOS_UNICODE[ch] || ch).replace(/\r?\n/g, " ");
+  }
+
+  function textoMixtoALatex(texto) {
+    return String(texto ?? "").split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g).map(parte =>
+      ((parte.startsWith("$$") && parte.endsWith("$$") && parte.length >= 4) ||
+       (parte.startsWith("$") && parte.endsWith("$") && parte.length >= 2))
+        ? parte.replace(/—/g, "---").replace(/−/g, "-")
+        : escaparTextoLatex(parte)
+    ).join("");
+  }
+
+  function numeroALatex(valor) {
+    if (valor === null || valor === undefined) return "---";
+    if (typeof valor === "number" && !Number.isFinite(valor)) return "$\\text{no finito}$";
+    const partes = String(valor).trim().toLowerCase().split("e");
+    return partes.length === 2 ? `$${partes[0]} \\times 10^{${Number(partes[1])}}$` : `$${partes[0]}$`;
+  }
+
+  function cabeceraALatex(col) {
+    const s = String(col ?? "");
+    if (s.includes("$")) return textoMixtoALatex(s);
+    return (/[\\_^]/.test(s) || /^[a-zA-Z0-9()'|,.\s+-]+$/.test(s)) ? `$${s}$` : escaparTextoLatex(s);
+  }
+
+  function celdaLatex(valor) {
+    if (valor === null || valor === undefined) return "---";
+    if (typeof valor === "number") return numeroALatex(valor);
+    const s = String(valor);
+    return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s.trim()) ? numeroALatex(s) : textoMixtoALatex(s);
+  }
+
+  function tablaALatex(t) {
+    const cols = Array.isArray(t && t.columnas) ? t.columnas : [];
+    const filas = Array.isArray(t && t.filas) ? t.filas : [];
+    const out = ["\\begin{table}[htbp]", "\\centering"];
+    if (t && t.titulo) out.push(`\\caption{${textoMixtoALatex(t.titulo)}}`);
+    out.push(`\\begin{tabular}{${cols.length ? cols.map(() => "c").join(" ") : "c"}}`, "\\hline");
+    if (cols.length) out.push(`${cols.map(cabeceraALatex).join(" & ")} \\\\`, "\\hline");
+    for (const fila of filas) out.push(`${fila.map(celdaLatex).join(" & ")} \\\\`);
+    out.push("\\hline", "\\end{tabular}", "\\end{table}");
+    return out.join("\n");
+  }
+
+  function bloqueEcuacion(it) {
+    const et = String(it.etiqueta ?? "");
+    const izq = /[\\_^]/.test(et) || /^[a-zA-Z0-9()'|,\s\[\]]+$/.test(et) ? et : `\\text{${escaparTextoLatex(et)}}`;
+    return `\\[\n${izq} = ${it.latex}\n\\]`;
+  }
+
+  function procedimientoALatex(p) {
+    const out = ["\\documentclass[11pt,a4paper]{article}", "\\usepackage[utf8]{inputenc}",
+      "\\usepackage[T1]{fontenc}", "\\usepackage{amsmath,amssymb}", "\\begin{document}"];
+    if (p && p.titulo) out.push(`\\section*{${textoMixtoALatex(p.titulo)}}`);
+    if (Array.isArray(p && p.entrada) && p.entrada.length) out.push("\\subsection*{Datos de entrada}", ...p.entrada.map(bloqueEcuacion));
+    if (Array.isArray(p && p.pasos) && p.pasos.length) {
+      out.push("\\subsection*{Procedimiento}");
+      for (const s of p.pasos) {
+        if (s.titulo) out.push(`\\paragraph{${textoMixtoALatex(s.titulo)}}`);
+        if (s.texto) out.push(textoMixtoALatex(s.texto));
+        for (const f of s.latex || []) out.push(`\\[\n${f}\n\\]`);
+        if (Array.isArray(s.matriz) && s.matriz.length) {
+          out.push(`\\[\n\\begin{pmatrix} ${s.matriz.map(r => r.map(String).join(" & ")).join(" \\\\ ")} \\end{pmatrix}\n\\]`);
+        }
+        if (Array.isArray(s.detalles) && s.detalles.length) {
+          out.push("\\begin{itemize}", ...s.detalles.map(d => `\\item ${textoMixtoALatex(d)}`), "\\end{itemize}");
+        }
+      }
+    }
+    if (Array.isArray(p && p.resultado) && p.resultado.length) out.push("\\subsection*{Resultado}", ...p.resultado.map(bloqueEcuacion));
+    for (const [sec, lista] of [["Verificación", p && p.verificacion], ["Avisos", p && p.avisos]]) {
+      if (Array.isArray(lista) && lista.length) out.push(`\\subsection*{${sec}}`, "\\begin{itemize}", ...lista.map(x => `\\item ${textoMixtoALatex(x)}`), "\\end{itemize}");
+    }
+    for (const t of (p && p.tablas) || []) out.push(tablaALatex(t));
+    out.push("\\end{document}");
+    return out.join("\n");
+  }
+
+  const api = { procedimientoALatex, tablaALatex, tablaACSV, textoPlano };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof window !== "undefined") window.ExportarProcedimiento = api;
 })();
