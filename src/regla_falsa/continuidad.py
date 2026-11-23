@@ -9,6 +9,7 @@ puede pasar por alto discontinuidades más estrechas que la separación entre mu
 import math
 
 from ..biseccion.expresiones import Expresion, numero_real
+from .dominio import ExpresionNumerica, puntos_excluidos
 
 MUESTRAS = 400          # subdivisiones de la región explorada
 _REFINAMIENTOS = 48     # bisecciones al estrechar un indicio
@@ -215,7 +216,7 @@ def _tramos_continuos(a, b, discontinuidades):
 
 
 def _leer_region(funcion, a, b, muestras):
-    f = funcion if isinstance(funcion, Expresion) else Expresion(funcion)
+    f = funcion if isinstance(funcion, Expresion) else ExpresionNumerica(funcion)
     a, b = numero_real(a, "a"), numero_real(b, "b")
     if a >= b or not math.isfinite(b - a):
         raise ValueError("La región debe cumplir a < b y tener ancho finito.")
@@ -225,6 +226,12 @@ def _leer_region(funcion, a, b, muestras):
 
 
 def _resumen_continuidad(f, a, b, muestras, discontinuidades):
+    # Una cancelación algebraica puede ocultar un punto excluido al muestreo de f.
+    for x in puntos_excluidos(f, a, b):
+        if not any(d["desde"] - (b-a)/muestras*1e-3 <= x <=
+                   d["hasta"] + (b-a)/muestras*1e-3 for d in discontinuidades):
+            discontinuidades.append(_discontinuidad("punto_indefinido", x, x))
+    discontinuidades.sort(key=lambda d: d["desde"])
     return {
         "funcion": f.texto, "intervalo": [a, b], "muestras": muestras + 1,
         "continua": not discontinuidades,

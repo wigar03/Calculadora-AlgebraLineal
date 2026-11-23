@@ -20,7 +20,10 @@ UMBRAL_ESTANCAMIENTO = 10
 
 def falsa_posicion(xl, xu, f_xl, f_xu):
     """x_r = x_u − f(x_u)·(x_l − x_u) / (f(x_l) − f(x_u)), por triángulos semejantes."""
-    return xu - f_xu * (xl - xu) / (f_xl - f_xu)
+    escala = max(abs(f_xl), abs(f_xu))
+    l, u = f_xl / escala, f_xu / escala
+    t = -l / (u - l)
+    return xl * (1 - t) + xu * t
 
 
 def _signo_producto(u, v):

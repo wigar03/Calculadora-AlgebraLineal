@@ -457,7 +457,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         self._send_json(resolver_secante(
             body.get("funcion"), body.get("x0"), body.get("x1"),
             body.get("tolerancia", 1e-6), 1 if ruta == "evaluar" else body.get("max_iteraciones", 50),
-            body.get("criterio", "absoluto")))
+            body.get("criterio", "absoluto"), body.get("condicion", "real")))
 
     def _handle_newton(self, ruta, body):
         """Derivar y graficar, validar el punto manual y ejecutar Newton-Raphson."""
@@ -469,7 +469,8 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         if ruta == "resolver":
             return self._send_json(resolver_newton(
                 funcion, body.get("x0"), body.get("tolerancia", 1e-6),
-                body.get("max_iteraciones", 50), body.get("criterio", "absoluto")))
+                body.get("max_iteraciones", 50), body.get("criterio", "absoluto"),
+                body.get("condicion", "real")))
         if ruta not in ("preparar", "derivar", "graficar"):
             return self._send_json({"error": "Ruta de Newton-Raphson no encontrada."}, 404)
         datos = preparar_funcion(funcion)
@@ -492,6 +493,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             tolerancia=body.get("tolerancia", 0.0001),
             max_iteraciones=body.get("max_iteraciones", 100),
             criterio=body.get("criterio", "intervalo"),
+            condicion=body.get("condicion", "real"),
         )
         res["grafica"] = muestrear_funcion(res["funcion"], *res["intervalo_inicial"])
         res["funcion_latex"] = Expresion(res["funcion"]).latex()
@@ -562,6 +564,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             funcion=previa["funcion"], xl=previa["xl"], xu=previa["xu"],
             tolerancia=body.get("tolerancia", 0.0001),
             max_iteraciones=body.get("max_iteraciones", 100),
+            condicion=body.get("condicion", "real"),
         )
         res["grafica"] = muestrear_funcion(res["funcion"], *res["intervalo_inicial"])
         res["funcion_latex"] = Expresion(res["funcion"]).latex()
