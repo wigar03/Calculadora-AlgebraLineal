@@ -38,3 +38,7 @@
   primera iteración, texto) no lo llevan, según el contrato. Golden: 43 respuestas idénticas.
 - Navegador con CSP activa: KaTeX (348 fórmulas), fuentes e iconos correctos; un mensaje de error con
   `<img onerror>` se muestra como texto, sin ejecutarse.
+
+## CI (run 45254331295, `main` 0f795dc)
+Linux y Windows en verde: 457 pruebas en cada plataforma. Ejecutable empaquetado con procesos aislados (PyInstaller):
+portable, instalada y reinstalada «11 módulos, 346 fórmulas, sin recursos externos».
