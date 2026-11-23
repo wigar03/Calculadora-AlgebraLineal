@@ -6,7 +6,7 @@ Universidad Americana (UAM), Facultad de Ingeniería y Arquitectura (FIA).
 - Docente: Carlos Iván Argüello.
 - Grupo: Grupo 10.
 - Modalidad: Grupal con defensa/exposición individual.
-- Proyecto: PROGRAMA VECTORES: Operaciones Algebraicas en $\mathbb{R}^n$,
+- Proyecto: PROGRAMA VECTORES: Operaciones Algebraicas en $`\mathbb{R}^n`$,
   Combinación Lineal y Ecuaciones Matriciales.
 - Integrantes: William Antonio García García, Caleb Jordan Tardencilla Alvarado,
   Rafael Hernández Sánchez y Andrés Sebastián González Maradiaga.
@@ -17,17 +17,17 @@ Universidad Americana (UAM), Facultad de Ingeniería y Arquitectura (FIA).
 
 El proyecto permite resolver y analizar los siguientes problemas:
 
-1. **Operaciones vectoriales en $\mathbb{R}^n$** de dimensión arbitraria desconocida a priori.
-2. **Evaluación de combinación lineal** para determinar rigurosamente si un vector $b$ pertenece al subespacio generado por un conjunto de vectores $\{v_1, v_2, \dots, v_k\}$.
-3. **Operaciones matriciales fundamentales**: adición, sustracción, producto por escalar, multiplicación de matrices $A_{m \times n} \cdot B_{n \times p}$ y transpuesta $A^T$ con análisis de simetría y propiedades.
-4. **Cálculo de la inversa de una matriz $A^{-1}$**: siguiendo el procedimiento analítico formal (matriz aumentada $[A \mid I_n]$, fórmula $2 \times 2$, métodos de Gauss y Gauss-Jordan, detección de matrices singulares y doble verificación $A \cdot A^{-1} = I_n$ y $A^{-1} \cdot A = I_n$).
-5. **Resolución computacional de ecuaciones matriciales** de la forma $Ax = b$ con clasificación completa según el Teorema de Rouché-Capelli e integración directa con el programa de eliminación de renglones desarrollado en la **Semana #3**.
-6. **Cálculo del determinante de matrices cuadradas $|A|$ en la interfaz interactiva**: implementación 100% Python estándar (sin librerías externas) integrada en el servidor web, que permite seleccionar entre **Expansión por Cofactores (Laplace)** y **Descomposición LU ($PA = LU$)**, evaluando e indicando dinámicamente la eficiencia computacional ($O(n!)$ vs $O(n^3)$) antes de la selección.
+1. **Operaciones vectoriales en $`\mathbb{R}^n`$** de dimensión arbitraria desconocida a priori.
+2. **Evaluación de combinación lineal** para determinar rigurosamente si un vector $`b`$ pertenece al subespacio generado por un conjunto de vectores $`\{v_1, v_2, \dots, v_k\}`$.
+3. **Operaciones matriciales fundamentales**: adición, sustracción, producto por escalar, multiplicación de matrices $`A_{m \times n} \cdot B_{n \times p}`$ y transpuesta $`A^T`$ con análisis de simetría y propiedades.
+4. **Cálculo de la inversa de una matriz $`A^{-1}`$**: siguiendo el procedimiento analítico formal (matriz aumentada $`[A \mid I_n]`$, fórmula $`2 \times 2`$, métodos de Gauss y Gauss-Jordan, detección de matrices singulares y doble verificación $`A \cdot A^{-1} = I_n`$ y $`A^{-1} \cdot A = I_n`$).
+5. **Resolución computacional de ecuaciones matriciales** de la forma $`Ax = b`$ con clasificación completa según el Teorema de Rouché-Capelli e integración directa con el programa de eliminación de renglones desarrollado en la **Semana #3**.
+6. **Cálculo del determinante de matrices cuadradas $`|A|`$ en la interfaz interactiva**: implementación 100% Python estándar (sin librerías externas) integrada en el servidor web, que permite seleccionar entre **Expansión por Cofactores (Laplace)** y **Descomposición LU ($`PA = LU`$)**, evaluando e indicando dinámicamente la eficiencia computacional ($`O(n!)`$ vs $`O(n^3)`$) antes de la selección.
 7. **Búsqueda numérica de raíces por bisección**: sección independiente con función editable, intervalo inicial, criterios de parada, tabla de iteraciones, verificación del residuo y gráfica interactiva con zoom in, zoom out, enfoque en la raíz, restablecimiento y desplazamiento.
 8. **Regla falsa**: gráfica, continuidad, selección y validación del intervalo e iteraciones.
 9. **Newton-Raphson**: derivada simbólica, gráfica, punto inicial elegido por el usuario, sustitución de la fórmula y tabla con errores y residuo.
 10. **Secante**: dos puntos manuales, rectas secantes, errores y residuo.
-11. **Jacobi y Gauss-Seidel**: métodos iterativos para $Ax = b$ con análisis de convergencia, tabla, residuo y comparación.
+11. **Jacobi y Gauss-Seidel**: métodos iterativos para $`Ax = b`$ con análisis de convergencia, tabla, residuo y comparación.
 
 ---
 
@@ -37,7 +37,7 @@ El proyecto permite resolver y analizar los siguientes problemas:
 > **Normas Técnicas y Restricciones:**
 > - **Prohibición de librerías externas**: Queda estrictamente prohibido el uso de NumPy, SciPy o rutinas avanzadas de álgebra de `math`.
 > - **100% Python Estándar**: Implementado utilizando únicamente listas, bucles `for` / `while`, condicionales `if` / `else` y funciones modulares.
-> - **Aritmética Exacta en $\mathbb{Q}$**: Para prevenir imprecisiones por redondeo binario de coma flotante (IEEE-754) en el cálculo de rangos e independencia lineal, se utiliza la librería estándar `fractions.Fraction`.
+> - **Aritmética Exacta en $`\mathbb{Q}`$**: Para prevenir imprecisiones por redondeo binario de coma flotante (IEEE-754) en el cálculo de rangos e independencia lineal, se utiliza la librería estándar `fractions.Fraction`.
 > - **Comentarios en el Código**: Cada función cuenta con documentación teórica exhaustiva que explica el procedimiento algebraico equivalente.
 
 Estas restricciones didácticas corresponden a los módulos originales de álgebra lineal (1 a 6). Los métodos numéricos (7 a 10) utilizan `ast` y `math` de Python y SVG en el navegador, sin dependencias de ejecución adicionales. Sus cálculos usan punto flotante y no alteran la aritmética fraccionaria de los otros módulos. Jacobi y Gauss-Seidel (módulo 11) combinan iteración numérica con análisis y verificación exactos.
@@ -46,57 +46,57 @@ Estas restricciones didácticas corresponden a los módulos originales de álgeb
 
 ## 3. Fundamentos Algebraicos por Módulo
 
-### Módulo 1: Operaciones Vectoriales en $\mathbb{R}^n$
+### Módulo 1: Operaciones Vectoriales en $`\mathbb{R}^n`$
 
-Un vector $v \in \mathbb{R}^n$ es una $n$-tupla ordenada de escalares: $v = (v_1, v_2, \dots, v_n)$. La calculadora admite $1 \le n \le 20$:
+Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v = (v_1, v_2, \dots, v_n)`$. La calculadora admite $`1 \le n \le 20`$:
 
-- **Suma Vectorial**: $u + v = (u_1 + v_1, u_2 + v_2, \dots, u_n + v_n)$, requiriendo $\dim(u) = \dim(v) = n$.
-- **Resta Vectorial**: $u - v = u + (-1)v = (u_1 - v_1, \dots, u_n - v_n)$.
-- **Multiplicación por Escalar**: $c \cdot v = (c \cdot v_1, c \cdot v_2, \dots, c \cdot v_n)$, para $c \in \mathbb{R}$.
-- **Producto Escalar Euclídeo (Producto Punto)**: $\langle u, v \rangle = \sum_{i=1}^n u_i \cdot v_i$.
-- **Norma al Cuadrado**: $\|v\|^2 = \langle v, v \rangle = \sum_{i=1}^n v_i^2$.
+- **Suma Vectorial**: $`u + v = (u_1 + v_1, u_2 + v_2, \dots, u_n + v_n)`$, requiriendo $`\dim(u) = \dim(v) = n`$.
+- **Resta Vectorial**: $`u - v = u + (-1)v = (u_1 - v_1, \dots, u_n - v_n)`$.
+- **Multiplicación por Escalar**: $`c \cdot v = (c \cdot v_1, c \cdot v_2, \dots, c \cdot v_n)`$, para $`c \in \mathbb{R}`$.
+- **Producto Escalar Euclídeo (Producto Punto)**: $`\langle u, v \rangle = \sum_{i=1}^n u_i \cdot v_i`$.
+- **Norma al Cuadrado**: $`\|v\|^2 = \langle v, v \rangle = \sum_{i=1}^n v_i^2`$.
 
 ### Módulo 2: Evaluación de Combinación Lineal
 
-Dado un conjunto de vectores $S = \{v_1, v_2, \dots, v_k\} \subset \mathbb{R}^n$ y un vector objetivo $b \in \mathbb{R}^n$, $b$ es combinación lineal de $S$ si existen escalares $c_1, c_2, \dots, c_k \in \mathbb{R}$ tales que:
+Dado un conjunto de vectores $`S = \{v_1, v_2, \dots, v_k\} \subset \mathbb{R}^n`$ y un vector objetivo $`b \in \mathbb{R}^n`$, $`b`$ es combinación lineal de $`S`$ si existen escalares $`c_1, c_2, \dots, c_k \in \mathbb{R}`$ tales que:
 
-$$
+```math
 c_1 v_1 + c_2 v_2 + \dots + c_k v_k = b
-$$
+```
 
-Para resolverlo computacionalmente, se construye la matriz aumentada $[V \mid b]$ donde cada vector $v_j$ forma una columna de coeficientes:
+Para resolverlo computacionalmente, se construye la matriz aumentada $`[V \mid b]`$ donde cada vector $`v_j`$ forma una columna de coeficientes:
 
-$$
+```math
 \left(\begin{array}{cccc|c}
 v_{11} & v_{12} & \cdots & v_{1k} & b_1 \\
 v_{21} & v_{22} & \cdots & v_{2k} & b_2 \\
 \vdots & \vdots & \ddots & \vdots & \vdots \\
 v_{n1} & v_{n2} & \cdots & v_{nk} & b_n
 \end{array}\right)
-$$
+```
 
 El sistema se resuelve y clasifica rigurosamente mediante el **Teorema de Rouché-Capelli**:
 
 #### 1. Sistema Compatible Determinado (SCD)
 Existe una **combinación lineal única** si y solo si el rango de la matriz de coeficientes coincide con el de la matriz aumentada y es igual al número de vectores:
 
-$$
+```math
 \mathrm{rg}(V) = \mathrm{rg}(V \mid b) = k \implies b \in \mathrm{gen}(S)
-$$
+```
 
 #### 2. Sistema Compatible Indeterminado (SCI)
 Existen **infinitas combinaciones lineales** si el rango coincide pero es estrictamente menor al número de vectores:
 
-$$
+```math
 \mathrm{rg}(V) = \mathrm{rg}(V \mid b) < k \implies b \in \mathrm{gen}(S)
-$$
+```
 
 #### 3. Sistema Incompatible (SI)
-El vector $b$ **no es combinación lineal** de los vectores de $S$ si el rango de la matriz aumentada es estrictamente mayor al de la matriz de coeficientes:
+El vector $`b`$ **no es combinación lineal** de los vectores de $`S`$ si el rango de la matriz aumentada es estrictamente mayor al de la matriz de coeficientes:
 
-$$
+```math
 \mathrm{rg}(V) < \mathrm{rg}(V \mid b) \implies b \notin \mathrm{gen}(S)
-$$
+```
 
 ### Módulo 3: Operaciones Matriciales Básicas
 
@@ -409,7 +409,7 @@ Rutas `POST` con JSON; entradas inválidas devuelven HTTP 400 con `error`. Las p
 
 `src/derivadas/motor.py` contiene la derivación simbólica independiente de Newton. `derivada_simbolica(funcion)` devuelve una expresión evaluable; `analizar_derivada(funcion)` devuelve función y derivada en sintaxis editable y LaTeX. Newton consume este motor. La ruta `POST /api/derivadas/derivar` acepta `{"funcion":"asin(x)"}` y deja preparado el contrato para un futuro módulo de derivadas.
 
-El motor cubre las operaciones del lenguaje admitido y sus composiciones: suma, resta, producto, cociente, potencias, reglas de cadena y funciones elementales. No pretende resolver expresiones fuera de ese lenguaje ni extender fórmulas por límites en singularidades. Las funciones inversas `asin`, `acos` y `atan` aparecen como arcoseno, arcocoseno y arcotangente en KaTeX y en el teclado compartido. Sus valores se expresan en radianes; `asin` y `acos` requieren argumentos entre −1 y 1 y sus derivadas son singulares en los extremos.
+El motor cubre las operaciones del lenguaje admitido y sus composiciones: suma, resta, producto, cociente, potencias, reglas de cadena y funciones elementales. No pretende resolver expresiones fuera de ese lenguaje ni extender fórmulas por límites en singularidades. Las funciones inversas `asin`, `acos` y `atan` aparecen como arcoseno, arcocoseno y arcotangente en KaTeX y en el teclado compartido. Sus valores se expresan en radianes; `asin` y `acos` requieren argumentos en $[-1,1]$ y sus derivadas son singulares en los extremos.
 
 ### Módulo 10: Método de la secante
 
@@ -419,7 +419,7 @@ $$x_{n+1}=x_n-\frac{f(x_n)(x_n-x_{n-1})}{f(x_n)-f(x_{n-1})}$$
 
 La gráfica muestra las primeras ocho rectas secantes y la aproximación final. Comparte el controlador de navegación con Newton-Raphson: zoom con botones y rueda centrado en el cursor, arrastre horizontal y vertical, flechas, teclas + y - e Inicio, doble clic para restablecer, porcentaje de ampliación y enfoque en la raíz. El zoom conserva los resultados y la escala vertical; el remuestreo cancela respuestas anteriores. Los botones Marcar permiten elegir manualmente ambos puntos en la gráfica. La tabla presenta las dos entradas, la nueva aproximación, el residuo y ambos errores, con la sustitución desplegable. No se exige cambio de signo ni se utiliza la derivada. Se detectan denominadores nulos, pasos no finitos, salidas del dominio, ciclos, falta de progreso y máximo de iteraciones; las diferencias muy pequeñas entre evaluaciones generan avisos.
 
-El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primero `1.333333333`, luego `1.462686567` y finalmente una raíz cercana a `1.521379707`.
+El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primero $1.333333333$, luego $1.462686567$ y finalmente una raíz cercana a $1.521379707$.
 
 | Ruta POST | Entrada | Respuesta |
 |---|---|---|
