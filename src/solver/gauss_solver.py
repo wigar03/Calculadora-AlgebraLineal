@@ -351,12 +351,17 @@ def solve_gaussian_elimination(
             )
         
         sol_dict: Dict[int, Fraction] = {}
-        for r in range(num_vars):
-            val = mat[r][num_cols - 1]
-            sol_dict[r] = val
-            result.solution[variable_names[r]] = val
+        for r, col in reversed(pivot_positions):
+            rhs = mat[r][-1]
+            contributions = sum((mat[r][c] * sol_dict[c]
+                                 for c in range(col + 1, num_vars)), Fraction(0))
+            val = (rhs - contributions) / mat[r][col]
+            sol_dict[col] = val
+            result.solution[variable_names[col]] = val
             result.backward_substitution_steps.append(
-                f"Fila {r + 1} de la matriz reducida: ${variable_names[r]} = {format_latex_number(val)}$"
+                f"Fila {r + 1}: ${variable_names[col]} = "
+                f"\\frac{{{format_latex_number(rhs)} - ({format_latex_number(contributions)})}}"
+                f"{{{format_latex_number(mat[r][col])}}} = {format_latex_number(val)}$"
             )
             
         result.solution_vector = [result.solution[var] for var in variable_names]
