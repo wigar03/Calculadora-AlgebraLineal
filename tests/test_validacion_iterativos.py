@@ -89,6 +89,31 @@ class TestValidacionIterativos(unittest.TestCase):
         residuo = max(abs(bi - sum(a * xi for a, xi in zip(fila, x))) for fila, bi in zip(A, b))
         self.assertAlmostEqual(float(residuo), r["verificacion"]["residuo_inf"], delta=1e-9)
 
+    def test_casos_que_no_deben_iterar(self):
+        # [[0,1],[0,1]] tiene rango 1: «singular» precede a la diagonal nula, que se informa en el análisis.
+        esperados = {"diagonal_nula_sin_arreglo": "singular", "singular_infinitas": "singular",
+                     "singular_incompatible": "incompatible", "diagonal_nula_reordenable": "diagonal_nula"}
+        for clave, motivo in esperados.items():
+            with self.subTest(clave):
+                r = self.resolver(clave, "jacobi")
+                self.assertFalse(r.get("convergio", False))
+                self.assertEqual(r.get("motivo"), motivo, r)
+
+    def test_reordenar_resuelve_la_diagonal_nula(self):
+        for metodo in METODOS:
+            r = self.resolver("diagonal_nula_reordenable", metodo, reordenar=True)
+            self.assertTrue(r["analisis"]["reordenamiento"]["aplicado"])
+            self.assertTrue(r["convergio"], r.get("mensaje"))
+            for got in r["solucion"]:
+                self.assertAlmostEqual(got, 1.0, delta=1e-8)
+
+    def test_comparar_devuelve_ambos_metodos(self):
+        c = CASOS["practica"]
+        r = post(self.url, "/api/iterativos/comparar", {"A": c["A"], "b": c["b"], "tolerancia": 1e-8})
+        for metodo in METODOS:
+            self.assertTrue(r[metodo]["convergio"])
+            self.assertEqual(r[metodo]["metodo"], metodo)
+
 
 if __name__ == "__main__":
     unittest.main()
