@@ -203,3 +203,39 @@ exacto al finalizar, 58 líneas; `ef62e96` — test(iterativos): verificar una v
 el umbral exacto, 36 líneas; este registro añade el commit documental, todos <=100 líneas.
 Queda revisión e integración del coordinador; el cambio paralelo en matriz.residuo
 es independiente de esta barrera final y no forma parte de esta rama.
+
+## Barrido GS normalizado para R1 (2026-11-23)
+
+Rama `orca/gauss-seidel` rebasada sobre main `d6b8209`, con los arreglos de Codex 1
+y la verificación exacta final ya integrados. Solo se modificó Gauss-Seidel, sus pruebas
+y esta evidencia; no se tocaron Jacobi, matriz, resolvedor, vista ni referencias.
+
+El barrido calcula ahora `b_i/a_ii - sum((a_ij/a_ii)*x_j)` usando inmediatamente
+las componentes anteriores nuevas. Así no redondea a cero a_ij*x_j antes de dividir.
+Si la normalización produce un cociente no representable o pierde uno no nulo a cero,
+se conserva la ecuación original racionalmente, evitando infinito por cero y pérdida
+del cociente. Este respaldo se prueba con coeficientes 1e-308 y 1e308.
+Las fórmulas y sustituciones LaTeX conservan el procedimiento y los índices originales.
+
+Primero fallaron dos regresiones: R1 por HTTP devolvía estancamiento, y el segundo
+componente del primer barrido era el doble de la referencia racional por perder
+el término que usa x_1 nuevo. Tras el arreglo ambas pasan.
+Con A=[[1e-200,5e-201],[5e-201,1e-200]], b=[5e-324,5e-324], x0=0 y tol=1e-6,
+GS alcanza tolerancia en **12 iteraciones**, con residuo relativo exacto
+**2.9802320600738147e-8**, verificado independientemente por HTTP con Fraction
+de los mismos floats A/b/x y sin reemplazar las iteraciones por solución directa.
+
+Se preservan los tres primeros barridos exactos Fraction de los 15 casos sin diagonal
+nula; los tres barridos flotantes se contrastan a `1e-12*max(1,abs(referencia))`.
+Se renderizaron las fórmulas y sustituciones de esos barridos y R1: **336 fórmulas**,
+KaTeX local con `throwOnError:true`, `strict:"error"`, **cero errores**.
+
+- `python -m unittest discover tests -v`: **414 pruebas, OK**, 14.703 segundos.
+- Los 10 archivos `tests/*.cjs` con `node --test`: **58 pruebas, 58 OK, 0 fallos**.
+- `git diff --check d6b8209..HEAD`: sin errores.
+- Logs: `%TEMP%/gauss-seidel-normalizado-python.log` y `gauss-seidel-normalizado-node.log`.
+- `be851b7` — fix(iterativos): normalizar el barrido de Gauss-Seidel por su diagonal,
+  **42 líneas**; `09bbb6a` — test(iterativos): contrastar los barridos normalizados
+  y sus extremos, **26 líneas**; este registro completa los commits, todos <=100 líneas.
+
+Queda revisión e integración del coordinador; no hay decisiones para el propietario.
