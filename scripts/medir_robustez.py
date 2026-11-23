@@ -3,11 +3,15 @@
 Uso: python scripts/medir_robustez.py > salida.md   (no modifica nada; usa un servidor local efímero)
 """
 import json
+import multiprocessing
+import os
 import random
 import socket
+import subprocess
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -15,6 +19,8 @@ from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.ui.web_server import servidor_local  # noqa: E402
+from src.core import limites  # noqa: E402
+from scripts.memoria_procesos import memoria_proceso  # noqa: E402
 
 
 def post(url, ruta, cuerpo, crudo=None, timeout=90, cabeceras=None):
@@ -29,10 +35,82 @@ def post(url, ruta, cuerpo, crudo=None, timeout=90, cabeceras=None):
     except (URLError, TimeoutError, socket.timeout) as e:
         return {"estado": "sin respuesta", "s": round(time.perf_counter() - t, 2), "bytes": 0, "msg": str(e)[:60]}
     try:
-        msg = str(json.loads(cuerpo).get("error", ""))[:70]
+        datos = json.loads(cuerpo)
+        msg = str(datos.get("error", ""))[:70]
     except ValueError:
         msg = ""
-    return {"estado": estado, "s": round(time.perf_counter() - t, 2), "bytes": len(cuerpo), "msg": msg}
+    resultado = {"estado": estado, "s": round(time.perf_counter() - t, 3), "bytes": len(cuerpo), "msg": msg}
+    if isinstance(datos, dict):
+        resultado.update({k: datos[k] for k in ("tipo", "codigo", "motivo") if k in datos})
+        if isinstance(datos.get("iteraciones"), list):
+            resultado["iteraciones"] = len(datos["iteraciones"])
+    return resultado
+
+
+def servidor_medicion():
+    """Proceso dedicado: su memoria no incluye las respuestas retenidas por el cliente."""
+    with servidor_local() as url:
+        print(json.dumps({"url": url, "servidor": os.getpid(),
+                          "trabajadores": [p.pid for p in multiprocessing.active_children()]}), flush=True)
+        sys.stdin.readline()
+
+
+def concurrencia_grande():
+    from tests.test_exportacion_modulos import entradas_largas
+    nombre, ruta, cuerpo, cantidad = entradas_largas()[0]
+    assert limites.RESPUESTA_MAX_BYTES == 16 * 1024**2
+    hijo = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--servidor-medicion"],
+                            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    detener, muestras, errores = threading.Event(), {}, []
+    try:
+        inicio = json.loads(hijo.stdout.readline())
+        url = inicio["url"]
+        pids = [inicio["servidor"], *inicio["trabajadores"]]
+
+        def muestrear():
+            while not detener.is_set():
+                for pid in pids:
+                    try:
+                        datos = memoria_proceso(pid)
+                        anterior = muestras.setdefault(pid, {})
+                        for clave, valor in datos.items():
+                            anterior[clave] = max(anterior.get(clave, 0), valor)
+                    except (OSError, KeyError) as exc:
+                        errores.append(f"PID {pid}: {exc}")
+                detener.wait(0.02)
+
+        monitor = threading.Thread(target=muestrear, daemon=True)
+        monitor.start()
+        base = post(url, "/api/biseccion/preview", {"funcion": "x"})
+        barrera = threading.Barrier(5)
+
+        def grande():
+            barrera.wait(timeout=5)
+            return post(url, ruta, cuerpo, timeout=30)
+
+        with ThreadPoolExecutor(max_workers=5) as grupo:
+            pendientes = [grupo.submit(grande) for _ in range(4)]
+            barrera.wait(timeout=5)
+            triviales = []
+            while not all(f.done() for f in pendientes):
+                triviales.append(post(url, "/api/biseccion/preview", {"funcion": "x"}, timeout=15))
+                time.sleep(0.1)
+            grandes = [f.result(timeout=35) for f in pendientes]
+        recuperacion = post(url, "/api/vectores/operar", {"operacion": "suma", "u": ["1"], "v": ["2"]})
+        detener.set()
+        monitor.join(2)
+        return {"caso": nombre, "limites": {"respuesta_bytes": limites.RESPUESTA_MAX_BYTES,
+                "trabajador_mb": limites.MEMORIA_CALCULO_MB, "tiempo_s": limites.TIEMPO_CALCULO_S},
+                "procesos": inicio, "memoria_bytes": muestras, "base": base,
+                "grandes": grandes, "triviales": triviales, "recuperacion": recuperacion,
+                "errores_muestreo": errores, "iteraciones_esperadas": cantidad}
+    finally:
+        detener.set()
+        try:
+            hijo.communicate("\n", timeout=8)
+        except subprocess.TimeoutExpired:
+            hijo.kill()
+            hijo.communicate()
 
 
 def matriz(n, semilla=1):
