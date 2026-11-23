@@ -172,11 +172,97 @@
     return { series, vista, logTol, omitidosCero };
   }
 
+  const EJEMPLOS = {
+    principal: { A: [["10", "-1", "2", "0"], ["-1", "11", "-1", "3"], ["2", "-1", "10", "-1"], ["0", "3", "-1", "8"]], b: ["6", "25", "-11", "15"], nota: "Ejemplo principal de la presentación (estrictamente dominante; solución exacta (1, 2, -1, 1))." },
+    practica: { A: [["8", "-1", "1", "0"], ["-1", "10", "-2", "1"], ["1", "-2", "9", "-1"], ["0", "1", "-1", "7"]], b: ["8", "7", "-4", "5"], nota: "Sistema de práctica de la presentación (4×4 estrictamente dominante)." },
+    reordenable: { A: [["2", "10", "1"], ["10", "1", "1"], ["1", "1", "10"]], b: ["13", "12", "12"], nota: "No dominante en el orden inicial (diverge); active «Reordenar ecuaciones» para permutar filas." },
+    jacobi_si_gs_no: { A: [["1", "2", "-2"], ["1", "1", "1"], ["2", "2", "1"]], b: ["1", "3", "5"], nota: "Contraejemplo clásico: Jacobi converge (ρ(T_J)=0) y Gauss-Seidel diverge (ρ(T_GS)=2)." }
+  };
+
   if (typeof module !== "undefined" && module.exports) {
     module.exports = {
-      MOTIVOS, GARANTIAS, PALETA, nombreVarLatex, numeroLatex, vectorLatex,
+      MOTIVOS, GARANTIAS, PALETA, EJEMPLOS, nombreVarLatex, numeroLatex, vectorLatex,
       formulaMetodoLatex, normasLatex, verificacionLatex, generarLatexRespuesta,
       construirSerieEvolucion, construirSerieConvergencia
     };
   }
+  if (typeof document === "undefined") return;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const el = id => document.getElementById(`it-${id}`);
+    if (!el("dim-n")) return;
+    const node = (tag, text, cls) => { const n = document.createElement(tag); if (text !== undefined) n.textContent = text; if (cls) n.className = cls; return n; };
+    const math = (s, display = true) => { const n = node(display ? "div" : "span"); renderLatexElement(n, s, display); return n; };
+    const mix = (s, tag = "p") => { const n = node(tag); renderMixedLatex(n, s); return n; };
+    let dimN = 4, ultimo = null, metricaConv = "residuo", metodoEvo = "jacobi";
+    const requests = new Map();
+
+    function error(msg) { const e = el("error"); e.textContent = msg; e.hidden = !msg; }
+    function limpiarResultados() {
+      ultimo = null;
+      ["analysis-card", "result-card", "charts-card", "steps-card", "table-card"].forEach(id => { el(id).hidden = true; });
+      ["analysis", "result", "plot-vars", "plot-conv", "steps", "table"].forEach(id => el(id).replaceChildren());
+    }
+
+    function leerSistemaUI() {
+      const A = [], b = [], x0 = [];
+      for (let i = 0; i < dimN; i++) {
+        const fila = [];
+        for (let j = 0; j < dimN; j++) fila.push(el(`a-${i}-${j}`)?.value.trim() || "0");
+        A.push(fila);
+        b.push(el(`b-${i}`)?.value.trim() || "0");
+        x0.push(el(`x0-${i}`)?.value.trim() || "0");
+      }
+      return { A, b, x0 };
+    }
+
+    function renderGrid(n, A = null, b = null, x0 = null) {
+      const prev = !A ? leerSistemaUI() : null;
+      dimN = Math.max(2, Math.min(10, parseInt(n, 10) || 4));
+      el("dim-n").value = String(dimN);
+      const grid = el("augmented-grid");
+      grid.style.gridTemplateColumns = `repeat(${dimN}, auto) 20px auto`;
+      grid.replaceChildren();
+      for (let j = 0; j < dimN; j++) { const h = node("div", "", "it-col-head"); h.append(math(`x_{${j + 1}}`, false)); grid.append(h); }
+      grid.append(node("div", "", "it-sep"));
+      const hb = node("div", "", "it-col-head"); hb.append(math("b", false)); grid.append(hb);
+      for (let i = 0; i < dimN; i++) {
+        for (let j = 0; j < dimN; j++) {
+          const inp = node("input", undefined, "bis-input it-cell");
+          inp.type = "text"; inp.id = `it-a-${i}-${j}`; inp.setAttribute("aria-label", `A[${i + 1},${j + 1}]`);
+          inp.value = A ? String(A[i][j]) : (prev && prev.A[i] && prev.A[i][j] !== undefined ? prev.A[i][j] : (i === j ? "1" : "0"));
+          grid.append(inp);
+        }
+        grid.append(node("div", "│", "it-sep"));
+        const ib = node("input", undefined, "bis-input it-cell it-cell-b");
+        ib.type = "text"; ib.id = `it-b-${i}`; ib.setAttribute("aria-label", `b[${i + 1}]`);
+        ib.value = b ? String(b[i]) : (prev && prev.b[i] !== undefined ? prev.b[i] : "0");
+        grid.append(ib);
+      }
+      const x0Grid = el("x0-grid"); x0Grid.replaceChildren();
+      for (let i = 0; i < dimN; i++) {
+        const wrap = node("label", "", "it-x0-item"); wrap.append(math(`x_{${i + 1}}^{(0)}`, false));
+        const ix = node("input", undefined, "bis-input it-cell");
+        ix.type = "text"; ix.id = `it-x0-${i}`; ix.value = x0 ? String(x0[i]) : (prev && prev.x0[i] !== undefined ? prev.x0[i] : "0");
+        wrap.append(ix); x0Grid.append(wrap);
+      }
+    }
+
+    async function request(route, data) {
+      requests.get(route)?.abort();
+      const ctrl = new AbortController(); requests.set(route, ctrl);
+      try {
+        const res = await fetch(`/api/iterativos/${route}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), signal: ctrl.signal });
+        const json = await res.json();
+        if (requests.get(route) !== ctrl) return null;
+        if (!res.ok || json.error) throw Error(json.error || "No se pudo completar el cálculo.");
+        return json;
+      } finally { if (requests.get(route) === ctrl) requests.delete(route); }
+    }
+
+    el("dim-dec").addEventListener("click", () => renderGrid(dimN - 1));
+    el("dim-inc").addEventListener("click", () => renderGrid(dimN + 1));
+    el("dim-n").addEventListener("change", () => renderGrid(el("dim-n").value));
+    renderGrid(4, EJEMPLOS.principal.A, EJEMPLOS.principal.b, ["0", "0", "0", "0"]);
+  });
 })();
