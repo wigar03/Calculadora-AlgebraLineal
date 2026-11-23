@@ -199,3 +199,29 @@ class APIIterativos(unittest.TestCase):
             r = self.post(ruta, {"A": [["1"]], "b": ["1"], "x0": ["0"],
                           "metodo": "jacobi", "reordenar": "abc"}, estado=400)
             self.assertIn("verdadero o falso", r["error"])
+
+    def test_regresiones_adversarias_con_controles_html_por_http(self):
+        casos = []
+        for n, factor in ((9, 1), (20, 100)):
+            A = [[str(int(i == j) - factor * int(j == i + 1)) for j in range(n)]
+                 for i in range(n)]
+            casos.append((A, [str(1 - factor)] * (n - 1) + ["1"], ["0"] * n, n + 1))
+        casos.append(([["1e308"]], ["1e308"], ["1"], 1))
+        for A, b, x0, pasos in casos:
+            cuerpo = {"A": A, "b": b, "x0": x0, "tolerancia": "1e-16",
+                      "max_iteraciones": "100", "criterio": "ambos", "reordenar": "false"}
+            for metodo in ("jacobi", "gauss_seidel"):
+                with self.subTest(n=len(b), metodo=metodo):
+                    r = self.post("resolver", {**cuerpo, "metodo": metodo})
+                    self.assertTrue(r["convergio"])
+                    self.assertEqual(r["motivo"], "tolerancia")
+                    self.assertEqual(r["solucion"], [1] * len(b))
+                    self.assertEqual(len(r["iteraciones"]), pasos)
+                    self.assertEqual(r["verificacion"]["residuo_rel"], 0)
+            comparacion = self.post("comparar", cuerpo)
+            for metodo in ("jacobi", "gauss_seidel"):
+                self.assertTrue(comparacion[metodo]["convergio"])
+                self.assertEqual(comparacion[metodo]["convergencia"], "demostrada")
+            analisis = self.post("analizar", cuerpo)
+            self.assertEqual(analisis["garantia"], "demostrada")
+            self.assertEqual(analisis["radio_espectral"]["jacobi"], 0)
