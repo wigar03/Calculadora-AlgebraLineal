@@ -145,3 +145,55 @@ class _ParserLineal:
         if b[1] == 0:
             raise ValueError(f"Línea {self.linea}: división por cero.")
         return ({k: v / b[1] for k, v in a[0].items()}, a[1] / b[1])
+
+
+def leer_ecuaciones(texto: str) -> tuple[list[list[Fraction]], list[Fraction], list[str]]:
+    """Analiza un sistema lineal cuadrado (una ecuación por línea) en coeficientes Fraction exactos."""
+    if not isinstance(texto, str):
+        raise ValueError("El texto del sistema debe ser una cadena de caracteres.")
+    lineas = [(i, ln.strip()) for i, ln in enumerate(texto.splitlines(), 1) if ln.strip()]
+    if not lineas:
+        raise ValueError("Ingresa al menos una ecuación lineal (una por línea).")
+
+    ecuaciones: list[tuple[dict[tuple[str, int], Fraction], Fraction]] = []
+    todas_vars: set[tuple[str, int]] = set()
+    for num, raw in lineas:
+        if ";" in raw:
+            raise ValueError(f"Línea {num}: escribe una sola ecuación por línea (sin ';').")
+        eq_count = raw.count("=")
+        if eq_count == 0:
+            raise ValueError(f"Línea {num}: falta el signo '=' para separar los lados de la ecuación.")
+        if eq_count > 1:
+            raise ValueError(f"Línea {num}: hay más de un signo '='. Escribe exactamente un '=' por línea.")
+        izq_txt, der_txt = (s.strip().translate(_NORM_OPS) for s in raw.split("="))
+        if not izq_txt or not der_txt:
+            raise ValueError(f"Línea {num}: ambos lados del signo '=' deben contener una expresión.")
+        c_izq, k_izq, v_izq = _ParserLineal(_tokenizar(izq_txt, num), num).parse()
+        c_der, k_der, v_der = _ParserLineal(_tokenizar(der_txt, num), num).parse()
+        if c_der or v_der:
+            raise ValueError(f"Línea {num}: hay incógnitas en el lado derecho de '='. Escribe todas las incógnitas a la izquierda (forma Ax = b).")
+        if not v_izq:
+            raise ValueError(f"Línea {num}: la ecuación no contiene incógnitas.")
+        todas_vars.update(v_izq)
+        ecuaciones.append((c_izq, k_der - k_izq))
+
+    bases = sorted({base for base, _ in todas_vars})
+    if len(bases) > 1:
+        raise ValueError(f"Variables inconsistentes: se mezclaron letras base ({', '.join(bases)}). Usa una sola letra con índices.")
+    base = bases[0]
+    indices = {idx for _, idx in todas_vars}
+    max_idx = max(indices)
+    faltantes = [i for i in range(1, max_idx + 1) if i not in indices]
+    if faltantes:
+        lista = ", ".join(f"{base}_{i}" for i in faltantes)
+        raise ValueError(f"Índices de variables inconsistentes: faltan {lista} entre {base}_1 y {base}_{max_idx}.")
+    m, n = len(ecuaciones), max_idx
+    if m != n:
+        raise ValueError(f"El sistema no es cuadrado: tiene {m} ecuaciones y {n} incógnitas ({base}_1..{base}_{n}).")
+    if n > 20:
+        raise ValueError(f"El sistema tiene {n} ecuaciones; el máximo admitido es 20.")
+
+    nombres = [f"{base}_{i}" for i in range(1, n + 1)]
+    A = [[c.get((base, j), Fraction(0)) for j in range(1, n + 1)] for c, _ in ecuaciones]
+    b = [bi for _, bi in ecuaciones]
+    return A, b, nombres
