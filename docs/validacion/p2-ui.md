@@ -20,7 +20,12 @@ Rama: `orca/p2-ui` (desde `main` `d8131ba`). Entorno: Windows 11, Python 3.12, N
 | Pruebas Node (`tests/*.cjs`) | 66 / 66 (13 archivos) | 68 / 68 (15 archivos, incluye navegador real) |
 | Desbordamiento horizontal móvil (390 px, menú abierto) | N/A | 0 px (`scrollWidth == clientWidth`, botón `>= 44 px`, ítems `53.9 px`) |
 
-> Nota `?v=` para el integrador (no se tocaron los `?v=` existentes): actualizar `app.js?v=af40e286ed7e`, `biseccion.js?v=1fc78816cd53`, `regla-falsa.js?v=743cb5307335`, `newton-raphson.js?v=fae04e17fb73`, `secante.js?v=2fd3642db817` e `iterativos.js?v=bd6c5a95a4ba`. Los 3 recursos nuevos ya llevan su SHA-256 real (`impresion.css?v=698245902f23`, `exportar.js?v=f3b262715a4b`, `exportar-ui.js?v=8665d7db6b6a`).
+> Nota `?v=` para el integrador (no se tocaron los `?v=` existentes): actualizar `app.js?v=af40e286ed7e`, `biseccion.js?v=1fc78816cd53`, `regla-falsa.js?v=743cb5307335`, `newton-raphson.js?v=fae04e17fb73`, `secante.js?v=2fd3642db817` e `iterativos.js?v=bd6c5a95a4ba`. Los 3 recursos nuevos ya llevan su SHA-256 real (`impresion.css?v=698245902f23`, `exportar.js?v=3588dae8aa3f`, `exportar-ui.js?v=8665d7db6b6a`).
+
+## Verificación cruzada contra batería independiente de Codex 2 (`orca/p2-verificacion`)
+Ejecutada en rama temporal con `78ee467` (`RESPUESTA_MAX_BYTES = 16 MB`) y los 8 commits de `orca/p2-verificacion` (`a0eacbc..4a6a748`):
+- `node --test tests/exportacion_verificar.cjs`: **6 / 6 OK** (89 ms) — BOM, oráculo KaTeX, inyección en cabeceras/celdas, fracciones validadas, rechazo explícito de `NaN`/`Infinity`, preservación de `-0.0`.
+- `python -m unittest tests.test_exportacion_modulos -v`: **9 / 9 OK, 1 skipped** (`pdflatex` no instalado) en **9.05 s** — 43 golden + Jacobi 20×20 10 000 iteraciones + Bisección 1000 + Regla Falsa 1000 + caso adversario (`\input{ajeno}`, Unicode, fila nula final, precisión `float.hex()`/`Decimal`, `longtable` con conteo exacto de `\\`, tiempo y memoria dentro de límites).
 
 ## Casos adversos y rendimiento
 
@@ -55,3 +60,6 @@ Rama: `orca/p2-ui` (desde `main` `d8131ba`). Entorno: Windows 11, Python 3.12, N
 | `22d8747` | `feat(ui): conectar exportar-ui en los 5 módulos numéricos` | 21 (`+16/-5`) |
 | `2275f02` | `fix(ui): ajustar transición táctil móvil en exportar-ui e impresión de steppers` | 10 (`+6/-4`) |
 | `cedcaaa` | `test(exportar): añadir prueba en navegador real para 11 módulos, impresión y móvil` | 92 (`+92/-0`) |
+| `28c552c` | `docs(validacion): registrar evidencia, capturas y mediciones de p2-ui` | 57 (`+57/-0`) |
+| `78fbd3b` | `test(exportar): cubrir -0.0, no finitos, fila nula, longtable y etiquetas adversarias` | 11 (`+9/-2`) |
+| `0b77034` | `fix(exportar): preservar -0, rechazar no finitos, fila nula, longtable y escape adversario` | 43 (`+29/-14`) |
