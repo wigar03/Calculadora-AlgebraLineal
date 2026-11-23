@@ -1,5 +1,7 @@
 """Entrada exacta, manejo matricial y pasos del método de Jacobi."""
 
 from .entrada import leer_sistema, sistema_float
+from .matriz import diagonal_nula, dominancia_diagonal, rangos, residuo
 
-__all__ = ["leer_sistema", "sistema_float"]
+__all__ = ["leer_sistema", "sistema_float", "diagonal_nula", "dominancia_diagonal",
+           "rangos", "residuo"]
