@@ -3,16 +3,20 @@
   "use strict";
 
   const NUMERO_VALIDO = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(?:[eE]([+-]?\d+))?$/;
-  const CERO_NEGATIVO = /^-0+(?:\.0*)?(?:[eE][+-]?\d+)?$/;
-  const ENTERO_LARGO = /^[+-]?\d{16,}$/;
+  const CERO_NUMERICO = /^[+-]?(?:0+(?:\.0*)?|\.0+)(?:[eE][+-]?\d+)?$/;
+  const ENTERO_LARGO = /^[+-]?0*[1-9]\d{15,}$/;
   const FRACCION_EXACTA = /^-?\d+\/0*[1-9]\d*$/;
   const PREFIJO_FORMULA = /^(?:[\t\r]|[\s\p{Z}\p{Cc}\uFEFF]*[=+\-@])/u;
   const UMBRAL_LONGTABLE = 30;
 
   function formatearNumeroCSV(texto, decimal) {
-    const limpio = CERO_NEGATIVO.test(texto) ? texto.slice(1) : texto;
-    const m = NUMERO_VALIDO.exec(limpio);
+    const m = NUMERO_VALIDO.exec(texto);
     if (!m) return texto;
+    if (CERO_NUMERICO.test(texto)) {
+      if (m[2] || !m[1].includes(".")) return "0";
+      const sinSigno = m[1].replace(/^[+-]/, "").replace(/^0+(?=\.)/, "0").replace(/^\./, "0.");
+      return decimal !== "." ? sinSigno.replace(".", decimal) : sinSigno;
+    }
     const mant = decimal !== "." ? m[1].replace(".", decimal) : m[1];
     if (!m[2]) return mant;
     const signo = m[2].startsWith("-") ? "-" : "+";
@@ -36,8 +40,9 @@
 
   function protegerTextoCSV(valor) {
     const txt = String(valor ?? "");
+    if (FRACCION_EXACTA.test(txt) || ENTERO_LARGO.test(txt)) return `="${txt}"`;
     const rec = txt.trim();
-    if (FRACCION_EXACTA.test(rec) || ENTERO_LARGO.test(rec)) return `'${txt}`;
+    if (rec !== txt && (FRACCION_EXACTA.test(rec) || ENTERO_LARGO.test(rec))) return `'${txt}`;
     return PREFIJO_FORMULA.test(txt) && !NUMERO_VALIDO.test(txt) ? `'${txt}` : txt;
   }
 
