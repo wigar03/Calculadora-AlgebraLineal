@@ -56,7 +56,7 @@ test('tablaACSV cumple contrato: BOM, ;, decimal ,, CRLF, científica, fraccione
   assert.equal(l[0], "k;x;frac;nota;'=col");
   assert.equal(l[1], '1;1,275449275970459;"=""5/2""";"  esp  ";\'=SUM(A1:A2)');
   assert.equal(l[2], '2;1,5E-07;"=""-181/60""";"a; ""b""\nc";\'+cmd|calc');
-  assert.equal(l[3], "3;-0;1/2+A1;'-A1;'@SUM(1,2)");
+  assert.equal(l[3], "3;0;1/2+A1;'-A1;'@SUM(1,2)");
   assert.equal(l[4], '4;;\'\t=1;"\'\r=2";-12,75');
   assert.throws(() => tablaACSV({ columnas: ['x'], filas: [[NaN]] }), /finito/i);
   assert.throws(() => tablaACSV({ columnas: ['x'], filas: [[Infinity]] }), /finito/i);
@@ -64,6 +64,27 @@ test('tablaACSV cumple contrato: BOM, ;, decimal ,, CRLF, científica, fraccione
   assert.equal(colaNula, '\uFEFFx\r\n1\r\n""');
   const multi = tablasACSV([{ titulo: 'T1', columnas: ['k', 'v'], filas: [[1, 0.5]] }, { titulo: 'T2', columnas: ['k', 'v'], filas: [[1, 1e-8]] }]);
   assert.ok(multi.startsWith('\uFEFF') && !multi.slice(1).includes('\uFEFF') && multi.includes('T1\r\nk;v\r\n1;0,5\r\n\r\nT2\r\nk;v\r\n1;1E-08'));
+});
+
+test('CSV endurecido: espacios/controles antes de formula, 1/0, enteros >15 cifras, -0 y racionales en cabeceras', () => {
+  const inyecciones = ['\n=1+2', ' =1+2', '\t+1+2', '\r-1+2', '\x0b=1+2', '\u00a0=1+2', '\u2003=1+2', '\u3000@SUM(1)', '\ufeff=1+2'];
+  const csvIny = tablaACSV({ columnas: inyecciones, filas: [inyecciones] });
+  for (const s of inyecciones) {
+    const esperado = `'${s}`;
+    const q = esperado.includes('\n') || esperado.includes('\r') ? `"${esperado}"` : esperado;
+    assert.equal(csvIny.split(q).length - 1, 2, `Falta prefijo en celda y cabecera para ${JSON.stringify(s)}`);
+  }
+  const csvCasos = tablasACSV([{
+    titulo: '1/2',
+    columnas: ['1/2', '-1/2', '1/2\n', '1/0', '1/000'],
+    filas: [['1/0', '1/000', '-1/0', '1/2\n', ' 1/2 '], ['9007199254740993123456789', '-1234567890123456', '123456789012345', '0.12345678901234567890123456789', '-0']],
+  }, { titulo: 'T2', columnas: ['x'], filas: [[-0.0], [1000000000000000]] }]);
+  assert.ok(csvCasos.startsWith("\uFEFF'1/2\r\n'1/2;'-1/2;\"'1/2\n\";1/0;1/000\r\n"));
+  assert.ok(!csvCasos.includes('"=""1/0"""') && !csvCasos.includes('"=""1/000"""'));
+  assert.ok(csvCasos.includes("'-1/0") && csvCasos.includes("\"'1/2\n\"") && csvCasos.includes('"\' 1/2 "'));
+  assert.ok(csvCasos.includes('"=""9007199254740993123456789"""') && csvCasos.includes('"=""-1234567890123456"""'));
+  assert.ok(csvCasos.includes(';123456789012345;0,12345678901234567890123456789;0\r\n'));
+  assert.ok(csvCasos.includes('T2\r\nx\r\n0\r\n"=""1000000000000000"""'));
 });
 
 test('tablaALatex usa tabular en tablas cortas y longtable en largas', () => {

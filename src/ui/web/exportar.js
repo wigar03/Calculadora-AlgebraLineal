@@ -3,12 +3,15 @@
   "use strict";
 
   const NUMERO_VALIDO = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(?:[eE]([+-]?\d+))?$/;
-  const FRACCION_EXACTA = /^-?\d+\/\d+$/;
-  const PREFIJO_FORMULA = /^[=+\-@\t\r]/;
+  const CERO_NEGATIVO = /^-0+(?:\.0*)?(?:[eE][+-]?\d+)?$/;
+  const ENTERO_LARGO = /^[+-]?\d{16,}$/;
+  const FRACCION_EXACTA = /^-?\d+\/0*[1-9]\d*$/;
+  const PREFIJO_FORMULA = /^(?:[\t\r]|[\s\p{Z}\p{Cc}\uFEFF]*[=+\-@])/u;
   const UMBRAL_LONGTABLE = 30;
 
   function formatearNumeroCSV(texto, decimal) {
-    const m = NUMERO_VALIDO.exec(texto);
+    const limpio = CERO_NEGATIVO.test(texto) ? texto.slice(1) : texto;
+    const m = NUMERO_VALIDO.exec(limpio);
     if (!m) return texto;
     const mant = decimal !== "." ? m[1].replace(".", decimal) : m[1];
     if (!m[2]) return mant;
@@ -21,17 +24,23 @@
     if (valor === null || valor === undefined) return "";
     if (typeof valor === "number") {
       if (!Number.isFinite(valor)) throw new RangeError(`Valor numérico no finito no exportable en CSV: ${valor}`);
-      return Object.is(valor, -0) ? "-0" : formatearNumeroCSV(String(valor), decimal);
+      if (valor === 0) return "0";
+      const s = String(valor);
+      return ENTERO_LARGO.test(s) ? `="${s}"` : formatearNumeroCSV(s, decimal);
     }
     const txt = String(valor);
+    if (ENTERO_LARGO.test(txt) || FRACCION_EXACTA.test(txt)) return `="${txt}"`;
     if (NUMERO_VALIDO.test(txt)) return formatearNumeroCSV(txt, decimal);
-    if (FRACCION_EXACTA.test(txt)) return `="${txt}"`;
+    const rec = txt.trim();
+    if (rec !== txt && (FRACCION_EXACTA.test(rec) || ENTERO_LARGO.test(rec))) return `'${txt}`;
     return PREFIJO_FORMULA.test(txt) ? `'${txt}` : txt;
   }
 
   function protegerTextoCSV(valor) {
     const txt = String(valor ?? "");
-    return PREFIJO_FORMULA.test(txt) && !NUMERO_VALIDO.test(txt) && !FRACCION_EXACTA.test(txt) ? `'${txt}` : txt;
+    const rec = txt.trim();
+    if (FRACCION_EXACTA.test(rec) || ENTERO_LARGO.test(rec)) return `'${txt}`;
+    return PREFIJO_FORMULA.test(txt) && !NUMERO_VALIDO.test(txt) ? `'${txt}` : txt;
   }
 
   function escaparCampoCSV(texto, separador) {
