@@ -82,7 +82,14 @@ class TestBancoRaices(unittest.TestCase):
         return datos, res
 
     def comprobar_resultado(self, ejercicio, metodo, datos, res):
-        a, b = (datos["a"], datos["b"]) if metodo == "biseccion" else INICIALES[ejercicio][:2]
+        if metodo == "biseccion":
+            a, b = datos["a"], datos["b"]
+        elif metodo == "regla_falsa":
+            a, b = datos["xl"], datos["xu"]
+        elif metodo == "secante":
+            a, b = datos["x0"], datos["x1"]
+        else:
+            a, b = INICIALES[ejercicio][:2]
         candidatas = [r for r in REFERENCIAS[ejercicio]["raices_en_[-10,10]"] if a <= float(r) <= b]
         self.assertEqual(len(candidatas), 1)
         referencia = candidatas[0]
@@ -138,6 +145,55 @@ class TestBancoRaices(unittest.TestCase):
                                        delta=4*math.ulp(max(1, abs(b))))
             if i and metodo == "secante":
                 self.assertEqual((a, b), (pasos[i-1]["b"], pasos[i-1]["c"]))
+
+    def test_otras_raices_positivas_identificadas(self):
+        for ejercicio, semillas in (("III-2", (3, 4, 4)), ("III-9", (2, 3, 3)),
+                                    ("IV-3", (4, 4.7, 4.5))):
+            for metodo in RUTAS:
+                with self.subTest(ejercicio=ejercicio, metodo=metodo):
+                    datos, res = self.resolver(ejercicio, metodo, semillas)
+                    referencia = next(float(r) for r in REFERENCIAS[ejercicio]["raices_en_[-10,10]"]
+                                      if semillas[0] < float(r) < semillas[1])
+                    self.assertTrue(res["convergio"], res)
+                    self.assertAlmostEqual(res["raiz"], referencia, delta=1e-6)
+                    if metodo != "biseccion":
+                        self.assertLessEqual(abs(FUNCIONES[ejercicio](res["raiz"])), 1e-6)
+                    self.comprobar_tabla(metodo, FUNCIONES[ejercicio], res["pasos"])
+
+    def test_intervalos_sin_signos_y_con_polos(self):
+        casos = [("x^2+1", 0, 1), (ECUACIONES["IV-1"]["funcion"], .5, 2.5),
+                 (ECUACIONES["IV-3"]["funcion"], 1, 2),
+                 (ECUACIONES["IV-3"]["funcion"], 3, 4),
+                 (ECUACIONES["IV-3"]["funcion"], -1, 1),
+                 (ECUACIONES["IV-4"]["funcion"], 1.5, 2.5),
+                 ("(x-.1234567)/(x-.1234567)*(x-.7)", 0, 1)]
+        for funcion, a, b in casos:
+            for metodo in ("biseccion", "regla_falsa"):
+                with self.subTest(funcion=funcion, metodo=metodo):
+                    datos = dict(funcion=funcion, a=a, b=b, xl=a, xu=b)
+                    estado, res = self.enviar(metodo, datos)
+                    self.assertEqual(estado, 400, res)
+                    self.assertIn("error", res)
+
+    def test_dominio_en_puntos_iniciales(self):
+        for ejercicio, x in (("III-4", 0), ("III-11", 0), ("IV-1", 1),
+                             ("IV-4", -1), ("IV-3", 0), ("IV-3", math.pi),
+                             ("IV-3", math.pi/2)):
+            for metodo in RUTAS:
+                with self.subTest(ejercicio=ejercicio, x=x, metodo=metodo):
+                    datos = dict(funcion=ECUACIONES[ejercicio]["funcion"],
+                                 a=x, b=x+1, xl=x, xu=x+1, x0=x, x1=x+1)
+                    estado, res = self.enviar(metodo, datos)
+                    self.assertEqual(estado, 400, res)
+
+    def test_iii_10_rechaza_cero_con_condicion_del_enunciado(self):
+        for metodo in RUTAS:
+            with self.subTest(metodo=metodo):
+                estado, res = self.enviar(metodo, dict(funcion=ECUACIONES["III-10"]["funcion"],
+                    condicion="positiva_no_nula", a=0, b=3, xl=0, xu=3, x0=0, x1=3))
+                self.assertEqual(estado, 200)
+                self.assertFalse(res["convergio"])
+                self.assertEqual(res["motivo"], "raiz_no_admisible")
 
 
 def _prueba_banco(ejercicio, metodo):
