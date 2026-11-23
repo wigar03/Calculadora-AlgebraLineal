@@ -56,21 +56,21 @@ en la página, [2,3] evita esa raíz trivial sin añadir controles.
 |---|---|---|
 | Bisección podía acercarse a un polo | Validación compartida de continuidad y restricciones del AST | Polos de IV-1/3/4, hueco cancelado y signos; `ebe65e2`, `2a70237`, `415a8a6` |
 | El motor directo de regla falsa omitía continuidad | Validar también dentro del motor | Regresiones Python/HTTP; `ebe65e2` |
-| tan(pi/2) y divisiones por tan(pi) parecían finitas | Guardas según precisión del argumento | Puntos iniciales fuera del dominio; `df60a5e`, `415a8a6` |
-| Paso diminuto podía aceptarse con residuo alto | Comprobar mejora residual escalada y conservar ambos errores | Newton exp(1e8*x)+1, secante atan(1e12*x)+2; `fef932f`, `77027a6` |
+| La guarda de tan alteraba valores definidos | Retirada la guarda numérica: se conserva el evaluador del analizador sin ajustar a cero | Revisión 3; `2727a79` |
+| Paso diminuto podía aceptarse con residuo alto | La escala de semilla fue sustituida por certificación local de existencia | Revisiones 1, 2 y 5; `1badd32`, `41f88b1` |
 | Regla falsa aceptaba el redondeo como convergencia | Agotamiento antes de tolerancia y control de residuo unilateral | x^2-2 con tol 1e-100, exp(30*(x-1))-2; `25d2603`, `77027a6` |
 | Derivación simplificada podía ampliar el dominio | Evaluar dominio original antes de f' | tan, 0*ln(x), (1/x)^0; `bdb52c3` |
 | ln cerca de cero se clasificaba como asíntota del extremo | Comparar crecimiento con altura finita del borde | III-4/11 en [1e-6,2], ln y 1/x; `77027a6` |
 
 La detección numérica de continuidad sigue siendo exploratoria para expresiones arbitrarias;
 se complementa con restricciones analíticas afines/cuadráticas y trigonométricas para los casos del banco.
-No se modificó `expresiones.py`. Falta, por coordinación, repetir el banco con el campo `ecuacion`
-cuando el integrador incorpore el analizador; no hay ecuaciones completas pendientes con `funcion`.
+No se modificó `expresiones.py` ni `biseccion/dominio.py`. El analizador ya está integrado;
+la notación del documento se contrasta también en `tests/test_validacion_ejercicios.py`, sin modificar ese archivo.
 
 ## Ejecuciones y evidencia por método
 
-Ejecutado: `python -m unittest discover tests -v`: **253 pruebas OK** (incluye 82 del banco).
-Ejecutado equivalente PowerShell del bucle `node --test tests/*.cjs`: **5 archivos, 31 pruebas OK**.
+Primera entrega: `python -m unittest discover tests -v`: **253 pruebas OK** (incluye 82 del banco).
+Primera entrega: equivalente PowerShell del bucle Node: **5 archivos, 31 pruebas OK**.
 La sustitución de la tabla se contrasta con funciones independientes de `math`; Newton se contrasta
 además con diferencias finitas y su recurrencia, y los métodos cerrados conservan cambio de signo.
 Las filas siguientes proceden de HTTP real ejecutado en `77027a6`; todas tienen estado VALIDADO.
@@ -149,3 +149,30 @@ Las filas siguientes proceden de HTTP real ejecutado en `77027a6`; todas tienen 
 | IV-4 | regla_falsa | 0.4605194800321761 | 2.244734e-10 | 4.603291e-11 | 11 | tolerancia | VALIDADO | 77027a6 |
 | IV-4 | secante | 0.46051948025664863 | 8.467118e-16 | 1.804112e-16 | 5 | tolerancia | VALIDADO | 77027a6 |
 | IV-4 | newton | 0.46051948025668027 | 3.079329e-14 | 6.328271e-15 | 4 | tolerancia | VALIDADO | 77027a6 |
+
+## Revisión cruzada: siete hallazgos corregidos
+
+Segunda entrega, base `e3bdbf9` tras `git rebase main`. Se ejecutó primero la línea base:
+305 pruebas Python y 46 Node OK. `tests/test_raices_revision.py` reprodujo los siete hallazgos
+antes de corregirlos (8 pruebas, 12 fallos de aserción/subcasos).
+Resultado final ejecutado en `59079ca`: **319 pruebas Python OK y 46 Node OK en 8 archivos**.
+Se mantienen 18/18 ecuaciones y los cuatro métodos del banco; las pruebas del coordinador también pasan.
+
+La parada del usuario y la certificación son condiciones independientes. Para declarar convergencia
+se exige cambio de signo estricto alrededor de la aproximación, dominio continuo comprobado sobre
+todo ese intervalo y condición de raíz válida. El radio es la tolerancia en criterios absoluto e
+intervalo; para otros criterios es tolerancia*max(1,abs(x)). Es un radio en x, no el porcentaje del paso.
+No se emplea f(x0) como certificado. `certificacion` informa radio, intervalo, evaluaciones y razón.
+La cota de bisección continúa separada; también debe excluir cero cuando se exige raíz positiva.
+
+Las raíces múltiples/extremos sin cambio de signo quedan **sin certificar**, incluso si f(x)=0.
+Esto no afirma que no existan: evita presentar un cero flotante o un límite como existencia probada.
+La certificación es conservadora cuando el análisis del dominio no puede comprobar una restricción.
+El dominio usa intervalos racionales para las operaciones algebraicas y límites para funciones.
+Los coeficientes/discriminantes del detector de restricciones cuadráticas se calculan con Fraction.
+
+Nuevo motivo `no_certificada`: «El criterio de parada se alcanzó, pero no se pudo certificar una raíz
+admisible cercana con cambio de signo en un intervalo continuo; puede tratarse de una raíz múltiple,
+un extremo o un límite sin raíz». Coordinado con el integrador para los cuatro JS; no se editaron aquí.
+Secante conserva `advertencias` como lista de str, sin objetos nuevos; Newton conserva objetos tipo/n.
+Los detalles estructurados van en `certificacion`. Se ejecutó una regresión específica del contrato.
