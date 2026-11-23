@@ -2,11 +2,15 @@
 
 Formato: ID · fecha · tipo (fuente / analizador / motor / presentación / infraestructura) · estado.
 
-## INC-001 · 2026-11-23 · fuente · ABIERTA (requiere al propietario)
+## INC-001 · 2026-11-23 · fuente · CERRADA como limitación del enunciado (decisión del propietario)
 **IV-2 y IV-5 no tienen igualdad.** En el XML del banco ampliado, cada uno contiene solo un `m:rad` OMML:
 IV-2 `√(2x³/(x−3))`, IV-5 `√((x+4)/(x−1))`. No hay `=`, lado derecho, texto oculto, control de cambios ni
 comentarios. No es un fallo de la calculadora. No se inventa el lado derecho ni se supone `= 0`.
 Pregunta enviada al propietario: ¿cuál es la igualdad completa de cada uno?
+**Decisión del propietario (etapa 3):** confirmado en el Word original: IV-2 `sqrt((2*x^3)/(x-3))` e IV-5
+`sqrt((x+4)/(x-1))` no incluyen igualdad. No se suponen igualadas a cero: un radical no presenta el cambio de signo
+que exigen bisección y falsa posición. Se registran como limitación del enunciado original; se conserva la
+validación de las expresiones y de sus dominios (pruebas de Antigravity en `tests/test_expresiones_notacion.py`).
 Mientras tanto: se prueba que la evaluación de ambos radicales respeta su dominio (IV-2: x ≤ 0 o x > 3;
 IV-5: x ≤ −4 o x > 1).
 
