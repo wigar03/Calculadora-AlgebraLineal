@@ -12,6 +12,7 @@ encontrados. No hay módulos nuevos ni cambios en la interfaz; los resultados de
 - **LaTeX que compila:** matrices de hasta 20 columnas, porcentajes con el idioma español, tablas largas ajustadas al
   ancho de la página, barra invertida sin llaves sobrantes, letras griegas y símbolos con su comando; los caracteres
   sin soporte se muestran como `[U+XXXX]`.
+- **Servidor:** una petición demasiado grande recibe siempre el mensaje del límite, no un corte de conexión.
 - **Guía matemática:** la fórmula de Gauss-Seidel vuelve a mostrar sus dos sumatorios en GitHub.
 
 ## Validación

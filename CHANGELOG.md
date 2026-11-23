@@ -7,6 +7,7 @@ Candidata de consolidación: exportaciones validadas con pdflatex, LibreOffice C
 - CSV protegido contra fórmulas precedidas de espacios; fracciones, enteros largos y ceros conservados.
 - Documentos LaTeX que compilan con matrices grandes, tablas largas, porcentajes, griego y Unicode.
 - Fórmula de Gauss-Seidel de la guía corregida en GitHub.
+- Mensaje del límite garantizado ante peticiones demasiado grandes.
 
 ## 1.0.0-rc.6
 

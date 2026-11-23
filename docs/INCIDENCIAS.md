@@ -143,6 +143,11 @@ como `[U+XXXX]`, nunca se omite. La CI compila ese adversario en el job `externo
 Localmente Chrome y Edge salían con código 0 sin abrir CDP: Orca corre elevado y Chromium se relanza des-elevado sin
 heredar stderr. La prueba usa `--do-not-de-elevate` en Windows. Diagnóstico: `docs/validacion/chrome-local.md`.
 
+### INC-030 · 2026-11-23 · servidor · CERRADA (8fff2a2)
+La CI de Linux falló una vez con `BrokenPipe`: ante un cuerpo mayor de 256 KB el servidor respondía 413 y cerraba sin
+leerlo, y el cliente que aún enviaba recibía un cierre abrupto en lugar del mensaje del límite (reproducido también
+en Windows). Ahora se lee y descarta hasta 4 MiB antes de responder; prueba `tests/test_cuerpo_excesivo.py`.
+
 ### INC-029 · 2026-11-23 · limitaciones externas · REGISTRADA
 - Excel no está disponible en ningún entorno autorizado: la compatibilidad se comprobó con LibreOffice Calc 26.2 y
   Gnumeric 1.12 (abrir, guardar y reabrir), no con Excel.
