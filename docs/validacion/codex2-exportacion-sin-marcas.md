@@ -47,7 +47,7 @@ Tres Jacobi de 10 000 filas y una bisección de 1000, cuatro procesos Node simul
 162,83–175,55 ms para cada Jacobi, 11,88 ms para bisección; RSS máximo por proceso **165,34 MiB**.
 Todas las filas están presentes, sin mutar los procedimientos; salida de la medición: código 0.
 
-## Único fallo adicional de la batería completa
+## Único fallo adicional de la batería completa (histórico)
 
 Con `REQUIERE_EXTERNOS=1`, motor LaTeX en PATH, Calc y Gnumeric configurados, la batería completa ejecutó
 **497 pruebas en 180,021 s, un fallo, cero omisiones y ninguna marca esperada ni éxito inesperado**.
@@ -57,3 +57,54 @@ el fixture CSV contiene `Unicode: ñ á Ω 你好` y pdfLaTeX aborta con
 No es uno de los 37 PDF del contrato (su adversario exige acentos latinos y caracteres especiales).
 No se ha retirado ni debilitado esa prueba adicional; el bloqueo se comunica al integrador para resolver
 el alcance del fixture o asignar el soporte Unicode de `exportar.js`, que no se edita en esta rama.
+
+## Revalidación final desde main 5ec2154: Unicode corregido
+
+La rama se rebasó sobre `main` `5ec2154`, que integra la corrección Unicode de Antigravity
+(`1ec825c`, incorporada como `35cd3cb`); esta revalidación no modifica código, pruebas ni golden.
+SHA-256 actual de `exportar.js`: `4fdaf33e838b154e1793dbe1bc12876f6d51baade4d99a317c4be0a80cb5672e`.
+Se usó `REQUIERE_EXTERNOS=1`; se eliminaron `P2_EXPORTAR_JS`, `CSV_EXIGIR_PENDIENTES` y
+`CSV_TEXTO_RACIONAL_EXACTO` del entorno. Los oráculos funcionan sin excepciones y conservan la exigencia
+predeterminada de texto racional exacto. Los perfiles de importación no alteran los bytes exportados.
+
+| Herramienta / perfil | Resultado independiente |
+|---|---|
+| Python completo, herramientas obligatorias | **497/497 pruebas aprobadas**, 178,737 s, cero omisiones o marcas |
+| `test_compilacion_real_si_hay_motor_instalado` | Pasa también el adversario original `ñ á Ω 你好` |
+| `test_externo_latex` | 37 PDF, 74 pasadas correctas; cero `Overfull hbox`, máximo 0 pt |
+| LibreOffice Calc, especiales desactivados | 22/22 etapas correctas, cero errores |
+| LibreOffice Calc, especiales activados | 22/22 etapas correctas, cero errores; prueba adicional 10,987 s |
+| Gnumeric STF, locale español | 22/22 etapas correctas, cero errores |
+| Node, incluidos auxiliares y Chrome portátil real | 81/81 pruebas aprobadas, cero omisiones; 5,509 s |
+
+Los libros se importaron, guardaron y reabrieron; valores, tipos, fórmulas y cabeceras racionales se
+comprobaron con los oráculos independientes existentes, sin retirar el adversario `ñ á Ω 你好`.
+
+### Comprobación del texto visible del PDF
+
+Se exportó un procedimiento cuyo único texto de muestra es `ñ á Ω 你好`, sin escribir los códigos
+de respaldo en la entrada, y se compiló dos veces con el mismo `exportar.js` de main y pdfLaTeX.
+El PDF tiene una página, sin errores, caracteres perdidos ni desbordamientos mayores de 1 pt.
+
+Se extrajo el texto con **pypdf y PyMuPDF**, de forma independiente de los formateadores:
+
+```text
+Comprobación Unicode: Ω [U+4F60][U+597D]
+Texto original del usuario
+ñ á Ω [U+4F60][U+597D]
+```
+
+Ambos extractores devuelven para el glifo griego `Ω` (U+2126), canónicamente equivalente a `Ω` (U+03A9);
+la normalización **NFC** de ambos textos confirma `Ω`. No se confunde el respaldo con un literal añadido
+por la prueba: `你` produce `[U+4F60]` y `好` produce `[U+597D]` en la salida real.
+También se renderizó la página a PNG con PyMuPDF a escala 2 y se inspeccionó la imagen: se ve la letra
+griega Ω, los dos códigos entre corchetes, los acentos y la ñ; sin recortes, solapamientos ni glifos vacíos.
+
+Evidencia local bajo `%TEMP%/orca-latex-rendimiento-9r1w7eur/unicode-main-5ec2154/`:
+`visible/documento.pdf`, `visible/pagina-1.png`, dos textos extraídos e `informe.json`;
+`csv-predeterminado/{calc,gnumeric}/informe.json` y `csv-especiales/calc/informe.json` conservan los 66
+resultados de etapas y los libros. El script de comprobación está en `scratch/verificar_unicode_pdf.py`.
+
+La compilación conserva la paginación de los casos largos: Jacobi 143 páginas, bisección 14 y regla falsa 20.
+El único fallo Unicode histórico queda resuelto; no hay fallos, omisiones, marcas ni éxitos inesperados
+en la batería completa actual. Se mantiene íntegro el fixture que permitió descubrirlo.
