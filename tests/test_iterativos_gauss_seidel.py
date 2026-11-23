@@ -66,6 +66,32 @@ class PasosGaussSeidel(unittest.TestCase):
         for obtenido, esperado in zip(x, REFERENCIAS["principal"]["iteraciones_gauss_seidel"][0]):
             self.assertAlmostEqual(obtenido, float(F(esperado)), places=14)
 
+    def test_tres_barridos_float_contra_el_banco_a_1e_12(self):
+        for nombre, caso in CASOS.items():
+            referencia = REFERENCIAS[nombre]
+            if referencia["diagonal_nula"]:
+                continue
+            A = [[float(F(v)) for v in fila] for fila in caso["A"]]
+            b = [float(F(v)) for v in caso["b"]]
+            x = [float(F(v)) for v in caso.get("x0", [0] * len(b))]
+            for k, esperados in enumerate(referencia["iteraciones_gauss_seidel"], 1):
+                with self.subTest(caso=nombre, k=k):
+                    x, detalle = paso_gauss_seidel(A, b, x)
+                    for obtenido, esperado in zip(x, esperados):
+                        valor = float(F(esperado))
+                        self.assertAlmostEqual(obtenido, valor, delta=1e-12 * max(1, abs(valor)))
+                    self.assertEqual([d["valor"] for d in detalle], x)
+
+    def test_normalizar_no_crea_cocientes_no_representables(self):
+        A = [[1e-308, 1e308], [0.0, 1.0]]
+        x, _ = paso_gauss_seidel(A, [1e-308, 0.0], [0.0, 0.0])
+        self.assertEqual(x, [1, 0])  # evita infinito * 0 al normalizar
+        A = [[1e308, 1e-308], [0.0, 1.0]]
+        x, _ = paso_gauss_seidel(A, [0.0, 1e308], [0.0, 1e308])
+        esperado = float(-F(A[0][1]) * F(1e308) / F(A[0][0]))
+        self.assertNotEqual(esperado, 0)
+        self.assertEqual(x, [esperado, 1e308])  # evita perder el cociente a cero
+
     def test_latex_cientifico_y_dimensiones(self):
         _, detalle = paso_gauss_seidel([[1.0]], [1e-20], [0.0])
         self.assertIn(r"\times 10^{-20}", detalle[0]["sustitucion_latex"])
