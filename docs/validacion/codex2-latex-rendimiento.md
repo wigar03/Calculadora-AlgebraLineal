@@ -87,3 +87,19 @@ Jacobi: 188,05 / 192,91 / 189,46 ms para LaTeX+CSV; RSS máximo 141,41 / 141,78 
 Cada una produjo 5 563 755 bytes LaTeX y 4 544 394 bytes CSV, con las 10 000 filas y sin mutar la respuesta.
 Bisección: 12,48 ms; RSS máximo 54,32 MiB; 134 994 bytes LaTeX, 77 433 bytes CSV, 1000 filas completas.
 El tiempo total por proceso, incluido inicio/lectura, fue 0,329–0,336 s para Jacobi y 0,075 s para bisección.
+
+## Baterías y estado de entrega
+
+- `python -m unittest discover tests -v`: **476 pruebas, OK**, 42,304 s, dos omisiones por ausencia de motor en PATH.
+  La distribución portátil se añade al PATH solo para la ejecución externa dedicada.
+- `REQUIERE_EXTERNOS=1 python -m unittest discover tests -p 'test_externo_*.py' -v`:
+  **15 pruebas, OK con 14 fallos esperados**, 27,786 s; se compilan los 37 documentos en total.
+- `node --test tests/test_*.cjs`, con `P2_BROWSER_EXE` apuntando a Chrome portátil:
+  **68 pruebas aprobadas**, cero omisiones, incluye los 11 módulos en navegador real, 16,280 s.
+- `python scripts/medir_robustez.py`: **código 0**, incluidas entradas adversarias y peticiones ligeras simultáneas.
+- `python scripts/medir_robustez.py --concurrencia-grande`: **código 0** con las medidas anteriores.
+- `python scripts/medir_exportaciones.py`: **código 0** con las medidas anteriores.
+- Diff contra la base: `src/` y `tests/validacion/golden/` intactos; solo pruebas, scripts y este informe.
+
+Pendiente explícito: incorporar por el integrador las correcciones de Antigravity, revalidarlas con
+`P2_EXPORTAR_JS` y retirar los 14 `expectedFailure`; los documentos afectados no se declaran aprobados.
