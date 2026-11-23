@@ -73,7 +73,7 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
             cert = certificar_raiz(f, p["x"], tol, criterio, condicion)
             if not cert["certificada"]:
                 motivo, convergio = "no_certificada", False
-                avisos.append(aviso_no_certificada(cert))
+                avisos.append(aviso_no_certificada(len(pasos)-1))
         valores = {"absoluto": p["error_absoluto"], "relativo": p["error_relativo"],
                    "residuo": abs(p["fx"])}
         clases = {k: clasificar(v, tol) for k, v in valores.items()}

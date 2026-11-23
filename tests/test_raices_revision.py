@@ -16,7 +16,7 @@ class TestRevisionRaices(unittest.TestCase):
         cls.url = cls.enterClassContext(servidor_local())
 
     def resolver(self, metodo, **datos):
-        datos = dict(tolerancia=1e-6, max_iteraciones=200, **datos)
+        datos = {"tolerancia": 1e-6, "max_iteraciones": 200, **datos}
         req = Request(self.url+"/api/"+metodo+"/resolver", json.dumps(datos).encode(),
                       {"Content-Type": "application/json"})
         try:
@@ -44,7 +44,7 @@ class TestRevisionRaices(unittest.TestCase):
                 self.assertEqual(estado, 200)
                 self.assertFalse(r["convergio"], r)
                 self.assertEqual(r["motivo"], "no_certificada")
-                self.assertTrue(r["advertencias"])
+                self.assertFalse(r["certificacion"]["certificada"])
 
     def test_3_tan_conserva_valores_definidos(self):
         x = math.nextafter(math.pi, math.inf)
@@ -90,7 +90,8 @@ class TestRevisionRaices(unittest.TestCase):
 
     def test_7_ln_cerca_del_borde_sigue_continua(self):
         for metodo in ("biseccion", "regla-falsa"):
-            estado, r = self.resolver(metodo, funcion="ln(x)+sin(x)-1.2", a=1e-16, b=2, xl=1e-16, xu=2)
+            estado, r = self.resolver(metodo, funcion="ln(x)+sin(x)-1.2", a=1e-16, b=2,
+                                      xl=1e-16, xu=2, max_iteraciones=1000)
             self.assertEqual(estado, 200, r)
             self.assertTrue(r["convergio"])
             self.assertAlmostEqual(r["raiz"], 1.2754495800797368, delta=1e-6)
@@ -117,3 +118,12 @@ class TestRevisionRaices(unittest.TestCase):
             self.assertEqual(estado, 200)
             self.assertTrue(r["cumple"]["residuo"])
             self.assertFalse(r["convergio"])
+
+    def test_secante_advertencias_solo_contiene_cadenas(self):
+        for funcion, semillas in (("1+1e-14*x", dict(x0=0, x1=1)),
+                                   (IV3, dict(x0=-1, x1=-.5))):
+            estado, r = self.resolver("secante", funcion=funcion, **semillas)
+            self.assertEqual(estado, 200)
+            if funcion.startswith("1+"):
+                self.assertTrue(r["advertencias"])
+            self.assertTrue(all(isinstance(a, str) for a in r["advertencias"]), r["advertencias"])

@@ -35,8 +35,8 @@ def certificar_raiz(f, x, tolerancia, criterio, condicion):
     return dict(cert, certificada=True, razon="cambio_de_signo_en_dominio_continuo")
 
 
-def aviso_no_certificada(cert):
-    return {"tipo": "no_certificada", "razon": cert["razon"],
+def aviso_no_certificada(n):
+    return {"tipo": "no_certificada", "n": n,
             "mensaje": "El criterio de parada se alcanzó, pero no se pudo certificar una raíz "
                        "admisible cercana con cambio de signo en un intervalo continuo. "
                        "Puede tratarse de una raíz múltiple, un extremo o un límite sin raíz."}

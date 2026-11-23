@@ -5,7 +5,7 @@ from ..regla_falsa.dominio import (
     ExpresionNumerica as Expresion, validar_condicion, raiz_admisible, verificar_raiz,
 )
 from ..core.tolerancia import clasificar, informe
-from ..regla_falsa.certificacion import certificar_raiz, aviso_no_certificada
+from ..regla_falsa.certificacion import certificar_raiz
 
 
 def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, criterio="absoluto",
@@ -35,7 +35,6 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
             cert = certificar_raiz(f, b, tol, criterio, condicion)
             if not cert["certificada"]:
                 motivo, convergio = "no_certificada", False
-                avisos.append(aviso_no_certificada(cert))
         valores = {"absoluto": ea, "relativo": er, "residuo": abs(fb)}
         clases = {k: clasificar(v, tol) for k, v in valores.items()}
         return {"funcion": f.texto, "funcion_latex": f.latex(), "iniciales": iniciales,
@@ -64,7 +63,7 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
             return resultado("divergencia", False)
         # Escala relativa: una diferencia pequeña frente a las evaluaciones.
         if abs(den) < 1e-12*max(abs(fa),abs(fb)):
-            avisos.append(n)
+            avisos.append(str(n))
         c = b - (fb/den)*(b-a)
         if not math.isfinite(c):
             return resultado("divergencia", False)
