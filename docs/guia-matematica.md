@@ -448,7 +448,14 @@ x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{
 \qquad T_{GS} = -(D+L)^{-1}U.
 ```
 
-**Convergencia.** El método converge para todo $`x^{(0)}`$ si y solo si $`\rho(T) < 1`$. La calculadora obtiene el polinomio característico exacto de $`T`$ (Faddeev-LeVerrier con fracciones) y decide $`\rho(T) < 1`$ con la prueba de Schur-Cohn en aritmética racional, sin redondeo. Son condiciones suficientes la dominancia diagonal estricta por filas (ambos métodos) y, solo para Gauss-Seidel, que $`A`$ sea simétrica definida positiva. La dominancia **no es necesaria** y Gauss-Seidel **no siempre** es más rápido: en $`A = \begin{pmatrix}1&2&-2\1&1&1\2&2&1\end{pmatrix}`$, $`\rho(T_J) = 0`$ (Jacobi converge) y $`\rho(T_{GS}) = 2`$ (diverge).
+**Convergencia.** El método converge para todo $`x^{(0)}`$ si y solo si $`\rho(T) < 1`$. La calculadora obtiene el polinomio característico exacto de $`T`$ (Faddeev-LeVerrier con fracciones) y decide $`\rho(T) < 1`$ con la prueba de Schur-Cohn en aritmética racional, sin redondeo. Son condiciones suficientes la dominancia diagonal estricta por filas (ambos métodos) y, solo para Gauss-Seidel, que $`A`$ sea simétrica definida positiva. La dominancia **no es necesaria** y Gauss-Seidel **no siempre** es más rápido: en
+
+```math
+A = \begin{pmatrix}1&2&-2\\1&1&1\\2&2&1\end{pmatrix},
+\qquad \rho(T_J) = 0,\qquad \rho(T_{GS}) = 2.
+```
+
+Jacobi converge y Gauss-Seidel diverge en este ejemplo.
 
 **Parada.** Cambio $`\|x^{(k+1)} - x^{(k)}\|_\infty`$ y residuo $`\|b - Ax^{(k+1)}\|_\infty`$, ambos relativos. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
 
