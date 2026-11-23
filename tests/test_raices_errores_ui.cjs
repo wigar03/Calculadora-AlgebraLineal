@@ -55,7 +55,7 @@ function crearEntorno(mensajeError) {
 
 test('bisección muestra diagnóstico específico en resultado y vista previa', async () => {
   const msg = errorReal('2x + 3 = 7');
-  assert.match(msg, /multiplicación/i);
+  assert.match(msg, /multiplicación entre 2 y x\. Escribe 2\*x \+ 3 = 7\./i);
   const env = crearEntorno(msg);
   env.cargar('biseccion.js');
   const form = env.doc.getElementById('bis-form');

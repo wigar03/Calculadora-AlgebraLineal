@@ -42,8 +42,12 @@ class TestNotacionEIgualdades(unittest.TestCase):
 
     def test_banco_12_explicitas_aceptadas_y_6_implicitas_diagnosticadas(self):
         esperados = {
-            "III-1": "4*x", "III-2": "3*x", "III-5": "3*x",
-            "III-13": "3*sen", "III-14": "2*x", "IV-3": "2*x",
+            "III-1": "Escribe x^3 − 4*x − 9 = 0.",
+            "III-2": "Escribe e^x − 3*x^2 = 0.",
+            "III-5": "Escribe x^4 − 3*x^2 − 3 = 0.",
+            "III-13": "Escribe x^2 − 3*sen(x) − ln(x + 2) = 0.",
+            "III-14": "Escribe e^(x/2) + sen(2*x) = 3.",
+            "IV-3": "Escribe e^(1/x) + 2*x / tan(x) = 2.",
         }
         for clave, datos in ECUACIONES.items():
             with self.subTest(ejercicio=clave):
@@ -58,7 +62,7 @@ class TestNotacionEIgualdades(unittest.TestCase):
                     self.assertTrue(f_eq.latex())
         with self.assertRaises(ValueError) as ctx:
             Expresion(INCOMPLETOS["IV-2"]["expresion"])
-        self.assertIn("2*x", str(ctx.exception))
+        self.assertIn("Escribe sqrt(2*x^3/(x-3)).", str(ctx.exception))
         f_iv2 = Expresion(hacer_explicita(INCOMPLETOS["IV-2"]["expresion"]))
         self.assertAlmostEqual(f_iv2(4.0), math.sqrt(128.0), places=12)
         for mal_x in (3.0, 1.0):

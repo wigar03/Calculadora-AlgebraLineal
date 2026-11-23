@@ -17,11 +17,19 @@ class TestDiagnosticosSintaxis(unittest.TestCase):
 
     def test_multiplicacion_omitida(self):
         casos = [
-            ("2x", ["multiplicación", "2*x"]), ("4x - 9", ["multiplicación", "4*x"]),
-            ("3x^2 - 1", ["multiplicación", "3*x"]), ("x(x+1)", ["multiplicación", "x*("]),
-            ("2(x+1)", ["multiplicación", "2*("]), ("(x+1)(x-1)", ["multiplicación", ")*("]),
-            ("3 sen(x)", ["multiplicación", "3*sen"]), ("sin(x)cos(x)", ["multiplicación", ")*cos"]),
-            ("2e^x", ["multiplicación", "2*e"]),
+            ("2x", ["entre 2 y x", "escribe 2*x."]),
+            ("2x + 3 = 7", ["entre 2 y x", "escribe 2*x + 3 = 7."]),
+            ("x = 2x + 3", ["entre 2 y x", "escribe x = 2*x + 3."]),
+            ("x² + 2x = 1", ["entre 2 y x", "escribe x² + 2*x = 1."]),
+            ("2x + 3x = 5", ["entre 2 y x", "escribe 2*x + 3x = 5."]),
+            ("4x - 9", ["entre 4 y x", "escribe 4*x - 9."]),
+            ("3x^2 - 1", ["entre 3 y x", "escribe 3*x^2 - 1."]),
+            ("x(x+1)", ["entre x y (", "escribe x*(x+1)."]),
+            ("2(x+1)", ["entre 2 y (", "escribe 2*(x+1)."]),
+            ("(x+1)(x-1)", ["entre ) y (", "escribe (x+1)*(x-1)."]),
+            ("3 sen(x)", ["entre 3 y sen(...)", "escribe 3*sen(x)."]),
+            ("sin(x)cos(x)", ["entre ) y cos(...)", "escribe sin(x)*cos(x)."]),
+            ("2e^x", ["entre 2 y e", "escribe 2*e^x."]),
         ]
         for texto, frags in casos:
             with self.subTest(texto=texto):
