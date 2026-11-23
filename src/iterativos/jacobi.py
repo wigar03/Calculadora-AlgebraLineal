@@ -1,6 +1,8 @@
 """Un paso simultáneo de Jacobi sobre datos numéricos previamente normalizados."""
 
+from fractions import Fraction
 from math import isfinite
+from sys import float_info
 
 from src.core.arithmetic import format_latex_number
 
@@ -35,10 +37,17 @@ def paso_jacobi(A, b, x):
     anteriores = tuple(x)
     nuevos, detalle = [], []
     for i, fila in enumerate(A):
-        suma = sum((a * anteriores[j] for j, a in enumerate(fila) if j != i), 0.0)
-        valor = float((b[i] - suma) / fila[i])
-        nuevos.append(valor)
         indices = [j for j, a in enumerate(fila) if j != i and a != 0]
+        productos = [fila[j] * anteriores[j] for j in indices]
+        if any(anteriores[j] != 0 and abs(p) < float_info.min
+               for j, p in zip(indices, productos)):
+            # Evita perder a_ij*x_j antes de dividir por a_ii. El cociente
+            # racional también evita desbordar al normalizar a_ij/a_ii.
+            suma = sum(Fraction(fila[j]) * Fraction(anteriores[j]) for j in indices)
+            valor = float((Fraction(b[i]) - suma) / Fraction(fila[i]))
+        else:
+            valor = float((b[i] - sum(productos, 0.0)) / fila[i])
+        nuevos.append(valor)
         simbolica = " + ".join(rf"\left({_latex(fila[j])}\right)x_{{{j + 1}}}^{{(k)}}"
                               for j in indices) or "0"
         numerica = " + ".join(rf"\left({_latex(fila[j])}\right)\cdot"

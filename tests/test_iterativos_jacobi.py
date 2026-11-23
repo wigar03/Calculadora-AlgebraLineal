@@ -82,6 +82,33 @@ class TestJacobi(unittest.TestCase):
             with self.subTest(sistema=sistema), self.assertRaisesRegex(ValueError, "dimensión"):
                 paso_jacobi(*sistema)
 
+    def test_paso_con_productos_subnormales_conserva_el_esquema(self):
+        minimo = float.fromhex("0x0.0000000000001p-1022")
+        A, b, x = [[1e-200, 5e-201], [5e-201, 1e-200]], [minimo] * 2, [minimo / 1e-200] * 2
+        esperado = [float((F(b[i]) - sum(F(A[i][j]) * F(x[j]) for j in range(2) if j != i))
+                          / F(A[i][i])) for i in range(2)]
+        nuevo, detalle = paso_jacobi(A, b, x)
+        for valor, referencia in zip(nuevo, esperado):
+            self.assertTrue(math.isclose(valor, referencia, rel_tol=1e-15, abs_tol=0.0))
+        self.assertEqual([d["usa_nuevos"] for d in detalle], [[], []])
+
+    def test_solucion_subnormal_por_api_con_residuo_independiente(self):
+        from urllib.request import Request, urlopen
+        from src.ui.web_server import servidor_local
+        payload = {"A": [["1e-200", "5e-201"], ["5e-201", "1e-200"]],
+                   "b": ["5e-324", "5e-324"], "metodo": "jacobi", "tolerancia": 1e-6}
+        with servidor_local() as base:
+            req = Request(base + "/api/iterativos/resolver", json.dumps(payload).encode(),
+                          {"Content-Type": "application/json"})
+            with urlopen(req, timeout=5) as response:
+                result = json.loads(response.read())
+        A, b, x = [[F(v) for v in row] for row in result["A"]], list(map(F, result["b"])), list(map(F, result["solucion"]))
+        r = max(abs(bi - sum(a * v for a, v in zip(row, x))) for row, bi in zip(A, b))
+        escala = max(map(abs, b)) + max(sum(map(abs, row)) for row in A) * max(map(abs, x))
+        self.assertTrue(result["convergio"])
+        self.assertLessEqual(float(r / escala), 1e-6)
+        self.assertGreater(len(result["iteraciones"]), 2)
+
 
 class TestEntradaIterativos(unittest.TestCase):
     def test_decimales_fracciones_y_conversion_sin_mutacion(self):
