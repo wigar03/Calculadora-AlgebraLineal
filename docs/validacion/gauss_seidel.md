@@ -51,7 +51,8 @@ las raíces de p(r*z) están en el disco unidad si y solo si rho<r.
 Se utiliza así el criterio exacto para acotar el máximo módulo, evitando resolver
 raíces complejas mal condicionadas. Error absoluto <= max(1,2*rho)*2^-38.
 Base del criterio recursivo: [Garza, Martínez y Romero, Algorithm 1](https://www.mdpi.com/2227-7390/8/8/1322).
-Con n>12 o diagonal nula los radios son null y se informa «No calculado».
+En el caso general con n>12 o diagonal nula los radios son null y se informa «No calculado».
+La revisión posterior añadió la excepción triangular exacta para n>12, descrita abajo.
 Dominancia estricta y SPD para GS pueden seguir proporcionando garantía.
 SPD se verifica por simetría y eliminación LDL racional con pivotes positivos.
 
@@ -89,3 +90,69 @@ Quedan revisión independiente e integración por el coordinador, incluidos Jaco
 | fbafe18 | fix(iterativos): respetar estabilidad exacta ante transitorios crecientes | 17 |
 
 El commit documental que contiene este informe completa la entrega; cada commit es <=100 líneas.
+
+## Revisión cruzada e integración de controles HTML (2026-11-23)
+
+Rama `orca/gauss-seidel` rebasada sobre main `a9627f8`, sin tocar entrada, matriz,
+Jacobi, vista ni handlers; el bloque API existente ya pasa los parámetros al resolvedor.
+
+INC-015 reproducida y corregida: `max_iteraciones: "100"` devuelve HTTP 200,
+con `max_iteraciones` entero en la respuesta, en vez del error que bloqueaba Resolver.
+Se admiten enteros decimales ASCII en texto, espacios exteriores y ceros iniciales:
+`"1"`, `"100"`, `" 100 "`, `"000100"`, `"10000"`.
+Se rechazan exponentes, signos y decimales (`"1e2"`, `"+100"`, `"10.5"`), texto
+inválido, booleanos, 0, negativos y valores mayores de 10000, con mensaje reparable.
+La tolerancia admite `"1e-6"` y `"0.000001"`; sigue exigiendo un valor positivo finito.
+`reordenar` admite el booleano real que envía `.checked` y también `"true"`/`"false"`
+(sin distinguir mayúsculas ni espacios exteriores); otros textos se rechazan.
+Se prueba el cuerpo exacto de `iterativos.js:490–493`: celdas A/b/x0 en texto,
+tolerancia/máximo/criterio en texto y checkbox booleano; se prueban además todos los
+escalares en texto para `/resolver`, `/comparar` y `/analizar`.
+`/analizar` conserva su contrato: analiza A/b/x0 y reordenamiento sin usar controles de parada.
+
+Tres regresiones adversarias de Codex 1 se comprobaron fallando antes del arreglo:
+
+- Meseta nilpotente n=9: ambos métodos daban estancamiento pese a cambio infinito 1.
+  La meseta de residuo exige ahora cambio nulo; alcanzan tolerancia en k=10 con x=unos.
+- Transitorio n=20, A=I−100N: se demostraba indebidamente ninguna garantía y se cortaba
+  por crecimiento en k=7; se reconoce triangularidad y T^n=0 exactamente aun con n>12.
+  Ambos métodos superiores alcanzan x=unos y tolerancia en k=21; se prueba también la
+  versión inferior (Jacobi k=21, GS k=2). La garantía es demostrada y ambos radios son 0.
+- A=[[1e308]], b=[1e308], x0=[1]: se sobrescribía el residuo robusto con infinito.
+  Se conserva ahora el cociente protegido de matriz.residuo: un paso, residuo relativo 0,
+  tolerancia satisfecha. Los valores realmente no finitos siguen provocando parada.
+
+Las tres entradas pasan también por HTTP para ambos métodos, comparar y analizar,
+con controles HTML en texto; no se sustituyó ninguna iteración por solución directa.
+
+Ejecución final, antes del cambio puramente documental:
+
+- `python -m unittest discover tests -v`: **400 pruebas, OK**, 13.308 segundos.
+- Los 10 archivos `tests/*.cjs` con `node --test`: **57 pruebas, 57 OK, 0 fallos**.
+- Las tres pruebas propias suman **38 tests**; API+convergencia: 33 tests OK.
+- `git diff --check a9627f8..HEAD`: sin errores.
+- Logs locales: `%TEMP%/gauss-seidel-revision-python.log` y `gauss-seidel-revision-node.log`.
+
+Auditoría de lectura de los archivos de Codex 1: 2912 emparejamientos frente a flujo
+máximo independiente, 600 permutaciones con solución preservada, 208 rangos contra SymPy,
+288 errores de celda y 2428 fórmulas KaTeX estrictas sin fallos en esas comprobaciones.
+Hallazgos reproducidos pendientes: P1 de residuo/iteración subnormal (API informa relativo 0
+con razón racional real 0.2), P2 de magnitud sin celda y P2 de celda tras reordenar.
+Detalles y correcciones sugeridas en
+`C:/Users/wigar/AppData/Local/Temp/revision_iterativos_codex1_task_36b5663b4c45.md`.
+La auditoría no cambió los módulos de Codex 1; los P2 son fallos de integración de la preparación.
+
+Commits de esta revisión (líneas añadidas + eliminadas):
+
+| Hash | Mensaje | Líneas |
+|---|---|---:|
+| c500a51 | fix(iterativos): aceptar los valores de los controles HTML | 23 |
+| e6778c1 | test(api): cubrir el cuerpo de texto del editor iterativo | 56 |
+| e1ed070 | test(api): rechazar opciones de texto invalidas con mensajes claros | 18 |
+| 9ccbe2a | fix(iterativos): exigir falta de cambio para detectar estancamiento | 17 |
+| 6d976b6 | fix(iterativos): demostrar nilpotencia triangular hasta orden veinte | 33 |
+| e1a2f3d | fix(iterativos): conservar el residuo robusto con escalas grandes | 23 |
+| 010339a | test(api): reproducir regresiones adversarias con controles HTML | 26 |
+
+Quedan revisión e integración del coordinador y asignación de los hallazgos de la auditoría;
+no se hizo push, merge a main ni release y no se requiere decisión del propietario.
