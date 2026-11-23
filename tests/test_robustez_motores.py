@@ -1,5 +1,7 @@
 """Límites de los motores, independientes de la validación HTTP."""
 import unittest
+import itertools
+import random
 from fractions import Fraction
 from unittest.mock import patch
 
@@ -92,6 +94,51 @@ class TestNumerosAcotados(unittest.TestCase):
     def test_denominador_cero_es_valueerror_en_espanol(self):
         with self.assertRaisesRegex(ValueError, "denominador.*cero"):
             parse_number("2/0")
+
+
+class TestDeterminanteRobusto(unittest.TestCase):
+    def test_cofactores_limite_y_lu_disponible(self):
+        for n in range(lim.COFACTORES_MAX + 1, lim.DETERMINANTE_MAX + 1):
+            with self.subTest(n=n):
+                with self.assertRaisesRegex(LimiteExcedido, "LU"):
+                    calcular_determinante(identidad(n), "cofactores")
+                self.assertEqual(calcular_determinante(identidad(n), "lu").determinante, 1)
+
+    def test_bareiss_con_referencia_independiente_de_permutaciones(self):
+        from src.matrices.determinante import determinante_bareiss
+        rnd = random.Random(947)
+        for n in range(1, 6):
+            for _ in range(5):
+                a = [[Fraction(rnd.randint(-3, 3), rnd.randint(1, 5)) for _ in range(n)] for _ in range(n)]
+                esperado = Fraction(0)
+                for p in itertools.permutations(range(n)):
+                    signo = (-1) ** sum(p[i] > p[j] for i in range(n) for j in range(i + 1, n))
+                    producto = Fraction(signo)
+                    for i, j in enumerate(p):
+                        producto *= a[i][j]
+                    esperado += producto
+                with self.subTest(n=n, a=a):
+                    self.assertEqual(determinante_bareiss(a), esperado)
+                    for metodo in ("lu", "cofactores"):
+                        self.assertEqual(calcular_determinante(a, metodo).determinante, esperado)
+
+    def test_bareiss_pivoteo_singular_y_orden_maximo(self):
+        from src.matrices.determinante import determinante_bareiss
+        for a, esperado in [([[0, 2], [3, 4]], -6), ([[0, 1, 2], [0, 2, 4], [0, 3, 6]], 0),
+                            (identidad(lim.DETERMINANTE_MAX), 1), ([[0]], 0)]:
+            self.assertEqual(determinante_bareiss(a), esperado)
+
+    def test_ambos_metodos_se_comprueban_con_bareiss(self):
+        for metodo in ("lu", "cofactores"):
+            with patch("src.matrices.determinante.determinante_bareiss", return_value=Fraction(77)):
+                with self.assertRaisesRegex(ArithmeticError, "comprobación"):
+                    calcular_determinante(identidad(3), metodo)
+
+    def test_eficiencia_grande_en_notacion_cientifica(self):
+        analisis = analizar_eficiencia_determinante(lim.EFICIENCIA_N_MAX)
+        self.assertRegex(analisis.ops_cofactores, r"^\d\.\d+e\+\d+$")
+        self.assertIn(analisis.ops_cofactores, analisis.justificacion)
+        self.assertEqual(analizar_eficiencia_determinante(6).ops_cofactores, 1236)
 
 
 if __name__ == "__main__":
