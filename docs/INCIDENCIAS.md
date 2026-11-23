@@ -38,7 +38,7 @@ Capturas de línea base (fuera del repositorio): inicio, Bisección, Bisección 
 una tubería usa cp1252 («multiplicaci�n»). Pasaba en el terminal del agente por su entorno. Corrección: forzar
 `PYTHONIOENCODING=utf-8` en el proceso hijo (también en `test_katex_render.cjs`, que podía perder símbolos).
 
-## INC-008 · 2026-11-23 · presentación · EN CURSO (Codex 1)
+## INC-008 · 2026-11-23 · presentación · CERRADA (integrada en main; KaTeX estricto en tests/test_lineal_ui.cjs)
 Revisión cruzada de la rama lineal: con 10 o más incógnitas o parámetros, `t_10` se emite sin llaves (KaTeX
 muestra t₁0). El ayudante de vectores paramétricos reescribe fracciones con una expresión regular frágil.
 Sin discrepancias matemáticas (1010 comparaciones con SymPy).
