@@ -36,6 +36,7 @@ El presente proyecto integrador implementa un sistema computacional integral par
 8. **Regla falsa**: gráfica, continuidad, selección y validación del intervalo e iteraciones.
 9. **Newton-Raphson**: derivada simbólica, gráfica, punto inicial elegido por el usuario, sustitución de la fórmula y tabla con errores y residuo.
 10. **Secante**: dos puntos manuales, rectas secantes, errores y residuo.
+11. **Jacobi y Gauss-Seidel**: métodos iterativos para $Ax = b$ con análisis de convergencia, tabla, residuo y comparación.
 
 ---
 
@@ -591,3 +592,18 @@ El desarrollo del proyecto se estructuró e integró cronológicamente mediante 
 30. `de7619f` - `feat(determinantes): integrar modulo web interactivo de determinantes por cofactores y LU`: Motor de determinantes 100% Python estándar en $\mathbb{Q}$ (sin librerías prohibidas), panel interactivo de evaluación previa de eficiencia ($O(n!)$ vs $O(n^3)$), nueva pestaña SPA en servidor web con renderizado KaTeX y 11 nuevas pruebas unitarias (60 tests totales).
 31. `f80f4ef` - `fix(latex): corregir delimitadores KaTeX y renderizado de dictamen teorico en determinantes`: Delimitación formal de expresiones matemáticas `$ ... $` en pasos de cofactores y triangulación LU, renderizado dinámico con KaTeX del dictamen de invertibilidad e integración de pruebas unitarias automatizadas (62 tests totales).
 32. `docs(code): estructurar y delimitar con comentarios los apartados del programa y transpuesta`: Inclusión de comentarios de bloque uniformes y prominentes que delimitan con claridad el inicio de cada apartado (Vectores, Combinación Lineal, Matrices Básicas, Sub-apartado de Transpuesta, Inversa, Ecuaciones Matriciales y Determinantes) en backend, frontend y módulos de cálculo.
+
+---
+
+### Módulo 11: Métodos iterativos de Jacobi y Gauss-Seidel
+
+Con $A = D + L + U$ (diagonal, estrictamente inferior y estrictamente superior):
+
+- **Jacobi**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)$; todas las componentes usan $x^{(k)}$. Matriz de iteración $T_J = -D^{-1}(L+U)$.
+- **Gauss-Seidel**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}\right)$; usa de inmediato los valores nuevos. $T_{GS} = -(D+L)^{-1}U$.
+
+**Convergencia.** El método converge para todo $x^{(0)}$ si y solo si $\rho(T) < 1$. La calculadora obtiene el polinomio característico exacto de $T$ (Faddeev-LeVerrier con fracciones) y decide $\rho(T) < 1$ con la prueba de Schur-Cohn en aritmética racional, sin redondeo. Son condiciones suficientes la dominancia diagonal estricta por filas (ambos métodos) y, solo para Gauss-Seidel, que $A$ sea simétrica definida positiva. La dominancia **no es necesaria** y Gauss-Seidel **no siempre** es más rápido: en $A = \begin{pmatrix}1&2&-2\1&1&1\2&2&1\end{pmatrix}$, $\rho(T_J) = 0$ (Jacobi converge) y $\rho(T_{GS}) = 2$ (diverge).
+
+**Parada.** Cambio $\|x^{(k+1)} - x^{(k)}\|_\infty$ y residuo $\|b - Ax^{(k+1)}\|_\infty$, ambos relativos. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
+
+**Nota sobre la presentación de clase.** Las tablas de las diapositivas 16 y 22 son correctas; los desarrollos de las diapositivas 15, 20 y 21 contienen errores aritméticos (ver `docs/INCIDENCIAS.md`, INC-012).
