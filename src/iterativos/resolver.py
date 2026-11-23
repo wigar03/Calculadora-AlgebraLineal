@@ -79,11 +79,20 @@ def _json_finito(valor):
     return valor if _finito(valor) else None
 
 
+def _verificar(A, b, x):
+    from .matriz import residuo
+    verificacion = residuo(A, b, x)
+    escala = max(map(abs, b)) + max(sum(map(abs, fila)) for fila in A) * max(map(abs, x))
+    if not math.isfinite(escala):
+        # Evita un falso residuo relativo cero al dividir por una escala infinita.
+        verificacion["residuo_rel"] = math.inf
+    return verificacion
+
+
 def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
                        max_iteraciones=100, criterio="ambos", reordenar=False):
     from .entrada import sistema_float
     from .jacobi import paso_jacobi
-    from .matriz import residuo
 
     tol = _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar)
     A, b, x0, analisis = _preparar(A, b, x0, metodo, reordenar)
@@ -102,7 +111,7 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
             try:
                 nuevo, detalle = paso(A, b, x)
                 cambio, relativo = medir_cambio(x, nuevo)
-                verificacion = residuo(A, b, nuevo)
+                verificacion = _verificar(A, b, nuevo)
             except (OverflowError, FloatingPointError):
                 motivo = "no_finito"
                 break
@@ -124,7 +133,7 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
             if detectado:
                 motivo = detectado
                 break
-    verificacion = residuo(A, b, x)
+    verificacion = _verificar(A, b, x)
     verificacion["cumple"] = _finito(verificacion) and verificacion["residuo_rel"] <= tol
     categoria = analisis["garantia"]
     if convergio and categoria != "demostrada":
