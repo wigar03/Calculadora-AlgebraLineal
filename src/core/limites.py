@@ -30,7 +30,7 @@ CUERPO_MAX_BYTES = 256 * 1024
 LECTURA_SOCKET_S = 10
 TIEMPO_CALCULO_S = 10
 MEMORIA_CALCULO_MB = 512
-RESPUESTA_MAX_BYTES = 4 * 1024 * 1024
+RESPUESTA_MAX_BYTES = 16 * 1024 * 1024  # 20×20 con 10 000 iteraciones y su procedimiento ≈ 11 MB
 
 
 class LimiteExcedido(ValueError):

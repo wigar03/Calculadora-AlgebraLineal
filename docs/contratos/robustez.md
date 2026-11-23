@@ -10,7 +10,7 @@ Autor: integrador (Claude Business). Cambios solo mediante el integrador. Regla 
   proceso**, lo reemplaza y responde 503 con `tipo = "tiempo"`. Ninguna otra petición espera a ese cálculo.
 - Memoria: Windows, Job Object con `JOB_OBJECT_LIMIT_PROCESS_MEMORY` (ctypes); POSIX, `resource.RLIMIT_AS`.
   Por defecto 512 MB. Superarla equivale a fallo controlado (`tipo = "limite"`), nunca a caída del servidor.
-- Salida: si la respuesta serializada supera 4 MB, se rechaza con `tipo = "limite"` (no se envían respuestas enormes).
+- Salida: si la respuesta serializada supera 16 MB (el máximo permitido, 20×20 con 10 000 iteraciones, ronda 11 MB), se rechaza con `tipo = "limite"` (no se envían respuestas enormes).
 - Rutas baratas (vista previa, muestreos pequeños, texto) pueden ejecutarse en el hilo tras la validación previa.
 - Coste previo: cada ruta costosa valida dimensiones y estima el coste **antes** de crear trabajo.
 
