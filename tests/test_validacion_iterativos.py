@@ -107,6 +107,19 @@ class TestValidacionIterativos(unittest.TestCase):
             for got in r["solucion"]:
                 self.assertAlmostEqual(got, 1.0, delta=1e-8)
 
+    def test_texto_de_la_presentacion_llega_a_la_misma_matriz(self):
+        textos = {"principal": "10x₁ − x₂ + 2x₃ = 6\n−x₁ + 11x₂ − x₃ + 3x₄ = 25\n2x₁ − x₂ + 10x₃ − x₄ = −11\n"
+                               "3x₂ − x₃ + 8x₄ = 15",
+                  "practica": "8x1 - x2 + x3 = 8\n-x1 + 10x2 - 2x3 + x4 = 7\nx1 - 2x2 + 9x3 - x4 = -4\n"
+                              "x2 - x3 + 7x4 = 5"}
+        for clave, texto in textos.items():
+            with self.subTest(clave):
+                r = post(self.url, "/api/iterativos/texto", {"texto": texto})
+                self.assertEqual([[Fraction(v) for v in fila] for fila in r["A"]],
+                                 [[Fraction(v) for v in fila] for fila in CASOS[clave]["A"]])
+                self.assertEqual([Fraction(v) for v in r["b"]], [Fraction(v) for v in CASOS[clave]["b"]])
+        self.assertIn("error", post(self.url, "/api/iterativos/texto", {"texto": "x1*x2 = 1\nx1 + x2 = 2"}))
+
     def test_comparar_devuelve_ambos_metodos(self):
         c = CASOS["practica"]
         r = post(self.url, "/api/iterativos/comparar", {"A": c["A"], "b": c["b"], "tolerancia": 1e-8})
