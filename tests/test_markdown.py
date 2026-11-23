@@ -14,7 +14,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 class TestMarkdown(unittest.TestCase):
     def test_documentos_publicos(self):
         resultado = subprocess.run(
-            [sys.executable, str(RAIZ / "scripts/verificar_markdown.py")],
+            [sys.executable, "-X", "utf8", str(RAIZ / "scripts/verificar_markdown.py")],
             cwd=RAIZ, capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(resultado.returncode, 0, resultado.stdout + resultado.stderr)
