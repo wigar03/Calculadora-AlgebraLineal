@@ -144,7 +144,8 @@ class TestSistemaTextoRobustez(unittest.TestCase):
         muchas = "x1 = 1\n" * 100000
         with self.assertRaisesRegex(ValueError, r"límite|máximo|20"):
             leer_ecuaciones(muchas)
-        r2 = self._post_texto(muchas, estado=400)
+        r2 = self._post_texto(muchas, estado=413)
+        self.assertEqual(r2["tipo"], "limite")
         self.assertLess(len(r2["error"]), 300)
         with self.assertRaisesRegex(ValueError, r"máximo.*20"):
             leer_ecuaciones("x1 = 1\n" * 21)

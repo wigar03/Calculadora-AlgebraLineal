@@ -121,6 +121,11 @@ def validar_peticion(ruta, cuerpo):
         max_matriz = limites.INVERSA_MAX
     elif ruta.endswith("/determinante"):
         max_matriz = limites.DETERMINANTE_MAX
+        matriz = cuerpo.get("A")
+        if (cuerpo.get("metodo", "lu") == "cofactores" and isinstance(matriz, list)
+                and len(matriz) > limites.COFACTORES_MAX):
+            raise limites.LimiteExcedido(f"Cofactores admite orden máximo {limites.COFACTORES_MAX}. "
+                                         "Seleccione LU para esta matriz.")
     elif ruta.endswith("/eficiencia-determinante"):
         max_matriz = limites.EFICIENCIA_N_MAX
         _entero_acotado("El orden n", cuerpo.get("n", 3), limites.EFICIENCIA_N_MAX)
@@ -158,7 +163,17 @@ def validar_peticion(ruta, cuerpo):
         _validar_literal(cuerpo["texto"])
     if "max_iteraciones" in cuerpo:
         maximo = limites.ITERATIVOS_ITER_MAX if modulo == "iterativos" else limites.RAICES_ITER_MAX
-        _entero_acotado("Las iteraciones", cuerpo["max_iteraciones"], maximo)
+        valor = cuerpo["max_iteraciones"]
+        if modulo == "iterativos":
+            mensaje = (f"El máximo de iteraciones debe ser un entero decimal entre 1 y {maximo}; "
+                       "escribe 100, sin decimales ni exponentes.")
+            if type(valor) is not int and not (isinstance(valor, str) and re.fullmatch(r"[0-9]+", valor.strip())):
+                raise ValueError(mensaje)
+            _validar_literal(valor)
+            if not 1 <= int(valor) <= maximo:
+                raise limites.LimiteExcedido(mensaje)
+        else:
+            _entero_acotado("Las iteraciones", valor, maximo)
     if "cantidad" in cuerpo:
         _entero_acotado("La cantidad de puntos", cuerpo["cantidad"], limites.PUNTOS_GRAFICA_MAX, 2)
 

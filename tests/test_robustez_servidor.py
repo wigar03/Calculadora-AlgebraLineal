@@ -65,6 +65,7 @@ class TestRobustezServidor(unittest.TestCase):
             ("/api/matrices/inversa", {"A": [[1]] * (limites.INVERSA_MAX + 1)}),
             ("/api/ecuaciones/resolver", {"A": [[1]] * (limites.SISTEMA_MAX + 1)}),
             ("/api/matrices/determinante", {"A": [[1]] * (limites.DETERMINANTE_MAX + 1)}),
+            ("/api/matrices/determinante", {"A": [[1]] * (limites.COFACTORES_MAX + 1), "metodo": "cofactores"}),
             ("/api/matrices/eficiencia-determinante", {"n": limites.EFICIENCIA_N_MAX + 1}),
             ("/api/iterativos/resolver", {"A": [[1]] * (limites.ITERATIVOS_MAX + 1)}),
             ("/api/iterativos/comparar", {"max_iteraciones": limites.ITERATIVOS_ITER_MAX + 1}),
