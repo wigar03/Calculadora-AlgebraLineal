@@ -47,6 +47,14 @@ Sin discrepancias matemáticas (1010 comparaciones con SymPy).
 El diagnóstico de producto implícito propone solo «Escribe '2*x'»; el propietario pidió la expresión completa
 corregida («Escribe 2*x + 3 = 7»).
 
+## INC-010 · 2026-11-23 · motor · EN CURSO (Codex 2) — hallado en revisión cruzada (Codex 1)
+Siete hallazgos reproducidos por HTTP, ninguno en los datos del banco con datos iniciales razonables:
+(P1) III-10 por secante desde (0.2, 0.5) acepta x ≈ 5.8·10⁻¹³ como raíz positiva no nula; IV-3 por Newton desde −2.75
+«converge» al punto excluido 0; la guarda de tan fabrica f = 0 y rechaza tan(1e16); el residuo escalado por f(x0)
+acepta exp(1e8·x), que no tiene raíces. (P2) polos falsos por cancelación en `_ceros`; tan(x/2) no se reconoce
+como afín; falso salto de III-11 en [1e-16, 2]. Corrección: certificar la raíz final (cambio de signo sin puntos
+excluidos) antes de declarar convergencia.
+
 ## INC-004 · 2026-11-23 · infraestructura · CERRADA
 `pytest` no está instalado; la suite oficial usa `unittest` (README y CI). Línea base: 169 pruebas OK y
 5 archivos `node --test` OK. No es un fallo.

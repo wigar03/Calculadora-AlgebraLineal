@@ -49,6 +49,8 @@ Se actualiza al integrar cada rama, con el commit que lo valida.
   documento con los 4 métodos (72 casos) y `test_producto_implicito_del_documento_se_diagnostica` los 6 productos.
 - Página (integrador, navegador): Bisección con las 18 ecuaciones del documento; Secante III-12 y III-15;
   Newton-Raphson III-13 e IV-3. Todas con |x − r| ≤ 10⁻⁶ y 0 errores KaTeX.
+- Revisión cruzada (Codex 1): 7 hallazgos fuera de los datos del banco, en corrección (INC-010). La
+  validación del banco se repetirá tras integrarlos.
 - Batería tras integrar las tres ramas: 305 pruebas Python OK y 46 pruebas Node OK (8 archivos).
 
 Detalle por área: `docs/validacion/lineal.md`, `docs/validacion/numerico.md`, `docs/validacion/expresiones.md`.
