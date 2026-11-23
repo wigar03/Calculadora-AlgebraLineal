@@ -55,3 +55,23 @@ Se actualiza al integrar cada rama, con el commit que lo valida.
 - Batería final (`main`, versión 1.0.0-rc.2): 322 pruebas Python OK y 52 pruebas Node OK (9 archivos).
 
 Detalle por área: `docs/validacion/lineal.md`, `docs/validacion/numerico.md`, `docs/validacion/expresiones.md`.
+
+## Módulo 11 — Jacobi y Gauss-Seidel (etapa 2)
+Referencia independiente: `tests/validacion/referencias_iterativos.json` (17 casos; iteraciones 1-3 en `Fraction`,
+solución y rangos con SymPy, radio espectral por raíces del polinomio característico exacto).
+Aceptación del integrador: `tests/test_validacion_iterativos.py` por HTTP real.
+
+| Comprobación | Resultado |
+|---|---|
+| Tabla del propietario (Jacobi y GS, k = 1, 2, ejemplo principal) | coincide a 5·10⁻⁷ |
+| Iteraciones 1-3 exactas, 15 casos sin diagonal nula × 2 métodos | coinciden a 10⁻¹² relativo |
+| ρ ≥ 1 (diverge_ambos, Hilbert-Jacobi, GS de jacobi_si_gs_no, spd-Jacobi) | nunca declara convergencia |
+| ρ < 0.6 | converge, «demostrada», solución exacta a 10⁻⁷ y residuo recalculado con Fraction |
+| Jacobi converge y GS diverge (ρ_J = 0, ρ_GS = 2) | reproducido: GS no siempre es más rápido |
+| Ciclo exacto de Jacobi con ρ = 1 | motivo `oscilacion` en k = 2 |
+| Singular, incompatible, diagonal nula | detectados antes de iterar |
+| Reordenamiento de ecuaciones completas | elimina la diagonal nula y converge |
+| Texto de las diapositivas 9 y 28 (x₁, −) | misma matriz que el banco |
+| Batería adversaria de Codex 1 (28 sistemas, 128 llamadas) | 3 hallazgos corregidos (INC-017) |
+| Revisión cruzada de Codex 2 | P1 subnormal corregido con verificación exacta final (INC-018) |
+| Navegador: sistema de práctica escrito como texto, comparación, gráficas, KaTeX | correcto; 0 errores KaTeX |
