@@ -63,10 +63,12 @@
   function normasLatex(paso) {
     if (!paso) return "";
     return [
-      String.raw`\left\|x^{(${paso.k})}-x^{(${paso.k - 1})}\right\|_\infty = ${numeroLatex(paso.cambio_inf)}`,
-      String.raw`\left\|r^{(${paso.k})}\right\|_\infty = ${numeroLatex(paso.residuo_inf)}`,
-      String.raw`\text{rel} = ${numeroLatex(paso.residuo_rel)}`
-    ].join(String.raw`\qquad `);
+      String.raw`\begin{aligned}`,
+      String.raw`\left\|x^{(${paso.k})}-x^{(${paso.k - 1})}\right\|_\infty &= ${numeroLatex(paso.cambio_inf)} \\`,
+      String.raw`\left\|r^{(${paso.k})}\right\|_\infty &= ${numeroLatex(paso.residuo_inf)} \\`,
+      String.raw`r_{\text{rel}} &= ${numeroLatex(paso.residuo_rel)}`,
+      String.raw`\end{aligned}`
+    ].join(" ");
   }
 
   function verificacionLatex(verif, b) {
@@ -75,7 +77,8 @@
     if (Array.isArray(verif.Ax)) out.push(`Ax \\approx ${vectorLatex(verif.Ax, 6)}`);
     if (Array.isArray(b)) out.push(`b = ${vectorLatex(b, 6)}`);
     if (Array.isArray(verif.residuo)) out.push(`r = b - Ax \\approx ${vectorLatex(verif.residuo, 6)}`);
-    out.push(String.raw`\|r\|_\infty = ${numeroLatex(verif.residuo_inf)}\qquad \frac{\|r\|_\infty}{\|b\|_\infty+\|A\|_\infty\|x\|_\infty} = ${numeroLatex(verif.residuo_rel)}`);
+    out.push(String.raw`\|r\|_\infty = ${numeroLatex(verif.residuo_inf)}`);
+    out.push(String.raw`\frac{\|r\|_\infty}{\|b\|_\infty+\|A\|_\infty\|x\|_\infty} = ${numeroLatex(verif.residuo_rel)}`);
     return out;
   }
 
@@ -306,7 +309,8 @@
       const textoMotivo = MOTIVOS[r.motivo] || r.mensaje || "Proceso finalizado.";
       destino.append(node("p", textoMotivo));
       if (r.mensaje && r.mensaje !== textoMotivo) destino.append(node("p", r.mensaje, "bis-help"));
-      if (Array.isArray(r.solucion)) destino.append(math(`x^{(${r.iteraciones ? r.iteraciones.length : 0})} \\approx ${vectorLatex(r.solucion, 8)}`));
+      const kFin = r.iteraciones && r.iteraciones.length ? r.iteraciones[r.iteraciones.length - 1].k : 0;
+      if (Array.isArray(r.solucion)) destino.append(math(`x^{(${kFin})} \\approx ${vectorLatex(r.solucion, 8)}`));
       if (r.iteraciones && r.iteraciones.length) destino.append(math(normasLatex(r.iteraciones[r.iteraciones.length - 1])));
       if (r.verificacion) {
         destino.append(node("p", `Verificación por sustitución (${r.verificacion.cumple ? "cumple tolerancia" : "no cumple tolerancia"}):`, "bis-help"));
