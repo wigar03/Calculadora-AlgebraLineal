@@ -1,6 +1,6 @@
 # Diagnóstico local de Chrome y Edge en `tests/test_p2_browser.cjs`
 
-Rama: `orca/consolidacion-chrome` (desde `main` `60c6d0c`). Entorno: Windows 11 (`LENOVOWAGG`, `C:\Users\wigar`), Python 3.12, Node.js v26.13.0.
+Rama: `orca/consolidacion-chrome` (desde `main` `60c6d0c`). Entorno: Windows 11 (equipo local del propietario), Python 3.12, Node.js v26.13.0.
 
 ## Conclusión
 **Problema del entorno (no de la aplicación), corregido de forma robusta en la prueba sin modificar la aplicación ni debilitar aserciones.**
