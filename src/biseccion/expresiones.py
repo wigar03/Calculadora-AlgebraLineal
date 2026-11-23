@@ -4,7 +4,11 @@ import ast
 import math
 import operator
 
+from .diagnosticos import diagnosticar_sintaxis, sugerir_funcion
 from .dominio import evaluar_binaria, evaluar_funcion
+from .normalizador import (
+    ALIAS_FUNCIONES, es_cero_literal, normalizar_ast, normalizar_simbolos, separar_igualdad,
+)
 
 
 FUNCIONES = {
@@ -47,31 +51,62 @@ class Expresion:
 
     def __init__(self, texto):
         if not isinstance(texto, str) or not texto.strip() or len(texto) > 500:
-            raise ValueError("Ingrese una función de entre 1 y 500 caracteres.")
+            raise ValueError("Error de sintaxis: ingrese una función de entre 1 y 500 caracteres.")
         self.texto = texto.strip()
-        try:
-            self.arbol = ast.parse(self.texto.replace("^", "**"), mode="eval").body
-        except (SyntaxError, RecursionError) as exc:
-            raise ValueError("Función inválida. Use, por ejemplo, x^3 - x - 2.") from exc
+        izq, der, offset_der = separar_igualdad(normalizar_simbolos(self.texto))
+        arbol_izq = self._parsear_lado(izq, 0)
+        if der is None:
+            arbol = arbol_izq
+        else:
+            arbol_der = self._parsear_lado(der, offset_der)
+            arbol = arbol_izq if es_cero_literal(arbol_der) else ast.BinOp(
+                left=arbol_izq, op=ast.Sub(), right=arbol_der
+            )
+        self.arbol = normalizar_ast(arbol)
         if sum(1 for _ in ast.walk(self.arbol)) > 120:
-            raise ValueError("La función es demasiado compleja.")
+            raise ValueError("Error de sintaxis: la función es demasiado compleja.")
         self._validar(self.arbol)
 
+    def _parsear_lado(self, lado, offset):
+        diagnosticar_sintaxis(lado, offset)
+        try:
+            return ast.parse(lado.replace("^", "**"), mode="eval").body
+        except (SyntaxError, RecursionError) as exc:
+            raise ValueError(
+                f"Error de sintaxis en '{lado}'. Revise operadores y paréntesis (por ejemplo, x^3 - x - 2)."
+            ) from exc
+
     def _validar(self, nodo):
-        if isinstance(nodo, ast.Constant) and type(nodo.value) in (int, float):
+        if isinstance(nodo, ast.Constant):
+            if type(nodo.value) not in (int, float):
+                raise ValueError(f"Error de sintaxis: valor '{nodo.value}' no permitido. Use solo números reales, 'x', 'pi' y 'e'.")
             numero_real(nodo.value, "La constante")
-        elif isinstance(nodo, ast.Name) and nodo.id in {"x", *CONSTANTES}:
-            return
+        elif isinstance(nodo, ast.Name):
+            if nodo.id in {"x", *CONSTANTES}:
+                return
+            if nodo.id in FUNCIONES or nodo.id in ALIAS_FUNCIONES:
+                raise ValueError(f"Error de sintaxis: '{nodo.id}' es una función y requiere paréntesis (por ejemplo, {nodo.id}(x)).")
+            raise ValueError(f"Error de sintaxis: variable no reconocida '{nodo.id}'. Use únicamente la variable 'x' (y constantes 'pi', 'e').")
         elif isinstance(nodo, ast.BinOp) and type(nodo.op) in OPERACIONES:
             self._validar(nodo.left)
             self._validar(nodo.right)
         elif isinstance(nodo, ast.UnaryOp) and isinstance(nodo.op, (ast.UAdd, ast.USub)):
             self._validar(nodo.operand)
-        elif (isinstance(nodo, ast.Call) and isinstance(nodo.func, ast.Name)
-              and nodo.func.id in FUNCIONES and len(nodo.args) == 1 and not nodo.keywords):
+        elif isinstance(nodo, ast.Call) and isinstance(nodo.func, ast.Name):
+            nombre = nodo.func.id
+            if nombre not in FUNCIONES:
+                sug = sugerir_funcion(nombre)
+                ayuda = f"¿Quiso escribir {' o '.join(sug)}?" if sug else f"Funciones admitidas: {', '.join(sorted(FUNCIONES))} (también sen)."
+                raise ValueError(f"Error de sintaxis: función desconocida '{nombre}'. {ayuda}")
+            if len(nodo.args) == 0:
+                raise ValueError(f"Error de sintaxis: la función '{nombre}' requiere un argumento (por ejemplo, {nombre}(x)).")
+            if len(nodo.args) != 1 or nodo.keywords:
+                raise ValueError(f"Error de sintaxis: la función '{nombre}' admite exactamente un argumento (por ejemplo, {nombre}(x)).")
             self._validar(nodo.args[0])
+        elif isinstance(nodo, ast.Tuple):
+            raise ValueError("Error de sintaxis: no se admite la coma ','. Use punto decimal '.' (por ejemplo, 0.5).")
         else:
-            raise ValueError("Expresión no permitida. Use x, números, +, -, *, /, ^ y funciones admitidas.")
+            raise ValueError("Error de sintaxis: expresión no permitida. Use x, números, +, -, *, /, ^ y funciones admitidas.")
 
     def _evaluar(self, nodo, x):
         if isinstance(nodo, ast.Constant):
