@@ -65,5 +65,7 @@ El script local reproducible queda en `scratch/reabrir_csv_619898b.py` (no se pu
 
 Contra la biblioteca de `main`, solo las cinco regresiones CSV tienen `expectedFailure` Python o `skip` Node,
 con motivo explícito; el resto sigue siendo estricto, incluidos los límites de 15 cifras y el texto inocuo.
+La batería completa local termina **489 Python, OK** (dos omisiones de motor y cinco fallos esperados),
+41,937 s; **79 Node, 74 aprobadas y cinco omisiones autorizadas**, 5,412 s, con Chrome portátil real.
 Pendiente por instrucción del integrador: **esperar el siguiente commit y revalidar LaTeX y CSV juntos**.
 No se retiran las marcas hasta que el integrador incorpore `exportar.js`.
