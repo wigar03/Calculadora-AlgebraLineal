@@ -124,6 +124,17 @@ test('LaTeX endurecido: MaxMatrixCols>=20, babel plainpercent, escape 1 pasada y
     verificacion: [`$Ax \\approx \\left(${Array(20).fill('0.6321389535670303').join(',\\; ')}\\right)$`],
   });
   assert.ok(largoVec.includes('\\ajm{$Ax \\approx \\left('));
+  const uni = procedimientoALatex({
+    version: 1, modulo: 'uni', titulo: 'Unicode: ñ á Ω π ρ α β Γ Δ ≤ ≥ ≠ ≈ ∞ √ · × − ± 你好 😀',
+    entrada: [{ etiqueta: 'Ω + π ≤ ∞ (你好)', latex: 'x^2' }],
+    pasos: [{ titulo: 'Paso α', texto: 'En mate: $α + Ω ≤ π · √2 − 1$ y emoji $😀$ y texto \\ ruta', latex: [], matriz: null, detalles: [] }],
+    resultado: [], verificacion: ['∀x ∈ ℝ: x² ≥ 0 ⇒ x ≠ ∞'], tablas: [], avisos: ['CJK 你好 y 😀'],
+  });
+  assert.ok(uni.includes('$\\Omega$') && uni.includes('$\\pi$') && uni.includes('$\\alpha$') && uni.includes('$\\Gamma$') && uni.includes('$\\pm$') && uni.includes('$\\surd$'));
+  assert.ok(uni.includes('\\texttt{[U+4F60]}') && uni.includes('\\texttt{[U+597D]}') && uni.includes('\\texttt{[U+1F600]}'));
+  assert.ok(uni.includes('\\textbackslash{}') && !uni.includes('\\textbackslash\\{\\}'));
+  assert.ok(!/[ΩπαβΓΔ≤≥≠≈∞√·×−±你好😀]/.test(uni), 'No deben quedar caracteres Unicode sin convertir');
+  for (const m of uni.matchAll(/(?<!\\)\$([^$\n]+?)\$/g)) katex.renderToString(m[1], { displayMode: false, throwOnError: true, strict: 'error' });
 });
 
 test('procedimientoALatex genera documento compilable con babel spanish, longtable y KaTeX estricto en los 33 golden', () => {

@@ -132,18 +132,30 @@
     return out.join("\n").trim();
   }
 
-  const SIMBOLOS_UNICODE = {
-    "←": "$\\leftarrow$", "→": "$\\rightarrow$", "−": "-", "—": "---", "–": "--", "…": "\\ldots{}",
-    "✓": "$\\checkmark$", "✗": "$\\times$", "≈": "$\\approx$", "≤": "$\\le$", "≥": "$\\ge$",
-    "≠": "$\\ne$", "·": "$\\cdot$", "×": "$\\times$", "∞": "$\\infty$", "ρ": "$\\rho$", "ε": "$\\varepsilon$", "Δ": "$\\Delta$",
-    "∉": "$\\notin$", "∈": "$\\in$", "³": "$^{3}$", "²": "$^{2}$", "¹": "$^{1}$", "⁰": "$^{0}$", "ℝ": "$\\mathbb{R}$", "‖": "$\\|$",
+  const MATH_UNICODE = {
+    "α": "\\alpha", "β": "\\beta", "γ": "\\gamma", "δ": "\\delta", "ε": "\\varepsilon", "ϵ": "\\epsilon", "ζ": "\\zeta", "η": "\\eta",
+    "θ": "\\theta", "ϑ": "\\vartheta", "ι": "\\iota", "κ": "\\kappa", "λ": "\\lambda", "μ": "\\mu", "µ": "\\mu", "ν": "\\nu", "ξ": "\\xi",
+    "ο": "o", "π": "\\pi", "ϖ": "\\varpi", "ρ": "\\rho", "ϱ": "\\varrho", "σ": "\\sigma", "ς": "\\varsigma", "τ": "\\tau", "υ": "\\upsilon",
+    "φ": "\\varphi", "ϕ": "\\phi", "χ": "\\chi", "ψ": "\\psi", "ω": "\\omega",
+    "Α": "A", "Β": "B", "Γ": "\\Gamma", "Δ": "\\Delta", "Ε": "E", "Ζ": "Z", "Η": "H", "Θ": "\\Theta", "Ι": "I", "Κ": "K", "Λ": "\\Lambda",
+    "Μ": "M", "Ν": "N", "Ξ": "\\Xi", "Ο": "O", "Π": "\\Pi", "Ρ": "P", "Σ": "\\Sigma", "Τ": "T", "Υ": "\\Upsilon", "Φ": "\\Phi", "Χ": "X", "Ψ": "\\Psi", "Ω": "\\Omega",
+    "←": "\\leftarrow", "→": "\\rightarrow", "↔": "\\leftrightarrow", "⇐": "\\Leftarrow", "⇒": "\\Rightarrow", "⇔": "\\Leftrightarrow", "↑": "\\uparrow", "↓": "\\downarrow", "↦": "\\mapsto",
+    "−": "-", "±": "\\pm", "∓": "\\mp", "×": "\\times", "÷": "\\div", "·": "\\cdot", "∘": "\\circ", "∙": "\\bullet",
+    "≤": "\\le", "≥": "\\ge", "≠": "\\ne", "≈": "\\approx", "≡": "\\equiv", "∼": "\\sim", "≃": "\\simeq", "≅": "\\cong", "∝": "\\propto", "≪": "\\ll", "≫": "\\gg", "⊥": "\\perp", "∥": "\\parallel", "‖": "\\|",
+    "∞": "\\infty", "∂": "\\partial", "∇": "\\nabla", "√": "\\surd", "∑": "\\sum", "∏": "\\prod", "∫": "\\int",
+    "∈": "\\in", "∉": "\\notin", "⊂": "\\subset", "⊃": "\\supset", "⊆": "\\subseteq", "⊇": "\\supseteq", "∪": "\\cup", "∩": "\\cap", "∅": "\\emptyset",
+    "∀": "\\forall", "∃": "\\exists", "¬": "\\neg", "∧": "\\wedge", "∨": "\\vee",
+    "ℝ": "\\mathbb{R}", "ℂ": "\\mathbb{C}", "ℕ": "\\mathbb{N}", "ℤ": "\\mathbb{Z}", "ℚ": "\\mathbb{Q}",
+    "°": "^{\\circ}", "′": "'", "″": "''", "✓": "\\checkmark", "✗": "\\times",
+    "⁰": "^{0}", "¹": "^{1}", "²": "^{2}", "³": "^{3}", "⁴": "^{4}", "⁵": "^{5}", "⁶": "^{6}", "⁷": "^{7}", "⁸": "^{8}", "⁹": "^{9}", "⁺": "^{+}", "⁻": "^{-}", "ⁿ": "^{n}",
+    "₀": "_{0}", "₁": "_{1}", "₂": "_{2}", "₃": "_{3}", "₄": "_{4}", "₅": "_{5}", "₆": "_{6}", "₇": "_{7}", "₈": "_{8}", "₉": "_{9}",
   };
-
-  const ESCAPES_LATEX = {
-    "\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", "&": "\\&", "$": "\\$",
-    "%": "\\%", "#": "\\#", "_": "\\_", "^": "\\^{}", "~": "\\~{}", ...SIMBOLOS_UNICODE,
+  const ESCAPES_TEXTO = {
+    "\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", "&": "\\&", "$": "\\$", "%": "\\%", "#": "\\#", "_": "\\_", "^": "\\^{}", "~": "\\~{}",
+    "—": "---", "–": "--", "…": "\\ldots{}", "“": "``", "”": "''", "‘": "`", "’": "'", "«": "\\guillemotleft{}", "»": "\\guillemotright{}", "\u00A0": "~",
   };
-  const RE_ESCAPE_LATEX = /[\\{}&$%#_^~←→−—–…✓✗≈≤≥≠·×∞ρεΔ∉∈³²¹⁰ℝ‖]/g;
+  const ES_TEXTO_LATIN_T1 = /^[\x20-\x7E¡¿ªºÀ-ÖØ-öø-ÿ]$/;
+  const codigoUnicode = ch => `U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}`;
 
   const COMANDOS_MAT = new Set(["det", "mid", "varepsilon", "Delta", "infty", "text", "left", "right", "frac", "cdot", "times", "vec", "operatorname", "mathbb", "rho", "sum", "|", ";", ",", "%", " "]);
 
@@ -156,16 +168,36 @@
   }
 
   function escaparTextoLatex(texto) {
-    return String(texto ?? "").replace(RE_ESCAPE_LATEX, ch => ESCAPES_LATEX[ch]).replace(/[\r\n\t]+/g, " ");
+    return String(texto ?? "").replace(/[\r\n\t]+|[\s\S]/gu, tok => {
+      if (tok[0] === "\r" || tok[0] === "\n" || tok[0] === "\t") return " ";
+      if (ESCAPES_TEXTO[tok]) return ESCAPES_TEXTO[tok];
+      if (MATH_UNICODE[tok]) return `$${MATH_UNICODE[tok]}$`;
+      if (ES_TEXTO_LATIN_T1.test(tok)) return tok;
+      return `\\texttt{[${codigoUnicode(tok)}]}\\allowbreak `;
+    });
+  }
+
+  function normalizarMathLatex(texto) {
+    const s = String(texto ?? "");
+    return /^[\x20-\x7E\r\n\t]*$/.test(s) ? s : s.replace(/[^\x20-\x7E\r\n\t]/gu, (ch, off) => {
+      if (ch === "—") return "---";
+      if (ch === "–") return "--";
+      if (ch === "…") return "\\ldots";
+      if (MATH_UNICODE[ch]) {
+        const cmd = MATH_UNICODE[ch];
+        return /[a-zA-Z]$/.test(cmd) && /^[a-zA-Z]/.test(s.slice(off + ch.length)) ? `${cmd} ` : cmd;
+      }
+      return ES_TEXTO_LATIN_T1.test(ch) ? ch : `\\texttt{[${codigoUnicode(ch)}]}`;
+    });
   }
 
   function textoMixtoALatex(texto) {
     return String(texto ?? "").split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g).map(parte => {
       if (parte.startsWith("$$") && parte.endsWith("$$") && parte.length >= 4) {
-        return `\\[\n${parte.slice(2, -2).trim().replace(/—/g, "---").replace(/−/g, "-")}\n\\]`;
+        return `\\[\n${normalizarMathLatex(parte.slice(2, -2).trim())}\n\\]`;
       }
       if (parte.startsWith("$") && parte.endsWith("$") && parte.length >= 2) {
-        const mat = parte.replace(/—/g, "---").replace(/−/g, "-");
+        const mat = `$${normalizarMathLatex(parte.slice(1, -1))}$`;
         return mat.length > 90 && mat.includes("\\left") ? `\\ajm{${mat}}` : mat;
       }
       return escaparTextoLatex(parte);
@@ -229,9 +261,9 @@
   }
 
   function bloqueEcuacion(it) {
-    const et = String(it.etiqueta ?? "");
-    if (esMathSeguro(et)) return `\\[\n${et} = ${it.latex}\n\\]`;
-    return `\\noindent\\textbf{${escaparTextoLatex(et)}}:\n\\[\n${it.latex}\n\\]`;
+    const et = String(it.etiqueta ?? ""), eq = normalizarMathLatex(it.latex);
+    if (esMathSeguro(et)) return `\\[\n${et} = ${eq}\n\\]`;
+    return `\\noindent\\textbf{${escaparTextoLatex(et)}}:\n\\[\n${eq}\n\\]`;
   }
 
   function procedimientoALatex(p) {
@@ -255,7 +287,7 @@
       for (const s of p.pasos) {
         if (s.titulo) out.push(`\\subsubsection*{${textoMixtoALatex(s.titulo)}}`);
         if (s.texto) out.push(textoMixtoALatex(s.texto));
-        for (const f of s.latex || []) out.push(`\\[\n${f}\n\\]`);
+        for (const f of s.latex || []) out.push(`\\[\n${normalizarMathLatex(f)}\n\\]`);
         if (Array.isArray(s.matriz) && s.matriz.length) {
           out.push(`\\[\n\\begin{pmatrix} ${s.matriz.map(r => r.map(String).join(" & ")).join(" \\\\ ")} \\end{pmatrix}\n\\]`);
         }
