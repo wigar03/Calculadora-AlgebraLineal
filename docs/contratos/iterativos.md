@@ -46,7 +46,7 @@ Respuesta `R`:
  "convergencia": "demostrada"|"observada"|"no_asegurada"}
 ```
 `motivo` ∈ {`tolerancia`, `max_iteraciones`, `divergencia`, `no_finito`, `estancamiento`, `oscilacion`,
-`diagonal_nula`, `singular`, `incompatible`}. Cada motivo tiene texto en la vista (prueba de contrato).
+`diagonal_nula`, `singular`, `incompatible`, `precision_insuficiente`} (este último: el criterio flotante se cumplió, pero la verificación exacta final del residuo no). Cada motivo tiene texto en la vista (prueba de contrato).
 
 ## Reglas matemáticas
 - Jacobi y Gauss-Seidel son esquemas distintos; una prueba debe fallar si uno usa el esquema del otro.
