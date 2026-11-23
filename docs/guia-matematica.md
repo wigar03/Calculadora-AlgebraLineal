@@ -67,12 +67,7 @@ c_1 v_1 + c_2 v_2 + \dots + c_k v_k = b
 Para resolverlo computacionalmente, se construye la matriz aumentada $`[V \mid b]`$ donde cada vector $`v_j`$ forma una columna de coeficientes:
 
 ```math
-\left(\begin{array}{cccc|c}
-v_{11} & v_{12} & \cdots & v_{1k} & b_1 \\
-v_{21} & v_{22} & \cdots & v_{2k} & b_2 \\
-\vdots & \vdots & \ddots & \vdots & \vdots \\
-v_{n1} & v_{n2} & \cdots & v_{nk} & b_n
-\end{array}\right)
+\left(\begin{array}{cccc|c}v_{11} & v_{12} & \cdots & v_{1k} & b_1 \\ v_{21} & v_{22} & \cdots & v_{2k} & b_2 \\ \vdots & \vdots & \ddots & \vdots & \vdots \\ v_{n1} & v_{n2} & \cdots & v_{nk} & b_n\end{array}\right)
 ```
 
 El sistema se resuelve y clasifica rigurosamente mediante el **Teorema de Rouché-Capelli**:
