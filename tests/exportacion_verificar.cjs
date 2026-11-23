@@ -56,7 +56,7 @@ if (process.argv.includes('--stdin')) {
   process.stdout.write(JSON.stringify(datos.map(exportar)));
 } else {
   const { test } = require('node:test');
-  const pendienteCSV = motivo => ({ skip: process.env.P2_EXPORTAR_JS ? false : `Pendiente Antigravity: ${motivo}` });
+  const pendienteCSV = motivo => ({ skip: process.env.P2_EXPORTAR_JS || process.env.CSV_EXIGIR_PENDIENTES === '1' ? false : `Pendiente Antigravity: ${motivo}` });
   test('P2: BOM, punto y coma, coma decimal y CRLF según contrato', () => {
     const csv = api.tablaACSV({ columnas: ['k', 'x'], filas: [[1, 1.25]] },
       { separador: ';', decimal: ',' });
@@ -122,6 +122,13 @@ if (process.argv.includes('--stdin')) {
       const campo = /[\r\n]/.test(valor) ? `"${protegido}"` : protegido;
       const texto = api.tablaACSV({ columnas: [valor], filas: [[valor]] });
       assert.equal(texto, `\ufeff${campo}\r\n${campo}`, `Texto alterado o inseguro: ${JSON.stringify(valor)}`);
+    }
+  });
+  test('P2: cabeceras racionales y enteros largos muestran su texto exacto sin apóstrofo',
+    pendienteCSV('Usar constantes de texto validadas también en cabeceras'), () => {
+    for (const valor of ['1/2', '-17/19', '0003/0007', '9007199254740993123456789']) {
+      const celda = `"=""${valor}"""`;
+      assert.equal(api.tablaACSV({ columnas: [valor], filas: [[valor]] }), `\ufeff${celda}\r\n${celda}`);
     }
   });
 }

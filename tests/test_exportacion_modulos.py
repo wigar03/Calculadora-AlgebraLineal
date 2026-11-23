@@ -48,7 +48,8 @@ def pendiente_csv(motivo):
     """Una biblioteca candidata se prueba estrictamente, sin ocultar sus fallos."""
     def decorar(prueba):
         prueba.__doc__ = "Pendiente Antigravity: " + motivo
-        return prueba if os.environ.get("P2_EXPORTAR_JS") else unittest.expectedFailure(prueba)
+        estricto = os.environ.get("P2_EXPORTAR_JS") or os.environ.get("CSV_EXIGIR_PENDIENTES") == "1"
+        return prueba if estricto else unittest.expectedFailure(prueba)
     return decorar
 
 
@@ -76,7 +77,8 @@ def problemas_csv(texto, tabla):
             lugar = f"[{i},{j}] {valor!r} -> {celda!r}"
             s = "" if valor is None else str(valor)
             if i == 0:
-                if celda != texto_protegido(s):
+                esperado = f'=\"{s}\"' if fraccion_valida(s) or entero_largo(s) else texto_protegido(s)
+                if celda != esperado:
                     errores.append(f"Cabecera insegura o alterada {lugar}")
             elif entero_largo(s):
                 if celda != f'=\"{s}\"':
@@ -331,6 +333,11 @@ class TestCSVContratoRevisado(unittest.TestCase):
         valores = [s + f for s in inicios for f in ("=1+1", "+SUM(A1)", "-SUM(A1)", "@SUM(A1)")]
         self.comprobar({"columnas": valores, "filas": [valores]})
 
+    @pendiente_csv("Cabeceras racionales/enteros largos deben mostrar el texto exacto sin apóstrofo")
+    def test_cabeceras_exactas_sin_apostrofo_visible(self):
+        valores = ["1/2", "-17/19", "0003/0007", "9007199254740993123456789", "-1234567890123456"]
+        self.comprobar({"columnas": valores, "filas": [valores]})
+
     def test_limite_15_cifras_y_textos_inocuos_sin_cambios(self):
         valores = ("123456789012345", "-123456789012345", "000123456789012345", "\u00a0 texto", "1/2")
         self.comprobar({"columnas": ["valor"], "filas": [[v] for v in valores]})
@@ -379,6 +386,13 @@ class TestOraculoCSV(unittest.TestCase):
         self.assertEqual(problemas_csv(correcto, tabla), [])
         for falso in ('="674700668366753000000"', '=1+1', '="674700668366753500000/0"'):
             self.assertTrue(problemas_csv(self.codificar(["x"], [[falso]]), tabla))
+
+    def test_cabecera_racional_o_entera_muestra_el_texto_exacto_sin_apostrofo(self):
+        for valor in ("1/2", "-17/19", "0003/0007", "9007199254740993123456789"):
+            tabla = {"columnas": [valor], "filas": []}
+            self.assertEqual(problemas_csv(self.codificar([f'=\"{valor}\"'], []), tabla), [])
+            for alterado in (valor, "'" + valor, '=\"1/0\"', '=1+1'):
+                self.assertTrue(problemas_csv(self.codificar([alterado], []), tabla))
 
     def test_fracciones_con_denominador_cero_nunca_son_formulas_validadas(self):
         for valor in ("1/0", "-1/0", "0/0", "17/000", "-17/000", "1/-0"):
