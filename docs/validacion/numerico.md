@@ -176,3 +176,69 @@ admisible cercana con cambio de signo en un intervalo continuo; puede tratarse d
 un extremo o un límite sin raíz». Coordinado con el integrador para los cuatro JS; no se editaron aquí.
 Secante conserva `advertencias` como lista de str, sin objetos nuevos; Newton conserva objetos tipo/n.
 Los detalles estructurados van en `certificacion`. Se ejecutó una regresión específica del contrato.
+
+### Pruebas y corrección por hallazgo
+
+Todos los nombres siguientes pertenecen a `TestRevisionRaices` en `tests/test_raices_revision.py`.
+
+| Hallazgo | Prueba (prefijo test_) | Corrección | Commit |
+|---|---|---|---|
+| 1 | `1_raiz_cero_aproximada_no_es_positiva_no_nula`, `1_metodos_cerrados_tampoco_aceptan_cero_aproximado` | La vecindad certificada y la cota de bisección deben excluir 0 | `1badd32`, `41f88b1` |
+| 2 | `2_limite_excluido_no_es_raiz_de_iv3` | Rechazar intervalo con punto excluido o sin cambio de signo | `2455949`, `1badd32` |
+| 3 | `3_tan_conserva_valores_definidos` | Eliminar ajuste a cero y banda de ulp del argumento; no modificar f | `2727a79` |
+| 4 | `4_cuadratica_positiva_no_inventa_polos` | Coeficientes y discriminante racionales exactos; raíces con Decimal a 80 cifras | `2727a79` |
+| 5 | `5_exponencial_sin_raices_no_converge`, `5_raiz_escalada_no_depende_de_la_semilla`, `5_residuo_escalado_no_oculta_estancamiento_de_regla_falsa` | Sustituir la guarda de semilla por prueba local de existencia, también en regla falsa | `1badd32`, `41f88b1` |
+| 6 | `6_division_constante_preserva_restricciones` | Reconocer división de polinomio por constante no nula | `2727a79` |
+| 7 | `7_ln_cerca_del_borde_sigue_continua` | El límite de refinamientos no demuestra salto si el AST certifica dominio continuo | `b854d41`, `fd6b094` |
+
+Se añadieron además casos de cero por subdesbordamiento, raíz múltiple, residuo pequeño lejos de una raíz,
+y `test_secante_advertencias_solo_contiene_cadenas`. Todas las pruebas del archivo pasan (14 métodos).
+
+### Resultados HTTP posteriores
+
+Solicitudes reales a `/api/<método>/resolver`, con tolerancia 1e-6 y límite 200 salvo 7b (1000).
+N = newton-raphson, S = secante, B = biseccion, F = regla-falsa. En B se usa criterio intervalo;
+en N/S, absoluto; F mantiene su criterio relativo porcentual. «false» nunca presenta x como raíz validada.
+F1=`x^2-5*sin(x)` y condición `positiva_no_nula`; F2=`exp(1/x)+2*x/tan(x)-2`.
+
+| Caso | Método y entrada | HTTP | x final / f(x) | convergio y motivo |
+|---|---|---|---|---|
+| 1a | S F1, (0.2,0.5) | 200 | 5.8159868717845e-13 / -2.907993435891912e-12 | false, no_certificada |
+| 1b | S F1, (0.25,0.75) | 200 | 2.4818392866374783e-16 / -1.2409196433187391e-15 | false, no_certificada |
+| 1c | S F1, (0.75,1.25) | 200 | 1.6667945176010336e-13 / -8.33397258800489e-13 | false, no_certificada |
+| 1d | B F1, [-0.2,0.1] | 200 | 9.536743164987686e-8 / -4.7683714915443656e-7 | false, raiz_no_admisible |
+| 2a | N F2, -2.75 | 200 | -8.566079518344774e-7 / -4.89164264649844e-13 | false, no_certificada (dominio) |
+| 2b | S F2, (-1,-0.5) | 200 | -1.5224698472669694e-6 / -1.5452084056732929e-12 | false, no_certificada (sin signo) |
+| 3a | N `1e16*tan(x)`, nextafter(pi,+inf) | 200 | 3.141592653589793 / -1.2246467991473533 | true, tolerancia; f inicial=3.216245299353273 |
+| 3b | N `tan(x)`, 1e16 | 200 | 1e16 / -1.2451734357184066 | false, no_certificada (precisión) |
+| 4a | B `(x-100000000)/((x-100000000)^2+1)`, [99999999,100000001] | 200 | 100000000 / 0 | true, raiz_evaluada |
+| 4b | B `(x-1)/((x-1)^2+1e-16)`, [0,2] | 200 | 1 / 0 | true, raiz_evaluada |
+| 5a | N `exp(1e8*x)`, 1e-6 | 200 | 9.9e-7 / 9.889030319346946e42 | false, no_certificada |
+| 5b | N `1e20*(x^2-2)`, sqrt(2) | 200 | 1.414213562373095 / -44408.92098500626 | true, tolerancia |
+| 5c | N `1e20*(x^2-2)`, 1.5 | 200 | 1.4142135623730951 / 44408.92098500626 | true, tolerancia |
+| 5d | F `1e-20*(exp(30*(x-1))-2)`, [1,2] | 200 | 1.000000000000187 / -9.999999999943911e-21 | false, no_certificada |
+| 6a | B `(x-1)*(tan(x/2)/tan(x/2))`, [0.5,7] | 400 | intervalo contiene discontinuidad o polo | rechazado |
+| 6b | B `(x-1)*(tan(0.5*x)/tan(0.5*x))`, [0.5,7] | 400 | mismo diagnóstico | rechazado |
+| 7a | B `ln(x)+sin(x)-1.2`, [1e-16,2] | 200 | 1.275449275970459 / -3.269506534397948e-7 | true, tolerancia |
+| 7b | F misma función/intervalo, límite 1000 | 200 | 1.2754499195071853 / 3.6492136845645007e-7 | true, tolerancia (400 iteraciones) |
+
+Las respuestas completas y solicitudes están en `%TEMP%/orca-numerico-revision-http.json`, generadas por
+`%TEMP%/orca-numerico-revision-http.py`; el log de la batería está en `%TEMP%/orca-numerico-revision-python.log`.
+La raíz de 3a está cerca de pi y certificada: el residuo no se fabrica como cero. En 5b/5c el residuo grande
+se conserva íntegro; el cambio de signo local certifica la cercanía independientemente de la semilla.
+
+### Commits de la revisión (líneas añadidas + eliminadas)
+
+- `d766151` test(numerical): reproducir siete hallazgos de revision cruzada — 81.
+- `2727a79` fix(numerical): conservar tan y restricciones racionales exactas — 41.
+- `b854d41` feat(numerical): comprobar dominio continuo con intervalos racionales — 84.
+- `fd6b094` fix(continuidad): no convertir resolucion insuficiente en un salto — 9.
+- `2455949` feat(numerical): certificar existencia local de raices admisibles — 42.
+- `1badd32` fix(numerical): separar parada y certificacion en metodos abiertos — 38.
+- `88a8f2d` test(numerical): exigir certificacion y conservar la funcion evaluada — 31.
+- `461e937` test(numerical): cubrir subdesbordamiento y limites de certificacion — 32.
+- `487c7e4` fix(secante): conservar advertencias como cadenas legibles — 27.
+- `41f88b1` fix(numerical): extender admisibilidad certificada a metodos cerrados — 36.
+- `fe24858` fix(regla-falsa): separar radio certificado y porcentaje del paso — 2.
+- `59079ca` fix(biseccion): certificar con radio absoluto para criterio intervalo — 2.
+- `5a260f2` docs(numerical): documentar certificacion y resultado de revision — 39.
