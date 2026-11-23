@@ -19,6 +19,7 @@
     max_iteraciones: "Se alcanzó el máximo de iteraciones sin cumplir la tolerancia. Puede aumentar el límite o revisar la tolerancia.",
     precision_agotada: "La precisión de punto flotante impide seguir reduciendo el intervalo. Revise la tolerancia o la escala de la función.",
     raiz_no_admisible: "La aproximación obtenida no cumple la condición pedida (raíz positiva o positiva no nula); por ejemplo, converge a la raíz excluida x = 0. Elija otros datos iniciales.",
+    no_certificada: "El criterio de parada se alcanzó, pero no se pudo certificar una raíz admisible cercana con un cambio de signo en un intervalo continuo; puede tratarse de una raíz múltiple, un extremo o un límite sin raíz. Revise el intervalo inicial.",
   };
 
   function formatear(valor) {

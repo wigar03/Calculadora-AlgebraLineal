@@ -26,8 +26,8 @@ function extraerMotivosPython(rutaRelativa, incluirEstado = false) {
 }
 
 const MODULOS = [
-  ['biseccion', 'src/biseccion/metodo.py', bis.MOTIVOS, ['raiz_no_admisible'], false],
-  ['regla_falsa', 'src/regla_falsa/metodo.py', rf.MOTIVOS, ['raiz_no_admisible', 'sin_progreso'], false],
+  ['biseccion', 'src/biseccion/metodo.py', bis.MOTIVOS, ['raiz_no_admisible', 'no_certificada'], false],
+  ['regla_falsa', 'src/regla_falsa/metodo.py', rf.MOTIVOS, ['raiz_no_admisible', 'sin_progreso', 'no_certificada'], false],
   ['secante', 'src/secante/metodo.py', sc.MOTIVOS, ['raiz_no_admisible', 'no_certificada'], false],
   ['newton_raphson', 'src/newton_raphson/metodo.py', nr.MOTIVOS, ['raiz_no_admisible', 'no_certificada'], true],
 ];
