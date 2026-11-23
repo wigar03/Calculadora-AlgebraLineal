@@ -152,3 +152,88 @@ def problemas_libro(celdas, procedimiento):
         elif actual or formula:
             errores.append("Celda adicional " + lugar)
     return sorted(errores)
+
+
+def leer_ods(ruta):
+    ns = {"t": "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
+          "o": "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
+          "p": "urn:oasis:names:tc:opendocument:xmlns:text:1.0"}
+    with zipfile.ZipFile(ruta) as z:
+        tablas = ET.fromstring(z.read("content.xml")).findall(".//t:table", ns)
+    assert len(tablas) == 1
+    celdas, fila = {}, 1
+    for r in tablas[0].findall("t:table-row", ns):
+        col = 1
+        for c in r:
+            tipo = c.get("{" + ns["o"] + "}value-type", "string")
+            formula = c.get("{" + ns["t"] + "}formula")
+            if formula is not None:
+                formula = re.sub(r"^[^:]+:=", "", formula)
+            valor = c.get("{" + ns["o"] + "}value", "") if tipo == "float" else "\n".join(
+                "".join(p.itertext()) for p in c.findall("p:p", ns))
+            rep = int(c.get("{" + ns["t"] + "}number-columns-repeated", "1"))
+            if valor or formula:
+                for j in range(col, col + rep):
+                    celdas[f"{columna(j)}{fila}"] = ({"float": "n", "string": "s"}.get(tipo, tipo), valor, formula)
+            col += rep
+        fila += int(r.get("{" + ns["t"] + "}number-rows-repeated", "1"))
+    return celdas
+
+
+class TestCSVExterno(unittest.TestCase):
+    def herramienta(self, nombre, variable):
+        ejecutable = shutil.which(os.environ.get(variable, nombre))
+        if not ejecutable:
+            motivo = f"Falta {nombre}; instale la herramienta o configure {variable}"
+            if os.environ.get("REQUIERE_EXTERNOS") == "1":
+                self.fail(motivo + " (REQUIERE_EXTERNOS=1)")
+            self.skipTest(motivo)
+        return ejecutable
+
+    def comprobar(self, motor, ejecutable):
+        procedimientos = corpus_csv()
+        self.assertEqual(len(procedimientos), 33)
+        self.assertEqual(len({p["modulo"] for p in procedimientos}), 13)  # once módulos, dos rutas adicionales
+        procedimientos = procedimientos + adversarios()
+        textos = exportar(procedimientos)
+        with tempfile.TemporaryDirectory(prefix="csv-externo-") as temporal:
+            base, entradas = Path(temporal), []
+            for i, (p, texto) in enumerate(zip(procedimientos, textos)):
+                if not p["tablas"]:
+                    self.assertEqual(texto, "", p["modulo"])
+                    continue
+                self.assertTrue(texto.startswith("\ufeff"), p["modulo"])
+                list(csv.reader(io.StringIO(texto.removeprefix("\ufeff")), delimiter=";", strict=True))
+                ruta = base / f"{i:02d}_{p['modulo']}.csv"
+                ruta.write_bytes(texto.encode("utf-8"))
+                entradas.append((p, ruta))
+            destinos = [base / nombre for nombre in ("importado", "guardado", "reabierto")]
+            for destino in destinos:
+                destino.mkdir()
+            if motor == "calc":
+                comun = [ejecutable, "-env:UserInstallation=" + (base / "perfil").as_uri(), "--headless"]
+                filtro = "--infilter=Text - txt - csv (StarCalc):59,34,76,1,,3082,false,true,false,false,false,0,true"
+                ejecutar([*comun, filtro, "--convert-to", "xlsx", "--outdir", destinos[0], *[r for _, r in entradas]])
+                ejecutar([*comun, "--convert-to", "ods", "--outdir", destinos[1], *destinos[0].glob("*.xlsx")])
+                ejecutar([*comun, "--convert-to", "xlsx", "--outdir", destinos[2], *destinos[1].glob("*.ods")])
+            else:
+                for _, ruta in entradas:
+                    inicial = destinos[0] / (ruta.stem + ".ods")
+                    intermedio = destinos[1] / (ruta.stem + ".gnumeric")
+                    final = destinos[2] / inicial.name
+                    ejecutar([ejecutable, "--import-type=Gnumeric_stf:stf_csvtab", "--import-encoding=UTF-8", ruta, inicial])
+                    ejecutar([ejecutable, inicial, intermedio])
+                    ejecutar([ejecutable, intermedio, final])
+            for p, ruta in entradas:
+                for etapa in (destinos[0], destinos[2]):
+                    with self.subTest(motor=motor, modulo=p["modulo"], caso=ruta.stem, etapa=etapa.name):
+                        libro = etapa / (ruta.stem + (".xlsx" if motor == "calc" else ".ods"))
+                        self.assertTrue(libro.is_file(), f"{ejecutable} no produjo {libro}")
+                        errores = problemas_libro(leer_xlsx(libro) if motor == "calc" else leer_ods(libro), p)
+                        self.assertEqual(errores, [], f"{len(errores)} incumplimientos; " + "; ".join(errores[:12]))
+
+    def test_libreoffice_importa_guarda_y_reabre(self):
+        self.comprobar("calc", self.herramienta("soffice", "SOFFICE"))
+
+    def test_gnumeric_importa_guarda_y_reabre(self):
+        self.comprobar("gnumeric", self.herramienta("ssconvert", "SSCONVERT"))
