@@ -60,6 +60,47 @@ def _limitar_memoria(megabytes):
     return _limitar_memoria_windows(megabytes)
 
 
+def _limitar_memoria_windows(megabytes):
+    """Job Object por trabajador: límite de memoria comprometida del proceso."""
+    import ctypes
+    from ctypes import wintypes as w
+
+    class LimitesBasicos(ctypes.Structure):
+        _fields_ = [("tiempo_proceso", ctypes.c_int64), ("tiempo_job", ctypes.c_int64),
+                    ("flags", w.DWORD), ("min_ws", ctypes.c_size_t),
+                    ("max_ws", ctypes.c_size_t), ("procesos", w.DWORD),
+                    ("afinidad", ctypes.c_size_t), ("prioridad", w.DWORD), ("plan", w.DWORD)]
+
+    class ContadoresIO(ctypes.Structure):
+        _fields_ = [(nombre, ctypes.c_uint64) for nombre in
+                    ("lecturas", "escrituras", "otros", "bytes_leidos", "bytes_escritos", "bytes_otros")]
+
+    class LimitesExtendidos(ctypes.Structure):
+        _fields_ = [("basicos", LimitesBasicos), ("io", ContadoresIO),
+                    ("memoria_proceso", ctypes.c_size_t), ("memoria_job", ctypes.c_size_t),
+                    ("pico_proceso", ctypes.c_size_t), ("pico_job", ctypes.c_size_t)]
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.CreateJobObjectW.argtypes = [ctypes.c_void_p, w.LPCWSTR]
+    kernel.CreateJobObjectW.restype = w.HANDLE
+    kernel.SetInformationJobObject.argtypes = [w.HANDLE, ctypes.c_int, ctypes.c_void_p, w.DWORD]
+    kernel.AssignProcessToJobObject.argtypes = [w.HANDLE, w.HANDLE]
+    kernel.GetCurrentProcess.restype = w.HANDLE
+    kernel.CloseHandle.argtypes = [w.HANDLE]
+    job = kernel.CreateJobObjectW(None, None)
+    if not job:
+        raise ctypes.WinError(ctypes.get_last_error())
+    datos = LimitesExtendidos()
+    datos.basicos.flags = 0x100  # JOB_OBJECT_LIMIT_PROCESS_MEMORY
+    datos.memoria_proceso = megabytes * 1024 * 1024
+    if (not kernel.SetInformationJobObject(job, 9, ctypes.byref(datos), ctypes.sizeof(datos))
+            or not kernel.AssignProcessToJobObject(job, kernel.GetCurrentProcess())):
+        error = ctypes.WinError(ctypes.get_last_error())
+        kernel.CloseHandle(job)
+        raise error
+    return job
+
+
 def _trabajador(conexion, memoria_mb):
     job = None
     try:
