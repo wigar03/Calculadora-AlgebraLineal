@@ -3,7 +3,6 @@
 REQUIERE_EXTERNOS=1 convierte la ausencia de pdflatex/Node en error de CI.
 P2_LATEX_ARTEFACTOS conserva fuentes, logs y PDF para reproducir un fallo.
 """
-import json
 import os
 import re
 import shutil
@@ -12,7 +11,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.test_exportacion_modulos import ROOT, corpus_real, ejecutar_node
+from tests.test_exportacion_modulos import corpus_real, ejecutar_node
 
 OVERFULL_GRAVE_PT = 10  # 3,5 mm fuera de la caja; también se comprueba en la segunda pasada.
 ESPECIALES = r"áéíóú ÁÉÍÓÚ ñ Ñ ü Ü: 50% & x_1 # {llaves} ~ ^ \ ruta"
@@ -81,3 +80,21 @@ class TestExternoLatex(unittest.TestCase):
                 tablas = caso["procedimiento"]["tablas"]
                 self.comprobar_pdf(caso["id"], salida["latex"],
                                    multipagina=any(len(t["filas"]) > 30 for t in tablas))
+
+    def test_matrices_y_texto_especial_utf8_en_todos_los_campos(self):
+        procedimiento = {"version": 1, "modulo": "prueba", "titulo": ESPECIALES,
+            "entrada": [{"etiqueta": ESPECIALES, "latex": r"\frac{1}{2}"}],
+            "pasos": [{"titulo": ESPECIALES, "texto": ESPECIALES,
+                       "latex": [r"A^{-1}A=I,\quad x\in\mathbb{R}"],
+                       "matriz": [["1", "-2"], ["3/4", "5"]], "detalles": [ESPECIALES]}],
+            "resultado": [{"etiqueta": ESPECIALES, "latex": "x=2"}],
+            "verificacion": [ESPECIALES], "avisos": [ESPECIALES],
+            "tablas": [{"titulo": ESPECIALES, "columnas": ["k", ESPECIALES],
+                        "filas": [[k, ESPECIALES] for k in range(40)]}]}
+        salida = ejecutar_node([procedimiento])[0]
+        # Compilar no basta: reescapar las llaves de textbackslash imprime llaves espurias.
+        with self.subTest(comprobacion="escape literal de barra inversa"):
+            self.assertIn(r"\textbackslash{}", salida["latex"])
+            self.assertNotIn(r"\textbackslash\{\}", salida["latex"])
+        with self.subTest(comprobacion="PDF y paginación del texto UTF-8"):
+            self.comprobar_pdf("especiales_utf8", salida["latex"], multipagina=True)
