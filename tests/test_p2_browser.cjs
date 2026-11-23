@@ -9,14 +9,35 @@ const buscarNavegadores = () => (process.env.P2_BROWSER_EXE ? [process.env.P2_BR
 const ultimasLineas = (txt, n = 12) => String(txt || '').trim().split(/\r?\n/).filter(Boolean).slice(-n).join('\n').slice(-1200) || '(sin salida en stderr)';
 const esBloqueoPolitica = err => Boolean(err && (['EACCES', 'EPERM', 'ENOENT'].includes(err.code) || [5, 1260, 4551].includes(err.exitCode) || POLITICA_RE.test(`${err.message || ''}\n${err.stderr || ''}`)));
 
-function matarArbol(proc) {
+const opcionesSpawn = (opts, platform = process.platform) => ({ ...opts, detached: platform !== 'win32' });
+
+function matarArbol(proc, { platform = process.platform, killFn = process.kill, spawnSyncFn = spawnSync } = {}) {
   if (!proc) return;
   try { proc.stdin?.destroy(); proc.stdout?.destroy(); proc.stderr?.destroy(); } catch (_) {}
   if (proc.exitCode === null && proc.signalCode === null && proc.pid) {
-    if (process.platform === 'win32') try { spawnSync('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true, timeout: 5000 }); } catch (_) {}
+    if (platform === 'win32') {
+      try { spawnSyncFn('taskkill', ['/PID', String(proc.pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true, timeout: 5000 }); } catch (_) {}
+    } else {
+      try { killFn(-proc.pid, 'SIGKILL'); } catch (_) {}
+    }
     try { proc.kill('SIGKILL'); } catch (_) {}
   }
   try { proc.unref(); } catch (_) {}
+}
+
+function esperarFin(proc, timeoutMs = 3000) {
+  if (!proc || !proc.pid) return Promise.resolve();
+  const muerto = () => { try { process.kill(proc.pid, 0); return false; } catch (e) { return e.code === 'ESRCH'; } };
+  if (muerto()) return Promise.resolve();
+  return new Promise(res => {
+    let fin = false;
+    const cerrar = () => { if (fin) return; fin = true; clearInterval(poll); clearTimeout(limite); proc.removeListener('exit', alSalir); try { proc.unref?.(); } catch (_) {} res(); };
+    const alSalir = () => { if (muerto()) cerrar(); };
+    try { proc.ref?.(); } catch (_) {}
+    proc.once('exit', alSalir);
+    const poll = setInterval(() => { if (muerto()) cerrar(); }, 25); poll.unref();
+    const limite = setTimeout(cerrar, timeoutMs); limite.unref();
+  });
 }
 
 function lanzar(cmd, args, opts, regex, stream, { timeoutMs = ARRANQUE_MS, signal, procs, timers } = {}) {
@@ -27,7 +48,7 @@ function lanzar(cmd, args, opts, regex, stream, { timeoutMs = ARRANQUE_MS, signa
     const alAbortar = () => fallar(`Arranque cancelado para ${path.basename(cmd)}`, { code: 'ABORT_ERR' });
     const timer = setTimeout(() => fallar(`Tiempo máximo de arranque agotado (${timeoutMs} ms) para ${path.basename(cmd)}`, { code: 'ETIMEDOUT' }), timeoutMs);
     timer.unref(); timers?.add(timer); signal?.addEventListener('abort', alAbortar, { once: true });
-    try { proc = spawn(cmd, args, opts); } catch (e) { return fin(rej, e); }
+    try { proc = spawn(cmd, args, opcionesSpawn(opts)); } catch (e) { return fin(rej, e); }
     procs?.add(proc);
     proc.stderr?.on('data', d => { errBuf = (errBuf + d).slice(-16000); });
     proc[stream]?.on('data', d => { buf += d; const m = buf.match(regex); if (m) fin(res, { val: m[1] || m[0], proc }); });
@@ -143,8 +164,17 @@ test('arranque del navegador: vence a tiempo con stderr, mata el proceso y disti
   );
   assert.equal(timers.size, 0);
   for (const p of procs) {
-    assert.throws(() => process.kill(p.pid, 0), 'El proceso hijo debe quedar terminado tras vencer el arranque');
+    await esperarFin(p);
+    assert.throws(() => process.kill(p.pid, 0), { code: 'ESRCH' }, 'El proceso hijo debe quedar terminado tras vencer el arranque');
   }
+  const llamadasPosix = [], llamadasWin = [];
+  const fakeProc = () => ({ pid: 4242, exitCode: null, signalCode: null, killed: false, kill(s) { this.killed = s; }, unref() {} });
+  assert.equal(opcionesSpawn({ stdio: 'pipe' }, 'linux').detached, true);
+  assert.equal(opcionesSpawn({ stdio: 'pipe' }, 'win32').detached, false);
+  matarArbol(fakeProc(), { platform: 'linux', killFn: (pid, sig) => llamadasPosix.push([pid, sig]), spawnSyncFn: () => { throw new Error('no taskkill en POSIX'); } });
+  assert.deepEqual(llamadasPosix, [[-4242, 'SIGKILL']]);
+  matarArbol(fakeProc(), { platform: 'win32', killFn: () => {}, spawnSyncFn: (cmd, args) => llamadasWin.push([cmd, args]) });
+  assert.deepEqual(llamadasWin, [['taskkill', ['/PID', '4242', '/T', '/F']]]);
   assert.equal(esBloqueoPolitica({ code: 'EACCES', message: 'spawn EACCES' }), true);
   assert.equal(esBloqueoPolitica({ exitCode: 4551, message: 'blocked by Application Control' }), true);
   assert.equal(esBloqueoPolitica({ code: 'ETIMEDOUT', message: 'timeout sin política' }), false);
