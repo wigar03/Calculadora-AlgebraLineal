@@ -87,7 +87,7 @@ test('CSV endurecido: espacios/controles antes de formula, 1/0, enteros >15 cifr
   assert.ok(csvCasos.includes("'-1/0") && csvCasos.includes("\"'1/2\n\"") && csvCasos.includes('"\' 1/2 "'));
   assert.ok(csvCasos.includes(';000123456789012345;"=""0001234567890123456""";0\r\n'));
   assert.ok(csvCasos.includes('"=""9007199254740993123456789"""') && csvCasos.includes('"=""-1234567890123456"""'));
-  assert.ok(csvCasos.includes(';123456789012345;0,12345678901234567890123456789;0;0,00;0;0\r\n'));
+  assert.ok(csvCasos.includes(';123456789012345;0,12345678901234567890123456789;0;0;0;0\r\n'));
   assert.ok(!csvCasos.includes('0E+') && !csvCasos.includes('0E-'));
   assert.ok(csvCasos.includes('T2\r\nx\r\n0\r\n"=""1000000000000000"""'));
 });

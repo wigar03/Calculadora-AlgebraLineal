@@ -12,11 +12,7 @@
   function formatearNumeroCSV(texto, decimal) {
     const m = NUMERO_VALIDO.exec(texto);
     if (!m) return texto;
-    if (CERO_NUMERICO.test(texto)) {
-      if (m[2] || !m[1].includes(".")) return "0";
-      const sinSigno = m[1].replace(/^[+-]/, "").replace(/^0+(?=\.)/, "0").replace(/^\./, "0.");
-      return decimal !== "." ? sinSigno.replace(".", decimal) : sinSigno;
-    }
+    if (CERO_NUMERICO.test(texto)) return "0";
     const mant = decimal !== "." ? m[1].replace(".", decimal) : m[1];
     if (!m[2]) return mant;
     const signo = m[2].startsWith("-") ? "-" : "+";
