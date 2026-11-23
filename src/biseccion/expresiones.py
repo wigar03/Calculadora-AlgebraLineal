@@ -7,7 +7,7 @@ import operator
 from .diagnosticos import diagnosticar_sintaxis, sugerir_funcion
 from .dominio import evaluar_binaria, evaluar_funcion
 from .normalizador import (
-    ALIAS_FUNCIONES, es_cero_literal, normalizar_ast, normalizar_simbolos, separar_igualdad,
+    ALIAS_FUNCIONES, es_cero_literal, normalizar_ast, normalizar_con_mapa, separar_igualdad,
 )
 
 
@@ -53,12 +53,13 @@ class Expresion:
         if not isinstance(texto, str) or not texto.strip() or len(texto) > 500:
             raise ValueError("Error de sintaxis: ingrese una función de entre 1 y 500 caracteres.")
         self.texto = texto.strip()
-        izq, der, offset_der = separar_igualdad(normalizar_simbolos(self.texto))
-        arbol_izq = self._parsear_lado(izq, 0)
+        normalizado, mapa = normalizar_con_mapa(self.texto)
+        izq, der, offset_der = separar_igualdad(normalizado)
+        arbol_izq = self._parsear_lado(izq, 0, self.texto, mapa)
         if der is None:
             arbol = arbol_izq
         else:
-            arbol_der = self._parsear_lado(der, offset_der)
+            arbol_der = self._parsear_lado(der, offset_der, self.texto, mapa)
             arbol = arbol_izq if es_cero_literal(arbol_der) else ast.BinOp(
                 left=arbol_izq, op=ast.Sub(), right=arbol_der
             )
@@ -67,8 +68,8 @@ class Expresion:
             raise ValueError("Error de sintaxis: la función es demasiado compleja.")
         self._validar(self.arbol)
 
-    def _parsear_lado(self, lado, offset):
-        diagnosticar_sintaxis(lado, offset)
+    def _parsear_lado(self, lado, offset, original=None, mapa=None):
+        diagnosticar_sintaxis(lado, offset, original, mapa)
         try:
             return ast.parse(lado.replace("^", "**"), mode="eval").body
         except (SyntaxError, RecursionError) as exc:

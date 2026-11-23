@@ -38,13 +38,13 @@ def tokenizar(texto, offset=0):
             if valor == ".":
                 raise ValueError(f"Error de sintaxis: carácter '.' no admitido en posición {pos}. Use '.' solo en decimales (por ejemplo, 0.5).")
             raise ValueError(f"Error de sintaxis: carácter no admitido '{valor}' en posición {pos}. Use solo x, números, +, -, *, /, ^ y paréntesis.")
-        tokens.append((tipo, valor, pos))
+        tokens.append((tipo, valor, pos, offset + m.start(), offset + m.end()))
     return tokens
 
 
 def _validar_parentesis(tokens):
     pila = []
-    for tipo, _, pos in tokens:
+    for tipo, _, pos, _, _ in tokens:
         if tipo == "LPAREN":
             pila.append(pos)
         elif tipo == "RPAREN":
@@ -73,13 +73,13 @@ def _validar_operador(val, pos, prev, nxt):
         raise ValueError(f"Error de sintaxis: operadores consecutivos inválidos '{val}{nxt[1]}' en posición {pos}. Deje un solo operador entre los operandos.")
 
 
-def diagnosticar_sintaxis(texto, offset=0):
+def diagnosticar_sintaxis(texto, offset=0, original=None, mapa=None):
     """Detecta errores frecuentes de sintaxis antes de `ast.parse` y sugiere corrección."""
     tokens = tokenizar(texto, offset)
     if not tokens:
         raise ValueError("Error de sintaxis: la expresión está vacía.")
     _validar_parentesis(tokens)
-    for i, (tipo, val, pos) in enumerate(tokens):
+    for i, (tipo, val, pos, _, end) in enumerate(tokens):
         prev = tokens[i - 1] if i > 0 else None
         nxt = tokens[i + 1] if i + 1 < len(tokens) else None
         if tipo == "OP":
@@ -90,11 +90,12 @@ def diagnosticar_sintaxis(texto, offset=0):
             raise ValueError(f"Error de sintaxis: paréntesis vacíos '()' en posición {pos}. Escriba una expresión dentro de ellos.")
         if not nxt:
             continue
-        ntipo, nval, _ = nxt
+        ntipo, nval, _, nstart, _ = nxt
         if tipo == "NUM" and ntipo == "NUM":
             raise ValueError(f"Error de sintaxis: número mal formado entre '{val}' y '{nval}' en posición {pos}.")
         if tipo == "ID" and val in _FUNCIONES and ntipo in ("ID", "NUM"):
             raise ValueError(f"Error de sintaxis: la función '{val}' requiere paréntesis alrededor de su argumento (por ejemplo, {val}({nval})).")
         if (tipo == "NUM" and ntipo in ("ID", "LPAREN")) or (tipo == "RPAREN" and ntipo in ("NUM", "ID", "LPAREN")) or (tipo == "ID" and ntipo in ("NUM", "ID")) or (tipo == "ID" and val in _ATOMOS and ntipo == "LPAREN"):
             der = f"{nval}(...)" if ntipo == "ID" and i + 2 < len(tokens) and tokens[i + 2][0] == "LPAREN" else nval
-            raise ValueError(f"Error de sintaxis: falta el operador de multiplicación entre '{val}' y '{der}'. Escribe '{val}*{der}'.")
+            sug = f"{original[:mapa[end]]}*{original[mapa[nstart]:]}" if original is not None and mapa is not None else f"{texto[:end - offset]}*{texto[nstart - offset:]}"
+            raise ValueError(f"Error de sintaxis: falta el operador de multiplicación entre {val} y {der}. Escribe {sug}.")

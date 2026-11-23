@@ -7,12 +7,20 @@ SUPERINDICES = {"²": "^2", "³": "^3", "⁴": "^4"}
 ALIAS_FUNCIONES = {"sen": "sin"}
 
 
+def normalizar_con_mapa(texto):
+    """Convierte símbolos Unicode a ASCII y devuelve `(normalizado, mapa_indices)`."""
+    partes, mapa = [], []
+    for idx, ch in enumerate(texto):
+        rep = SUPERINDICES.get(ch, ch.translate(SIMBOLOS))
+        partes.append(rep)
+        mapa.extend([idx] * len(rep))
+    mapa.append(len(texto))
+    return "".join(partes), mapa
+
+
 def normalizar_simbolos(texto):
     """Convierte símbolos matemáticos Unicode admitidos a su forma ASCII."""
-    salida = texto.translate(SIMBOLOS)
-    for superindice, potencia in SUPERINDICES.items():
-        salida = salida.replace(superindice, potencia)
-    return salida
+    return normalizar_con_mapa(texto)[0]
 
 
 def separar_igualdad(texto):
