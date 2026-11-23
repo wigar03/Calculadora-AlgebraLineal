@@ -183,6 +183,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     if "--servidor-medicion" in sys.argv:
         servidor_medicion()
     elif "--concurrencia-grande" in sys.argv:
