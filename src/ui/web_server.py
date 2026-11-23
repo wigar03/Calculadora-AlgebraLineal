@@ -16,6 +16,7 @@ import sys
 import json
 import math
 import logging
+import re
 import socket
 import threading
 import time
@@ -64,6 +65,50 @@ def serialize_fraction_or_str(val):
     if hasattr(val, "numerator") and hasattr(val, "denominator"):
         return format_number(val)
     return str(val)
+
+
+def _validar_literal(valor):
+    texto = str(valor).replace("_", "")
+    if any(len(m.group()) > limites.DIGITOS_MAX for m in re.finditer(r"\d+", texto)):
+        raise limites.LimiteExcedido(f"Cada entero admite como máximo {limites.DIGITOS_MAX} dígitos.")
+    for exponente in re.finditer(r"[eE]([+-]?\d+)", texto):
+        digitos = exponente[1].lstrip("+-0") or "0"
+        if len(digitos) > len(str(limites.EXPONENTE_MAX)) or int(digitos) > limites.EXPONENTE_MAX:
+            raise limites.LimiteExcedido(f"El exponente debe tener valor absoluto ≤ {limites.EXPONENTE_MAX}.")
+
+
+def _numero_json(texto, convertir):
+    _validar_literal(texto)
+    return convertir(texto)
+
+
+def _validar_celda(valor):
+    if isinstance(valor, bool) or not isinstance(valor, (str, int, float)):
+        raise ValueError("Cada celda debe contener un número o una fracción escrita como a/b.")
+    _validar_literal(valor)
+    if isinstance(valor, float) and not math.isfinite(valor):
+        raise ValueError("Los números deben ser reales finitos.")
+
+
+def _validar_lista(valor, nombre, maximo, columnas=None):
+    if not isinstance(valor, list):
+        raise ValueError(f"{nombre} debe ser una lista JSON.")
+    # La ausencia y las listas vacías conservan el diagnóstico de cada motor.
+    if valor:
+        limites.exigir_dimension(nombre, len(valor), maximo)
+    for elemento in valor:
+        if columnas is None:
+            _validar_celda(elemento)
+        else:
+            _validar_lista(elemento, f"Columnas de {nombre}", columnas)
+
+
+def _entero_acotado(nombre, valor, maximo, minimo=1):
+    _validar_celda(valor)
+    numero = numero_real(valor, nombre)
+    if not numero.is_integer():
+        raise ValueError(f"{nombre} debe ser un número entero.")
+    return limites.exigir_dimension(nombre, int(numero), maximo, minimo)
 
 
 def calcular_respuesta(ruta, cuerpo):
