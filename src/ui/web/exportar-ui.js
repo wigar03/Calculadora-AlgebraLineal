@@ -160,7 +160,71 @@
     sincronizar(moduloId);
   }
 
-  const api = { MODULOS, registrar, limpiar, obtener: id => procedimientos.get(id) || null };
+  function montarModulo(doc, moduloId) {
+    const sec = doc.getElementById(moduloId);
+    const hdr = sec && sec.querySelector("header.notebook-heading, header.bis-notebook-heading");
+    if (!hdr || instancias.has(moduloId)) return;
+    hdr.classList.add("exp-heading");
+    const wrap = crearEl(doc, "div", "exp-control");
+    const status = crearEl(doc, "span", "exp-status");
+    status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite");
+    const trigger = crearEl(doc, "button", "btn-clear exp-trigger");
+    trigger.type = "button"; trigger.disabled = true;
+    const menuId = `exp-menu-${moduloId}`;
+    trigger.setAttribute("aria-disabled", "true"); trigger.setAttribute("aria-haspopup", "menu");
+    trigger.setAttribute("aria-expanded", "false"); trigger.setAttribute("aria-controls", menuId);
+    trigger.append(crearIcono(doc, "share-2", "btn-icon"), crearEl(doc, "span", "", "Exportar"), crearIcono(doc, "chevron-down", "exp-chevron"));
+    const menu = crearEl(doc, "div", "exp-menu");
+    menu.setAttribute("id", menuId); menu.setAttribute("role", "menu"); menu.setAttribute("aria-label", "Opciones de exportación"); menu.hidden = true;
+    const latexBtn = crearOpcion(doc, "latex", "copy", "Copiar LaTeX", "Pasos, resultado y verificación");
+    const csvBtn = crearOpcion(doc, "csv", "download", "Exportar CSV", "Separador ; y coma decimal");
+    csvBtn.hidden = true;
+    const printBtn = crearOpcion(doc, "imprimir", "printer", "Imprimir o guardar como PDF", "Solo el resultado, sin menús");
+    const items = [latexBtn, csvBtn, printBtn];
+    menu.append(...items); wrap.append(status, trigger, menu); hdr.append(wrap);
+    const inst = { moduloId, wrap, trigger, menu, status, csvBtn, items, timer: null };
+    instancias.set(moduloId, inst);
+    trigger.addEventListener("click", () => (menu.hidden ? abrir(inst, null) : cerrar(inst, false)));
+    trigger.addEventListener("keydown", ev => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); menu.hidden ? abrir(inst, 0) : cerrar(inst, true); }
+      else if (ev.key === "ArrowDown") { ev.preventDefault(); abrir(inst, 0); }
+      else if (ev.key === "ArrowUp") { ev.preventDefault(); abrir(inst, -1); }
+      else if (ev.key === "Escape" && !menu.hidden) { ev.preventDefault(); cerrar(inst, true); }
+    });
+    menu.addEventListener("keydown", ev => {
+      const lista = visibles(inst); const i = lista.indexOf(doc.activeElement);
+      if (ev.key === "Escape") { ev.preventDefault(); cerrar(inst, true); }
+      else if (ev.key === "ArrowDown" && lista.length) { ev.preventDefault(); lista[(i + 1 + lista.length) % lista.length].focus(); }
+      else if (ev.key === "ArrowUp" && lista.length) { ev.preventDefault(); lista[(i - 1 + lista.length) % lista.length].focus(); }
+      else if (ev.key === "Home" && lista.length) { ev.preventDefault(); lista[0].focus(); }
+      else if (ev.key === "End" && lista.length) { ev.preventDefault(); lista[lista.length - 1].focus(); }
+      else if (ev.key === "Tab") cerrar(inst, false);
+    });
+    items.forEach(b => b.addEventListener("click", () => ejecutarAccion(inst, b.dataset.expAction, doc)));
+    const entradas = [sec.querySelector(".card-input"), moduloId === "tab-iterativos" ? doc.getElementById("it-card-1") : null, moduloId === "tab-iterativos" ? doc.getElementById("it-card-2") : null].filter(Boolean);
+    entradas.forEach(box => { ["input", "change"].forEach(t => box.addEventListener(t, () => limpiar(moduloId))); });
+    sincronizar(moduloId);
+  }
+
+  let globalesActivos = false;
+  function montar(doc = typeof document !== "undefined" ? document : null) {
+    if (!doc) return;
+    if (doc.head && !doc.getElementById("exportar-ui-styles")) {
+      const st = crearEl(doc, "style"); st.setAttribute("id", "exportar-ui-styles"); st.textContent = ESTILOS; doc.head.appendChild(st);
+    }
+    MODULOS.forEach(id => montarModulo(doc, id));
+    if (!globalesActivos) {
+      globalesActivos = true;
+      doc.addEventListener("click", ev => { if (abierto && !abierto.wrap.contains(ev.target)) cerrar(abierto, false); });
+      doc.addEventListener("calculator:navigate", () => { if (abierto) cerrar(abierto, false); });
+    }
+    if (typeof window !== "undefined" && window.lucide && window.lucide.createIcons) {
+      try { window.lucide.createIcons(); } catch (_) {}
+    }
+  }
+
+  const api = { MODULOS, montar, registrar, limpiar, obtener: id => procedimientos.get(id) || null };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof window !== "undefined") window.ExportarUI = api;
+  if (typeof document !== "undefined") document.addEventListener("DOMContentLoaded", () => montar(document));
 })();
