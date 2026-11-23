@@ -112,6 +112,12 @@ class TestNumerosAcotados(unittest.TestCase):
 
 
 class TestDeterminanteRobusto(unittest.TestCase):
+    def test_cofactores_acota_el_desarrollo_con_celdas_grandes(self):
+        a = [[f"1e{lim.EXPONENTE_MAX}"] * lim.COFACTORES_MAX for _ in range(lim.COFACTORES_MAX)]
+        with patch("src.matrices.determinante.PasoDeterminante", side_effect=AssertionError("desarrollo prematuro")):
+            with self.assertRaisesRegex(LimiteExcedido, "LU"):
+                calcular_determinante(a, "cofactores")
+
     def test_cofactores_limite_y_lu_disponible(self):
         for n in range(lim.COFACTORES_MAX + 1, lim.DETERMINANTE_MAX + 1):
             with self.subTest(n=n):
