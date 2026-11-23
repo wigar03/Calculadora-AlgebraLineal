@@ -11,7 +11,7 @@ Todas las mediciones se hicieron en esta máquina con `servidor_local()` y HTTP 
 | AU-03 | A | Los límites de la UI (n ≤ 8, ≤ 10…) no se validan en Python | inversa n = 30: 3 s y 32 MB; sistema 40×40: 4.5 s y 51 MB |
 | AU-04 | M | JSON inválido se convierte en `{}` y produce mensajes engañosos | `except Exception: body = {}` en `web_server.py:95`; `{no json` da «Operación vectorial desconocida: ''» |
 | AU-05 | M | Se filtran textos de Python sin traducir | `'list' object has no attribute 'get'`, `invalid literal for int()`, `Exceeds the limit (4300 digits)` |
-| AU-06 | M | `?v=` de 10 de 13 recursos desactualizados y sin `Cache-Control`: la app de escritorio puede usar JS viejo | `tests/test_recursos_version.py`; **se corrige en esta etapa** |
+| AU-06 | M | `?v=` desactualizados (10 de 13) | **corregido** en rc.3 con prueba; falta `Cache-Control` (P1) |
 | AU-07 | M | Errores mostrados con `innerHTML` sin escapar (autoinyección de HTML) | `app.js:411,1410` y otros 4: `<p>${err.message}</p>`; el servidor repite la entrada |
 | AU-08 | B | `Fraction("1e5000000")` construye un entero enorme antes de fallar (2.5 s de CPU) | sondeo HTTP |
 | AU-09 | B | Listado de directorios en estáticos y CORS `*` (solo afecta a 127.0.0.1) | `GET /vendor/` = 200; `Access-Control-Allow-Origin: *` |
