@@ -25,6 +25,12 @@ Comprobaciones independientes con SymPy 1.14.0, sin importar el motor de la calc
 
 Los comentarios matemáticos de `src/matrices/determinante.py` repiten algunos errores; quedan fuera del área autorizada.
 
+Comprobaciones complementarias: `solve((x-1)*(x-2)*(x-3), x)` da tres raíces (1, 2, 3), aunque en 0 y 4 los
+signos sean opuestos (−6, 6). La guía no debe prometer una sola raíz a partir del muestreo. La traza de una matriz
+rectangular (`zeros(2, 3).trace()`) lanza `NonSquareMatrixError`: la propiedad se restringirá a matrices cuadradas.
+Las normas de cambio y residuo escritas en la guía son absolutas; se aclarará que los criterios usan sus versiones
+relativas (por ejemplo, cambio absoluto 2 y relativo 1 al pasar de 0 a 2), conservando las expresiones.
+
 ## Renderizado y formato
 
 GitHub recibe el contenido con `gh api -X POST /markdown -f mode=gfm -f context=wigar03/Calculadora-AlgebraLineal -F text=@archivo`.
