@@ -290,7 +290,7 @@ Cumpliendo la especificación requerida, la aplicación evalúa e informa **ante
 
 ### Módulo 7: Método de Bisección
 
-Abra la pestaña **Método de Bisección**. Ingrese una función continua en todo el intervalo $[a,b]$, con $a < b$ y valores $f(a)$ y $f(b)$ de signos opuestos. Si un extremo se evalúa como cero, se informa directamente sin iteraciones. El cambio de signo garantiza existencia de una raíz únicamente bajo la hipótesis de continuidad; no garantiza unicidad. La aplicación no demuestra automáticamente esa hipótesis.
+Abra la pestaña **Método de Bisección**. Ingrese una función continua en todo el intervalo $`[a,b]`$, con $`a < b`$ y valores $`f(a)`$ y $`f(b)`$ de signos opuestos. Si un extremo se evalúa como cero, se informa directamente sin iteraciones. El cambio de signo garantiza existencia de una raíz únicamente bajo la hipótesis de continuidad; no garantiza unicidad. La aplicación no demuestra automáticamente esa hipótesis.
 
 Los módulos se seleccionan desde una **barra lateral izquierda**. En pantallas de hasta 900 px, el botón **Módulos** abre ese menú; puede cerrarlo seleccionando un módulo, haciendo clic fuera o pulsando Escape.
 
@@ -298,17 +298,17 @@ Al escribir la función, la **vista matemática** debajo del campo se actualiza 
 
 KaTeX también presenta la función del resultado, la sustitución de la raíz, el intervalo final, las condiciones del método, los criterios de parada y las etiquetas matemáticas de la tabla y sus detalles. Las cifras que requieren notación científica se muestran con potencias de diez. Las expresiones matemáticas de etiquetas, títulos y paneles de los demás módulos utilizan el mismo renderizador; los campos de entrada mantienen la sintaxis editable y los selectores nativos usan nombres descriptivos.
 
-En cada iteración se evalúa el punto medio $c=(a+b)/2$ y se conserva la mitad del intervalo con signos opuestos. La tabla muestra $a$, $b$, $c$, sus evaluaciones, el signo de $f(a)f(c)$, ancho, cota de error, diferencia absoluta entre aproximaciones, error relativo porcentual y actualización elegida.
+En cada iteración se evalúa el punto medio $`c=(a+b)/2`$ y se conserva la mitad del intervalo con signos opuestos. La tabla muestra $`a`$, $`b`$, $`c`$, sus evaluaciones, el signo de $`f(a)f(c)`$, ancho, cota de error, diferencia absoluta entre aproximaciones, error relativo porcentual y actualización elegida.
 
-La tabla principal mantiene visibles la iteración, $a$, $b$, $c$, $f(c)$ y el error relativo. **Ver detalle** despliega las evaluaciones, medidas de error, decisión y valores completos de esa iteración. En pantallas de hasta 1100 px, las filas se presentan como tarjetas con etiquetas; la información se distribuye verticalmente sin necesitar desplazamiento horizontal. El contenedor conserva desplazamiento vertical para tablas largas.
+La tabla principal mantiene visibles la iteración, $`a`$, $`b`$, $`c`$, $`f(c)`$ y el error relativo. **Ver detalle** despliega las evaluaciones, medidas de error, decisión y valores completos de esa iteración. En pantallas de hasta 1100 px, las filas se presentan como tarjetas con etiquetas; la información se distribuye verticalmente sin necesitar desplazamiento horizontal. El contenedor conserva desplazamiento vertical para tablas largas.
 
-Seleccione uno de los siguientes criterios; el proceso también termina si $f(c)$ se evalúa como cero:
+Seleccione uno de los siguientes criterios; el proceso también termina si $`f(c)`$ se evalúa como cero:
 
 | Criterio | Condición de parada | Interpretación de la tolerancia |
 | --- | --- | --- |
-| Ancho del intervalo | $b-a \leq \varepsilon$ | Unidades de $x$; la cota de error del punto medio es $(b-a)/2$ en aritmética exacta. |
-| Error relativo aproximado | $\left\lvert(c_i-c_{i-1})/c_i\right\rvert\cdot100 \leq \varepsilon$ | Porcentaje: `1` significa 1 %. No se define en la primera iteración ni con $c_i=0$. |
-| Residuo | $\lvert f(c)\rvert \leq \varepsilon$ | Unidades de $f(x)$; un residuo pequeño no garantiza por sí solo un error pequeño en $x$. |
+| Ancho del intervalo | $`b-a \leq \varepsilon`$ | Unidades de $`x`$; la cota de error del punto medio es $`(b-a)/2`$ en aritmética exacta. |
+| Error relativo aproximado | $`\left\lvert(c_i-c_{i-1})/c_i\right\rvert\cdot100 \leq \varepsilon`$ | Porcentaje: `1` significa 1 %. No se define en la primera iteración ni con $`c_i=0`$. |
+| Residuo | $`\lvert f(c)\rvert \leq \varepsilon`$ | Unidades de $`f(x)`$; un residuo pequeño no garantiza por sí solo un error pequeño en $`x`$. |
 
 La diferencia absoluta de la tabla mide el cambio entre dos aproximaciones, no el error verdadero respecto de una raíz desconocida. El resultado incluye la sustitución en la función original, el intervalo final y la cota obtenida a partir de sus extremos. La gráfica interactiva permite realizar zoom in, zoom out, enfocar la raíz aproximada, restablecer la vista completa al 100% y desplazarse (pan) mediante controles en pantalla, rueda del ratón o arrastre táctil; toma muestras orientativas para el intervalo visualizado y no demuestra continuidad ni permite descartar singularidades entre muestras.
 
@@ -316,7 +316,7 @@ La diferencia absoluta de la tabla mide el cambio entre dos aproximaciones, no e
 
 **Límites y diagnósticos:** tolerancia finita mayor que cero, máximo entero de 1 a 1000 iteraciones, función de hasta 500 caracteres y 120 nodos de expresión, y exponentes de magnitud máxima 1000. Se rechazan sintaxis no permitida, entradas no finitas, intervalos sin cambio de signo y errores de dominio detectados durante la evaluación. Alcanzar el máximo de iteraciones o agotar la precisión se informa sin declarar que se alcanzó la tolerancia. Las evaluaciones usan punto flotante: un cero calculado puede deberse al redondeo o al subdesbordamiento, y la cota del intervalo no incluye los errores de evaluación de la función. Solo se redondea la presentación; el cursor sobre las cifras permite consultar el valor completo.
 
-**Ejemplo de referencia:** el botón correspondiente carga `x^4 - 5*x^3 + 0.5*x^2 - 11*x + 10`, intervalo `[0.6, 1]`, criterio **Residuo** y tolerancia `0.0001`. Produce 15 iteraciones, $c \approx 0.76392822265625$ y $|f(c)| \approx 0.00006538248$. También hay ejemplos de `cos(x)-x` y `x^10-1`.
+**Ejemplo de referencia:** el botón correspondiente carga `x^4 - 5*x^3 + 0.5*x^2 - 11*x + 10`, intervalo `[0.6, 1]`, criterio **Residuo** y tolerancia `0.0001`. Produce 15 iteraciones, $`c \approx 0.76392822265625`$ y $`|f(c)| \approx 0.00006538248`$. También hay ejemplos de `cos(x)-x` y `x^10-1`.
 
 Se consultaron los materiales locales de `Docs`, especialmente la hoja `Bisección.xlsx`, la presentación `MÉTODOS NUMERICOS.pptx` y `guia-busqueda-raices.pdf`, para el algoritmo, las columnas y las medidas de error. Las evaluaciones se recalculan desde la función ingresada, pues algunas tablas de los materiales contienen discrepancias numéricas. La carpeta de referencias queda excluida mediante `.gitignore`, tanto si se llama `Docs` como `docs`; los materiales no son necesarios para ejecutar la calculadora.
 
@@ -347,16 +347,18 @@ Se consultaron los materiales locales de `Docs`, especialmente la hoja `Bisecci�
 
 Abra la pestaña **Método de Regla Falsa**. El módulo guía un flujo de cuatro pasos y cada uno se habilita al completar el anterior:
 
-1. **Función y gráfica.** Se escribe $f(x)$ y una región de interés $[a,b]$; la calculadora dibuja la función en el plano cartesiano (zoom, desplazamiento y lectura de coordenadas).
-2. **Continuidad e intervalos.** El sistema muestrea la región y clasifica cada indicio: tramos fuera del dominio, puntos indefinidos, saltos y asíntotas verticales. Con ese análisis propone intervalos candidatos $[x_l, x_u]$ con cambio de signo y sin discontinuidades detectadas; el muestreo no demuestra unicidad de la raíz. El intervalo también puede escribirse a mano o marcarse arrastrando sobre la gráfica.
-3. **Validación.** La calculadora comprueba $f(x_l)\cdot f(x_u) < 0$ y busca discontinuidades dentro del intervalo. El Teorema del Valor Intermedio requiere continuidad, que el muestreo no demuestra. Un cambio de signo causado por una asíntota detectada se rechaza.
+1. **Función y gráfica.** Se escribe $`f(x)`$ y una región de interés $`[a,b]`$; la calculadora dibuja la función en el plano cartesiano (zoom, desplazamiento y lectura de coordenadas).
+2. **Continuidad e intervalos.** El sistema muestrea la región y clasifica cada indicio: tramos fuera del dominio, puntos indefinidos, saltos y asíntotas verticales. Con ese análisis propone intervalos candidatos $`[x_l, x_u]`$ con cambio de signo y sin discontinuidades detectadas; el muestreo no demuestra unicidad de la raíz. El intervalo también puede escribirse a mano o marcarse arrastrando sobre la gráfica.
+3. **Validación.** La calculadora comprueba $`f(x_l)\cdot f(x_u) < 0`$ y busca discontinuidades dentro del intervalo. El Teorema del Valor Intermedio requiere continuidad, que el muestreo no demuestra. Un cambio de signo causado por una asíntota detectada se rechaza.
 4. **Regla falsa.** Con el intervalo validado se itera
 
-$$x_r = x_u - \frac{f(x_u)\,(x_l - x_u)}{f(x_l) - f(x_u)}$$
+```math
+x_r = x_u - \frac{f(x_u)\,(x_l - x_u)}{f(x_l) - f(x_u)}
+```
 
-Si $f(x_l)\cdot f(x_r) < 0$, $x_u \leftarrow x_r$; si es $> 0$, $x_l \leftarrow x_r$; si es $0$, $x_r$ es la raíz. En cada iteración se calcula $\varepsilon_a = \left|\frac{x_r^{nuevo}-x_r^{anterior}}{x_r^{nuevo}}\right|\cdot 100\%$ hasta alcanzar la tolerancia (en %) o el máximo de iteraciones. La raíz, las primeras rectas secantes y los $x_r$ se muestran sobre la gráfica final, junto con la tabla de iteraciones.
+Si $`f(x_l)\cdot f(x_r) < 0`$, $`x_u \leftarrow x_r`$; si es $`> 0`$, $`x_l \leftarrow x_r`$; si es $`0`$, $`x_r`$ es la raíz. En cada iteración se calcula $`\varepsilon_a = \left|\frac{x_r^{nuevo}-x_r^{anterior}}{x_r^{nuevo}}\right|\cdot 100\%`$ hasta alcanzar la tolerancia (en %) o el máximo de iteraciones. La raíz, las primeras rectas secantes y los $`x_r`$ se muestran sobre la gráfica final, junto con la tabla de iteraciones.
 
-El análisis de continuidad es numérico (401 muestras con refinamiento) y orientativo: no demuestra continuidad y puede pasar por alto discontinuidades más estrechas que la separación entre muestras. Cuando un extremo queda fijo durante 10 o más iteraciones seguidas se informa el estancamiento, como ocurre con $x^{10}-1$ en $[0, 1.3]$. Los valores de los ejemplos se recalculan desde la función ingresada; con $x^4 - 5x^3 + 0.5x^2 - 11x + 10$ en $[4.95, 5.5]$ y tolerancia $0.01\%$ se obtienen 5 iteraciones y $x_r \approx 5.2360550811$.
+El análisis de continuidad es numérico (401 muestras con refinamiento) y orientativo: no demuestra continuidad y puede pasar por alto discontinuidades más estrechas que la separación entre muestras. Cuando un extremo queda fijo durante 10 o más iteraciones seguidas se informa el estancamiento, como ocurre con $`x^{10}-1`$ en $`[0, 1.3]`$. Los valores de los ejemplos se recalculan desde la función ingresada; con $`x^4 - 5x^3 + 0.5x^2 - 11x + 10`$ en $`[4.95, 5.5]`$ y tolerancia $`0.01\%`$ se obtienen 5 iteraciones y $`x_r \approx 5.2360550811`$.
 
 #### API de regla falsa
 
