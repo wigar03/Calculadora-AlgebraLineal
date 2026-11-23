@@ -76,13 +76,21 @@ característico exacto; el motor decide ρ < 1 con Schur-Cohn en aritmética rac
 10 de 13 `?v=` de `index.html` no identificaban el contenido (algunos desde antes de esta orquestación) y el servidor
 no envía `Cache-Control`: la ventana de escritorio podía usar JS o CSS antiguos. Prueba nueva con hash en LF.
 
-### INC-015 · 2026-11-23 · integración · EN CURSO (Codex 2)
+### INC-015 · 2026-11-23 · integración · CERRADA (c500a51; pruebas HTTP con los valores de los controles)
 En la página real, «Resolver» del módulo 11 fallaba siempre: la vista envía `max_iteraciones` como cadena («100»),
 igual que el resto de módulos, y el resolvedor solo aceptaba enteros. Las pruebas simuladas y la de aceptación usaban
 números. Detectado al probar en el navegador.
 
-### INC-016 · 2026-11-23 · presentación · EN CURSO (Antigravity)
+### INC-016 · 2026-11-23 · presentación · CERRADA (c913d48)
 La tabla de iteraciones y los radios espectrales se muestran con 6 cifras significativas (1.14306); se pasan a 10.
+
+### INC-017 · 2026-11-23 · motor · CERRADA (9ccbe2a, 6d976b6, e1a2f3d) — batería adversaria de Codex 1
+Falso «estancamiento» con cambio 1.0 (9×9, ρ = 0), falsa «divergencia» por transitorio (20×20 nilpotente) y ninguna
+iteración con A = [[1e308]]. Ahora: convergen en k = 10 y k = 21 («demostrada») y el caso extremo converge.
+
+### INC-018 · 2026-11-23 · motor · CERRADA (2260479→2be6c0d) — revisión cruzada de Codex 2
+Con valores subnormales el residuo se redondeaba a 0 y se declaraba convergencia con residuo relativo exacto 0.2.
+Ahora la x final se verifica con `Fraction`; si no cumple, motivo `precision_insuficiente`.
 
 ## INC-004 · 2026-11-23 · infraestructura · CERRADA
 `pytest` no está instalado; la suite oficial usa `unittest` (README y CI). Línea base: 169 pruebas OK y
