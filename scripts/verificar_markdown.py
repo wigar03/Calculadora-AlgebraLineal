@@ -167,6 +167,11 @@ def verificar(archivo, raiz=RAIZ, solo_enlaces=False):
         error = comprobar_destino(destino, archivo, raiz)
         if error:
             errores.append((posicion, error))
+    referencias = {" ".join(m[1].lower().split()) for m in REFERENCIA.finditer(vista)}
+    for enlace in ENLACE.finditer(vista):
+        clave = " ".join((enlace[3] or enlace[1]).lower().split())
+        if enlace[3] is not None and clave not in referencias:
+            errores.append((enlace.start(), "referencia sin definir: " + clave))
     nombre = archivo.relative_to(raiz) if archivo.is_relative_to(raiz) else archivo
     return [f"{nombre}:{texto.count(chr(10), 0, pos) + 1}: {error}"
             for pos, error in sorted(errores)]
