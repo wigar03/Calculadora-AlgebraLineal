@@ -7,7 +7,6 @@ import csv
 import hashlib
 import io
 import json
-import math
 import os
 import re
 import shutil
@@ -180,6 +179,7 @@ class TestExportacionModulos(unittest.TestCase):
         cls.casos, cls.consultas = corpus_real()
         cls.casos.append({"id": "adversario", "procedimiento": adversario()})
         cls.salidas = ejecutar_node([c["procedimiento"] for c in cls.casos])
+        assert len(cls.salidas) == len(cls.casos), "El puente Node perdió procedimientos"
 
     def test_cobertura_corpus_y_limites_reales(self):
         self.assertEqual(len(self.consultas), 43 + 3)

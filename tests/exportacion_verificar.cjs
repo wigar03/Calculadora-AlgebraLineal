@@ -7,9 +7,10 @@ const ROOT = path.resolve(__dirname, '..');
 const EXPORTAR = process.env.P2_EXPORTAR_JS || path.join(ROOT, 'src/ui/web/exportar.js');
 const api = require(EXPORTAR);
 const katex = require('../src/ui/web/vendor/katex/katex.min.js');
+const MATEMATICAS = /(?<!\\)\\\[([\s\S]*?)\\\]|(?<!\\)\\\(([\s\S]*?)\\\)|(?<!\\)\$\$([\s\S]*?)\$\$|(?<!\\)\$((?:\\.|[^$])*?)\$/g;
 
 function matematicas(doc) {
-  return [...doc.matchAll(/(?<!\\)\\\[([\s\S]*?)\\\]|(?<!\\)\\\(([\s\S]*?)\\\)|(?<!\\)\$\$([\s\S]*?)\$\$|(?<!\\)\$((?:\\.|[^$])*?)\$/g)]
+  return [...doc.matchAll(MATEMATICAS)]
     .map(m => m.slice(1).find(s => s !== undefined));
 }
 
@@ -20,6 +21,9 @@ function verificarLatex(doc) {
     else if (pila.pop() !== m[2]) errores.push(`Entorno mal cerrado: ${m[0]}`);
   }
   if (pila.length) errores.push(`Entornos sin cerrar: ${pila.join(', ')}`);
+  if (/(?<!\\)(?:\$|\\[[\]()])/.test(doc.replace(MATEMATICAS, ''))) {
+    errores.push('Delimitador matemático sin pareja');
+  }
   const fragmentos = matematicas(doc), unicos = new Set(fragmentos);
   let fallos = errores.length;
   for (const tex of unicos) {
@@ -61,6 +65,7 @@ if (process.argv.includes('--stdin')) {
   test('P2: oráculo detecta entornos desequilibrados y KaTeX inválido', () => {
     assert.ok(verificarLatex('\\begin{pmatrix}\\end{bmatrix}').fallos > 0);
     assert.ok(verificarLatex('\\[\\comandoInexistente{x}\\]').fallos > 0);
+    assert.ok(verificarLatex('texto $x+1').fallos > 0);
     assert.equal(verificarLatex('\\[\\frac{1}{2}\\] precio \\$2').fallos, 0);
   });
   test('P2: texto y cabeceras no pueden inyectar fórmulas', () => {
