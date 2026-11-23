@@ -1,5 +1,6 @@
 """Resolvedor iterativo y comparación, con verificación de residuo obligatoria."""
 import math
+import re
 
 from .convergencia import (analizar_espectro, garantia_convergencia, medir_cambio,
                            cumple_tolerancia, detectar_parada)
@@ -19,6 +20,7 @@ MENSAJES = {
 
 
 def _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar):
+    """Normaliza controles HTML: entero decimal y booleano true/false en texto."""
     if metodo not in ("jacobi", "gauss_seidel"):
         raise ValueError("Método inválido: elige jacobi o gauss_seidel.")
     try:
@@ -27,13 +29,21 @@ def _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar):
         raise ValueError("La tolerancia debe ser un número positivo finito.") from exc
     if isinstance(tolerancia, bool) or not math.isfinite(tol) or tol <= 0:
         raise ValueError("La tolerancia debe ser un número positivo finito.")
-    if (type(max_iteraciones) is not int or not 1 <= max_iteraciones <= 10000):
-        raise ValueError("El máximo de iteraciones debe ser un entero entre 1 y 10000.")
+    if isinstance(max_iteraciones, str) and re.fullmatch(r"[0-9]+", max_iteraciones.strip()):
+        try:
+            max_iteraciones = int(max_iteraciones)
+        except ValueError:
+            pass  # entero de miles de cifras: se rechaza con el mismo mensaje localizado
+    if type(max_iteraciones) is not int or not 1 <= max_iteraciones <= 10000:
+        raise ValueError("El máximo de iteraciones debe ser un entero decimal entre 1 y 10000; "
+                         "escribe 100, sin decimales ni exponentes.")
     if criterio not in ("ambos", "cambio", "residuo"):
         raise ValueError("Criterio inválido: elige ambos, cambio o residuo.")
+    if isinstance(reordenar, str) and reordenar.strip().lower() in ("true", "false"):
+        reordenar = reordenar.strip().lower() == "true"
     if type(reordenar) is not bool:
         raise ValueError("Reordenar debe ser verdadero o falso.")
-    return tol
+    return tol, max_iteraciones, reordenar
 
 
 def _preparar(A, b, x0, metodo, ordenar):
@@ -59,7 +69,7 @@ def _preparar(A, b, x0, metodo, ordenar):
 
 def analizar_sistema(A, b, metodo="jacobi", x0=None, reordenar=False):
     """Análisis sin iterar, usado por /api/iterativos/analizar."""
-    _opciones(metodo, 1e-6, 100, "ambos", reordenar)
+    _, _, reordenar = _opciones(metodo, 1e-6, 100, "ambos", reordenar)
     return _preparar(A, b, x0, metodo, reordenar)[3]
 
 
@@ -94,7 +104,8 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
     from .entrada import sistema_float
     from .jacobi import paso_jacobi
 
-    tol = _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar)
+    tol, max_iteraciones, reordenar = _opciones(
+        metodo, tolerancia, max_iteraciones, criterio, reordenar)
     A, b, x0, analisis = _preparar(A, b, x0, metodo, reordenar)
     A, b, x0 = sistema_float(A, b, x0)
     x, historial, vectores = list(x0), [], [list(x0)]

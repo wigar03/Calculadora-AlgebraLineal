@@ -212,7 +212,7 @@ class ResolucionIterativa(unittest.TestCase):
         for opciones in ({"tolerancia": 0}, {"tolerancia": "nan"},
                          {"tolerancia": True}, {"max_iteraciones": 10001},
                          {"max_iteraciones": True}, {"max_iteraciones": 1.5},
-                         {"criterio": "inventado"}, {"reordenar": "false"}):
+                         {"criterio": "inventado"}, {"reordenar": "quizas"}):
             with self.subTest(opciones=opciones), self.assertRaises(ValueError):
                 self.resolver("principal", **opciones)
         for criterio in ("cambio", "residuo", "ambos"):
