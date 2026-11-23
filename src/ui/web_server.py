@@ -111,6 +111,58 @@ def _entero_acotado(nombre, valor, maximo, minimo=1):
     return limites.exigir_dimension(nombre, int(numero), maximo, minimo)
 
 
+def validar_peticion(ruta, cuerpo):
+    """Forma, dimensiones y presupuesto antes de ocupar un trabajador."""
+    partes = ruta.split("/")
+    modulo = partes[2] if len(partes) > 2 else ""
+    max_matriz = {"matrices": limites.MATRIZ_OPERAR_MAX, "ecuaciones": limites.SISTEMA_MAX,
+                  "iterativos": limites.ITERATIVOS_MAX}.get(modulo)
+    if ruta.endswith("/inversa"):
+        max_matriz = limites.INVERSA_MAX
+    elif ruta.endswith("/determinante"):
+        max_matriz = limites.DETERMINANTE_MAX
+    elif ruta.endswith("/eficiencia-determinante"):
+        max_matriz = limites.EFICIENCIA_N_MAX
+        _entero_acotado("El orden n", cuerpo.get("n", 3), limites.EFICIENCIA_N_MAX)
+    if max_matriz:
+        for clave in ("A", "B"):
+            if clave in cuerpo:
+                _validar_lista(cuerpo[clave], clave, max_matriz, max_matriz)
+        for clave in ("b", "x0"):
+            if clave in cuerpo and cuerpo[clave] is not None:
+                _validar_lista(cuerpo[clave], clave, max_matriz)
+    if modulo == "vectores":
+        max_vector = limites.COMBINACION_N_MAX if ruta.endswith("/combinacion") else limites.VECTOR_MAX
+        for clave in ("u", "v", "b"):
+            if clave in cuerpo:
+                _validar_lista(cuerpo[clave], clave, max_vector)
+        if "vectores" in cuerpo:
+            _validar_lista(cuerpo["vectores"], "Vectores", limites.COMBINACION_K_MAX, limites.COMBINACION_N_MAX)
+    for clave in ("c", "k", "a", "xl", "xu", "x1", "tolerancia"):
+        if clave in cuerpo:
+            _validar_celda(cuerpo[clave])
+    if modulo != "iterativos":
+        for clave in ("x0", "b"):
+            if clave in cuerpo and max_matriz is None and modulo != "vectores":
+                _validar_celda(cuerpo[clave])
+    if "funcion" in cuerpo:
+        funcion = cuerpo["funcion"]
+        if not isinstance(funcion, str):
+            raise ValueError("La función debe ser texto.")
+        if len(funcion) > limites.FUNCION_MAX_CARACTERES:
+            raise limites.LimiteExcedido(f"La función admite como máximo {limites.FUNCION_MAX_CARACTERES} caracteres.")
+        _validar_literal(funcion)
+    if "texto" in cuerpo:
+        if not isinstance(cuerpo["texto"], str):
+            raise ValueError("El sistema debe escribirse como texto.")
+        _validar_literal(cuerpo["texto"])
+    if "max_iteraciones" in cuerpo:
+        maximo = limites.ITERATIVOS_ITER_MAX if modulo == "iterativos" else limites.RAICES_ITER_MAX
+        _entero_acotado("Las iteraciones", cuerpo["max_iteraciones"], maximo)
+    if "cantidad" in cuerpo:
+        _entero_acotado("La cantidad de puntos", cuerpo["cantidad"], limites.PUNTOS_GRAFICA_MAX, 2)
+
+
 def calcular_respuesta(ruta, cuerpo):
     """Adaptador importable del motor HTTP; no crea sockets en el trabajador."""
     resultado = []
@@ -225,11 +277,16 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             if longitud > limites.CUERPO_MAX_BYTES:
                 raise ErrorEjecucion("El cuerpo supera el tamaño máximo permitido.", "limite", "cuerpo_grande", 413)
             try:
-                body = json.loads(self._leer_cuerpo(longitud) if longitud else b"{}")
+                body = json.loads(self._leer_cuerpo(longitud) if longitud else b"{}",
+                                  parse_int=lambda t: _numero_json(t, int),
+                                  parse_float=lambda t: _numero_json(t, float))
+            except limites.LimiteExcedido:
+                raise
             except (ValueError, UnicodeError):
                 raise ErrorEjecucion("El cuerpo de la petición no es JSON válido", "entrada", "json_invalido", 400)
             if not isinstance(body, dict):
                 raise ValueError("El cuerpo de la petición debe ser un objeto JSON.")
+            validar_peticion(urlparse(self.path).path, body)
             datos, estado = calcular_respuesta(urlparse(self.path).path, body)
             self._send_json(datos, estado)
         except TimeoutError:
