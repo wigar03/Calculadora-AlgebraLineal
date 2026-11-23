@@ -4,6 +4,7 @@ SOFFICE y SSCONVERT permiten ejecutables portables, sin instalaciones del sistem
 P2_EXPORTAR_JS selecciona una biblioteca candidata sin modificar src/ ni los golden.
 """
 import csv
+import contextlib
 import functools
 import io
 import json
@@ -93,7 +94,7 @@ def adversarios():
     textos = ["=cmd|'/c calc'!A1", '=HYPERLINK("#local";"x")', "=1+2", "+1+2", "-1+2", "@SUM(1)",
               "\t=1+2", "\r=1+2", "\n=1+2", " =1+2", "\ufeff=1+2", "\u00a0=1+2", "\v=1+2",
               'comillas "dobles"; fin', "línea 1\nlínea 2", "Unicode: ñ á Ω 你好", "1/2x", '1/2"&1',
-              "-1/2;=1+2", "1/2\n", "1/0", "1/000", "  bordes  "]
+              "-1/2;=1+2", "1/2\n", "1/0", "1/000", "  bordes  ", "1/2", "-1/2"]
     return [{"modulo": "adversarios", "tablas": [
         {"titulo": textos[0], "columnas": ["caso", "texto", "control"],
          "filas": [[i, s, "fin"] for i, s in enumerate(textos)]},
@@ -196,8 +197,12 @@ class TestCSVExterno(unittest.TestCase):
         self.assertEqual(len({p["modulo"] for p in procedimientos}), 13)  # once módulos, dos rutas adicionales
         procedimientos = procedimientos + adversarios()
         textos = exportar(procedimientos)
-        with tempfile.TemporaryDirectory(prefix="csv-externo-") as temporal:
+        evidencia = os.environ.get("CSV_EVIDENCIA_DIR")
+        contexto = contextlib.nullcontext(str(Path(evidencia).resolve() / motor)) if evidencia else \
+            tempfile.TemporaryDirectory(prefix="csv-externo-")
+        with contexto as temporal:
             base, entradas = Path(temporal), []
+            base.mkdir(parents=True, exist_ok=True)
             for i, (p, texto) in enumerate(zip(procedimientos, textos)):
                 if not p["tablas"]:
                     self.assertEqual(texto, "", p["modulo"])
@@ -209,7 +214,7 @@ class TestCSVExterno(unittest.TestCase):
                 entradas.append((p, ruta))
             destinos = [base / nombre for nombre in ("importado", "guardado", "reabierto")]
             for destino in destinos:
-                destino.mkdir()
+                destino.mkdir(exist_ok=True)
             if motor == "calc":
                 comun = [ejecutable, "-env:UserInstallation=" + (base / "perfil").as_uri(), "--headless"]
                 filtro = "--infilter=Text - txt - csv (StarCalc):59,34,76,1,,3082,false,true,false,false,false,0,true"
@@ -224,16 +229,35 @@ class TestCSVExterno(unittest.TestCase):
                     ejecutar([ejecutable, "--import-type=Gnumeric_stf:stf_csvtab", "--import-encoding=UTF-8", ruta, inicial])
                     ejecutar([ejecutable, inicial, intermedio])
                     ejecutar([ejecutable, intermedio, final])
+            resultados = []
             for p, ruta in entradas:
                 for etapa in (destinos[0], destinos[2]):
                     with self.subTest(motor=motor, modulo=p["modulo"], caso=ruta.stem, etapa=etapa.name):
                         libro = etapa / (ruta.stem + (".xlsx" if motor == "calc" else ".ods"))
                         self.assertTrue(libro.is_file(), f"{ejecutable} no produjo {libro}")
                         errores = problemas_libro(leer_xlsx(libro) if motor == "calc" else leer_ods(libro), p)
+                        resultados.append({"caso": ruta.stem, "etapa": etapa.name, "errores": errores})
                         self.assertEqual(errores, [], f"{len(errores)} incumplimientos; " + "; ".join(errores[:12]))
+            if evidencia:
+                (base / "informe.json").write_text(json.dumps(resultados, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def test_libreoffice_importa_guarda_y_reabre(self):
         self.comprobar("calc", self.herramienta("soffice", "SOFFICE"))
 
     def test_gnumeric_importa_guarda_y_reabre(self):
         self.comprobar("gnumeric", self.herramienta("ssconvert", "SSCONVERT"))
+
+
+class TestOraculoLibroCSV(unittest.TestCase):
+    def test_acepta_fraccion_textual_y_decimal_exactos(self):
+        p = {"tablas": [{"columnas": ["q", "x", "texto"], "filas": [["-1/2", 1.25, "=1+2"]]}]}
+        celdas = {"A1": ("s", "q", None), "B1": ("s", "x", None), "C1": ("s", "texto", None),
+                  "A2": ("str", "-1/2", '"-1/2"'), "B2": ("n", "1.25", None), "C2": ("s", "'=1+2", None)}
+        self.assertEqual(problemas_libro(celdas, p), [])
+
+    def test_detecta_formula_con_cache_inocua_fecha_y_redondeo(self):
+        p = {"tablas": [{"columnas": [], "filas": [["1/2", 1.2345678901234567, "=1+2"]]}]}
+        errores = problemas_libro({"A1": ("n", "46054", None), "B1": ("n", "1.23457", None),
+                                  "C1": ("str", "=1+2", "HYPERLINK(\"#local\",\"x\")")}, p)
+        for mensaje in ("Fracción alterada", "Pérdida numérica", "Fórmula no autorizada"):
+            self.assertTrue(any(mensaje in e for e in errores), errores)
