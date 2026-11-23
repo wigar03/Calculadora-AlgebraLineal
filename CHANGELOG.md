@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 1.0.0-rc.6
+
+Candidata con exportación de resultados (P2) y documentación pública revisada.
+
+- Botón «Exportar» por módulo: copiar LaTeX, CSV para Excel en español e impresión o PDF.
+- Subtítulo general sin enumerar métodos.
+- Fórmulas de la documentación con notación matemática de GitHub y correcciones verificadas en la guía.
+
 ## 1.0.0-rc.5
 
 Candidata de robustez; resultados y procedimientos de los once módulos sin cambios.
