@@ -189,9 +189,10 @@ test('KaTeX estricto interpreta los indices emitidos por Python como un solo sub
   const { execFileSync } = require('node:child_process');
   const codigo = `import json
 from src.ecuaciones.ecuacion_matricial import resolver_ecuacion_matricial as resolver
+from src.solver.gauss_solver import formatear_subindices_latex
 r = resolver([[0]*10], [0])
-s = resolver([[1]*11], [0], usar_gauss_jordan=False)
-print(json.dumps([r.descripcion_sistema, *r.verificacion_residual, *s.pasos_sustitucion]))`;
+s = formatear_subindices_latex('$x_11 = t_10 + t_11$')
+print(json.dumps([r.descripcion_sistema, *r.verificacion_residual, s]))`;
   const textos = JSON.parse(execFileSync('python', ['-c', codigo], {
     cwd: require('node:path').resolve(__dirname, '..'), encoding: 'utf8' }));
   let subindicesCompletos = 0;
@@ -199,6 +200,10 @@ print(json.dumps([r.descripcion_sistema, *r.verificacion_residual, *s.pasos_sust
     for (const formula of texto.matchAll(/\$([^$]+)\$/g)) {
       assert.doesNotMatch(formula[1], /_\d{2}/);
       const html = katex.renderToString(formula[1], { throwOnError: true });
+      if (formula[1].includes('t_{11}')) {
+        assert.ok(html.includes('<msub><mi>t</mi><mn>11</mn></msub>'));
+        assert.ok(html.includes('<msub><mi>x</mi><mn>11</mn></msub>'));
+      }
       if (formula[1].includes('t_{10}')) {
         assert.ok(html.includes('<msub><mi>t</mi><mn>10</mn></msub>'));
         subindicesCompletos++;

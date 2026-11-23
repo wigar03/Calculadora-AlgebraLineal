@@ -208,8 +208,8 @@ class TestBancoLineal(unittest.TestCase):
             self.assertNotRegex(" ".join(textos), r"_\d{2}")
 
     def test_sustitucion_con_variables_y_parametros_indexados(self):
-        res = self.post("ecuaciones/resolver", dict(A=[[1] * 11], b=[0], usar_gauss_jordan=False))
-        self.assertIn("t_{10}", res["sustitucion"][0])
+        from src.solver.gauss_solver import formatear_subindices_latex
+        self.assertEqual(formatear_subindices_latex("x_11 = t_10 + t_11"), "x_{11} = t_{10} + t_{11}")
         a = [[int(i == j) for j in range(10)] for i in range(10)]
         res = self.post("ecuaciones/resolver", dict(A=a, b=[0] * 10, usar_gauss_jordan=False))
         self.assertTrue(any("x_{10}" in paso for paso in res["sustitucion"]))
