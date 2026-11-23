@@ -24,3 +24,15 @@ Configuración local (no versionada): ganchos `.git/hooks/pre-commit` (≤ 100 l
 | 7196bbd, 9a5fb83 | integrador | INC-005 (la prueba entró en el commit anterior a la corrección) | `src/ui/web_server.py`, `tests/test_servidor_local.py` |
 | 580bcb5 | integrador | INC-007, salida de Python en UTF-8 en pruebas Node | `tests/test_raices_errores_ui.cjs`, `test_katex_render.cjs` |
 | f9a79b4, c6fdf36 | integrador | aceptación con la notación del documento | `tests/test_validacion_ejercicios.py` |
+
+## 2026-11-23 — etapa 2: módulo 11 (Jacobi y Gauss-Seidel)
+| Origen | Motivo | Archivos principales |
+|---|---|---|
+| integrador | contrato, firmas, casos y referencias exactas; AGENTS.md | `docs/contratos/iterativos.md`, `tests/validacion/*iterativos*` |
+| `orca/jacobi` (Codex 1) | entrada exacta, dominancia, reordenamiento, rango, residuo, Jacobi; R1-R3 | `src/iterativos/{entrada,matriz,jacobi}.py` |
+| `orca/gauss-seidel` (Codex 2) | Gauss-Seidel, espectro exacto (Schur-Cohn), parada, resolvedor, API; INC-015/017/018 | `src/iterativos/{gauss_seidel,convergencia,resolver}.py`, `web_server.py` |
+| `orca/iterativos-ui` (Antigravity) | lector de texto, vista, gráficas, KaTeX, 10 cifras, motivos, robustez | `src/iterativos/sistema_texto.py`, `src/ui/web/iterativos.{js,css}`, `index.html` |
+| integrador | ruta `/texto`, exportaciones, `?v=` por contenido, regresión por huella, aceptación HTTP | `web_server.py`, `index.html`, `tests/test_validacion_iterativos.py` |
+| integrador | auditoría y roadmap; README y guía matemática; release rc.3 | `docs/auditoria/*`, `README.md`, `docs/guia-matematica.md` |
+
+Todos los commits de agentes se integraron con `cherry-pick` (autoría del propietario conservada) y ≤ 100 líneas.
