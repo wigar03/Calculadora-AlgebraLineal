@@ -62,6 +62,15 @@ python tests/validacion/generar_referencias.py   # regenera referencias (requier
 - Interfaz: un módulo nuevo con el patrón de navegación existente (entrada lateral, tarjeta de inicio y sección);
   no se modifican los módulos anteriores. Al cambiar un recurso web, actualizar su `?v=` (SHA-256, 12 caracteres).
 
+## Etapa 3 (P1): robustez y formato común de procedimientos
+- Contratos: `docs/contratos/robustez.md` y `docs/contratos/procedimiento.md`.
+- Responsables: Codex 2 (ejecución aislada, límites centrales, servidor, errores, seguridad), Codex 1 (motores de
+  álgebra lineal, Bareiss y coste de cofactores, números grandes, adaptadores lineales), Antigravity (adaptadores
+  numéricos, escape de errores en la vista, biblioteca `exportar.js` sin cargar), integrador (golden, CI, mediciones).
+- No regresión: `tests/test_golden_api.py` (43 respuestas congeladas) debe pasar siempre; solo claves nuevas de primer nivel.
+- P2 (copiar, exportar, imprimir) solo tras P1 y tras aprobar la propuesta visual. P3 no autorizado.
+- IV-2 e IV-5: limitación del enunciado original (INC-001 cerrada); no se resuelven ni se igualan a cero.
+
 ## UX
 No cambiar navegación, disposición, colores, tipografía, controles ni flujos sin autorización del propietario.
 Permitido: corregir errores internos, ampliar capacidades matemáticas y mejorar los mensajes de error.
