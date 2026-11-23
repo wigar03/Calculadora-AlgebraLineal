@@ -100,62 +100,62 @@ El vector $`b`$ **no es combinación lineal** de los vectores de $`S`$ si el ran
 
 ### Módulo 3: Operaciones Matriciales Básicas
 
-Para matrices $A, B \in \mathcal{M}_{m \times n}(\mathbb{R})$ y un escalar $k \in \mathbb{R}$:
+Para matrices $`A, B \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un escalar $`k \in \mathbb{R}`$:
 
 #### Adición y Sustracción
 Válida únicamente si ambas matrices tienen la misma dimensión:
 
-$$
+```math
 \dim(A) = \dim(B) = m \times n
-$$
+```
 
 La suma y resta se calculan componente a componente:
 
-$$
+```math
 (A \pm B)_{ij} = a_{ij} \pm b_{ij}
-$$
+```
 
 #### Multiplicación por Escalar
-Para cualquier escalar real $k \in \mathbb{R}$:
+Para cualquier escalar real $`k \in \mathbb{R}`$:
 
-$$
+```math
 (k \cdot A)_{ij} = k \cdot a_{ij}
-$$
+```
 
 #### Multiplicación de Matrices
-Dadas una matriz $A$ de dimensión $m \times n$ y una matriz $B$ de dimensión $n \times p$, el producto está definido si y solo si el número de columnas de $A$ coincide con el número de filas de $B$:
+Dadas una matriz $`A`$ de dimensión $`m \times n`$ y una matriz $`B`$ de dimensión $`n \times p`$, el producto está definido si y solo si el número de columnas de $`A`$ coincide con el número de filas de $`B`$:
 
-$$
+```math
 \mathrm{cols}(A) = \mathrm{filas}(B) = n
-$$
+```
 
-La matriz resultante $C = A \cdot B$ tiene dimensión $m \times p$:
+La matriz resultante $`C = A \cdot B`$ tiene dimensión $`m \times p`$:
 
-$$
+```math
 C_{m \times p} = A_{m \times n} \cdot B_{n \times p}
-$$
+```
 
 Donde cada entrada de la matriz resultante se obtiene mediante la suma de productos de fila por columna:
 
-$$
+```math
 c_{ij} = \sum_{k=1}^n a_{ik} \cdot b_{kj}
-$$
+```
 
-#### Transpuesta de una Matriz $A^T$
-Dada una matriz $A \in \mathcal{M}_{m \times n}(\mathbb{R})$, su transpuesta $A^T \in \mathcal{M}_{n \times m}(\mathbb{R})$ intercambia ordenadamente sus filas por columnas:
+#### Transpuesta de una Matriz $`A^T`$
+Dada una matriz $`A \in \mathcal{M}_{m \times n}(\mathbb{R})`$, su transpuesta $`A^T \in \mathcal{M}_{n \times m}(\mathbb{R})`$ intercambia ordenadamente sus filas por columnas:
 
-$$
+```math
 (A^T)_{ji} = a_{ij}, \quad \forall \, 1 \le i \le m, \; 1 \le j \le n
-$$
+```
 
 El programa analiza exhaustivamente sus propiedades teóricas:
-- **Involución**: $(A^T)^T = A$.
-- **Distributividad respecto a la suma**: $(A + B)^T = A^T + B^T$.
-- **Homogeneidad con escalar**: $(k \cdot A)^T = k \cdot A^T$.
-- **Propiedad multiplicativa (orden invertido)**: $(A \cdot B)^T = B^T \cdot A^T$.
-- **Simetría y antisimetría**: si $A$ es cuadrada ($m = n$), se evalúa si es simétrica ($A^T = A$) o antisimétrica ($A^T = -A$).
-- **Invarianza de la traza**: $\mathrm{tr}(A^T) = \mathrm{tr}(A) = \sum_{i=1}^n a_{ii}$.
-- **Invertibilidad de la transpuesta (Teorema Unidad 2.2 c)**: $(A^T)^{-1} = (A^{-1})^T$.
+- **Involución**: $`(A^T)^T = A`$.
+- **Distributividad respecto a la suma**: $`(A + B)^T = A^T + B^T`$.
+- **Homogeneidad con escalar**: $`(k \cdot A)^T = k \cdot A^T`$.
+- **Propiedad multiplicativa (orden invertido)**: $`(A \cdot B)^T = B^T \cdot A^T`$.
+- **Simetría y antisimetría**: si $`A`$ es cuadrada ($`m = n`$), se evalúa si es simétrica ($`A^T = A`$) o antisimétrica ($`A^T = -A`$).
+- **Invarianza de la traza**: $`\mathrm{tr}(A^T) = \mathrm{tr}(A) = \sum_{i=1}^n a_{ii}`$.
+- **Invertibilidad de la transpuesta (Teorema Unidad 2.2 c)**: $`(A^T)^{-1} = (A^{-1})^T`$.
 
 ### Módulo 4: Inversa de una Matriz $A^{-1}$
 
