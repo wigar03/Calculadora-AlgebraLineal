@@ -23,6 +23,63 @@ def diagonal_nula(A):
     return [i for i, fila in enumerate(A) if fila[i] == 0]
 
 
+def _asignacion(candidatas):
+    """Asigna una ecuación diferente a cada posición diagonal.
+
+    Hasta n=8, backtracking exhaustivo podado (a lo sumo 109601 nodos).
+    Para n>8, preferencia heurística de candidatos y caminos aumentantes:
+    evita n!, pero sigue encontrando una asignación completa si existe.
+    La heurística decide qué asignación elegir, no demuestra convergencia.
+    """
+    n = len(candidatas)
+    columnas = sorted(range(n), key=lambda c: (len(candidatas[c]), c))
+    permutacion = [-1] * n
+    if n <= 8:
+        def buscar(k, usadas):
+            if k == n:
+                return True
+            col = columnas[k]
+            for fila in candidatas[col]:
+                if fila not in usadas:
+                    permutacion[col] = fila
+                    if buscar(k + 1, usadas | {fila}):
+                        return True
+            return False
+        return permutacion if buscar(0, set()) else None
+
+    asignadas = {}
+
+    def aumentar(col, vistas):
+        for fila in candidatas[col]:
+            if fila in vistas:
+                continue
+            vistas.add(fila)
+            if fila not in asignadas or aumentar(asignadas[fila], vistas):
+                asignadas[fila] = col
+                return True
+        return False
+
+    for col in columnas:
+        if not aumentar(col, set()):
+            return None
+    for fila, col in asignadas.items():
+        permutacion[col] = fila
+    return permutacion
+
+
+def _candidatas(A, estrictas):
+    """Prioriza |a_ij| / suma(|fila|), conservando el orden ante empates."""
+    totales = [sum(abs(v) for v in fila) for fila in A]
+    resultado = []
+    for col in range(len(A)):
+        filas = [i for i, fila in enumerate(A) if fila[col] != 0 and
+                 (not estrictas or 2 * abs(fila[col]) > totales[i])]
+        filas.sort(key=lambda i: (abs(A[i][col]) / totales[i], i == col, -i),
+                   reverse=True)
+        resultado.append(filas)
+    return resultado
+
+
 def rangos(A, b):
     """Rangos y singularidad por el motor Gauss racional ya existente."""
     A, b, _ = leer_sistema(A, b)
