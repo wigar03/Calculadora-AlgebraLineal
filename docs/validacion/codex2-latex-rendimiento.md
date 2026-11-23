@@ -96,6 +96,7 @@ El tiempo total por proceso, incluido inicio/lectura, fue 0,329–0,336 s para J
   **15 pruebas, OK con 14 fallos esperados**, 27,786 s; se compilan los 37 documentos en total.
 - `node --test tests/test_*.cjs`, con `P2_BROWSER_EXE` apuntando a Chrome portátil:
   **68 pruebas aprobadas**, cero omisiones, incluye los 11 módulos en navegador real, 16,280 s.
+  Incluyendo también los auxiliares (`tests/*.cjs`): **75 aprobadas**, cero omisiones, 4,862 s.
 - `python scripts/medir_robustez.py`: **código 0**, incluidas entradas adversarias y peticiones ligeras simultáneas.
 - `python scripts/medir_robustez.py --concurrencia-grande`: **código 0** con las medidas anteriores.
 - `python scripts/medir_exportaciones.py`: **código 0** con las medidas anteriores.
