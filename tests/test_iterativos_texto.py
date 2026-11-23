@@ -1,9 +1,13 @@
 """Pruebas del analizador de sistemas lineales en texto (src/iterativos/sistema_texto.py)."""
 
 from fractions import Fraction
+import json
 import unittest
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 from src.iterativos.sistema_texto import leer_ecuaciones
+from src.ui.web_server import servidor_local
 from tests.validacion.banco_iterativos import CASOS
 
 
@@ -108,6 +112,69 @@ class TestSistemaTextoErrores(unittest.TestCase):
         self._assert_error("3 = 3\nx1 = 1", r"no contiene incógnitas")
         self._assert_error("2 3x1 + x2 = 1\nx1 + x2 = 2", r"operador|inesperado")
         self._assert_error("(1/2 x1 + x2 = 1\nx1 + x2 = 2", r"paréntesis")
+
+
+class TestSistemaTextoRobustez(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = cls.enterClassContext(servidor_local())
+
+    def _post_texto(self, texto, estado=400):
+        req = Request(
+            self.url + "/api/iterativos/texto",
+            data=json.dumps({"texto": texto}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            resp = urlopen(req, timeout=10)
+        except HTTPError as exc:
+            resp = exc
+        with resp:
+            self.assertEqual(resp.status, estado)
+            return json.loads(resp.read().decode("utf-8"))
+
+    def test_indice_enorme_y_exceso_ecuaciones_rechazo_temprano_breve(self):
+        with self.assertRaises(ValueError) as ctx:
+            leer_ecuaciones("x200000 = 1")
+        self.assertLess(len(str(ctx.exception)), 300)
+        self.assertRegex(str(ctx.exception), r"Línea 1.*máximo|20")
+        r = self._post_texto("x200000 = 1", estado=400)
+        self.assertLess(len(r["error"]), 300)
+
+        muchas = "x1 = 1\n" * 100000
+        with self.assertRaisesRegex(ValueError, r"límite|máximo|20"):
+            leer_ecuaciones(muchas)
+        r2 = self._post_texto(muchas, estado=400)
+        self.assertLess(len(r2["error"]), 300)
+        with self.assertRaisesRegex(ValueError, r"máximo.*20"):
+            leer_ecuaciones("x1 = 1\n" * 21)
+
+    def test_parentesis_profundos_y_signos_unarios_sin_recursion_error(self):
+        anidado = "(" * 300 + "x1" + ")" * 300 + " = 1"
+        with self.assertRaisesRegex(ValueError, r"Línea 1.*paréntesis"):
+            leer_ecuaciones(anidado)
+        r = self._post_texto(anidado, estado=400)
+        self.assertNotIn("recursion", r["error"].lower())
+        self.assertRegex(r["error"], r"Línea 1.*paréntesis")
+
+        signos = "+" * 1500 + "x1 = 1"
+        A, b, nombres = leer_ecuaciones(signos)
+        self.assertEqual((A, b, nombres), ([[Fraction(1)]], [Fraction(1)], ["x_1"]))
+        r2 = self._post_texto(signos, estado=200)
+        self.assertEqual(r2, {"A": [["1"]], "b": ["1"], "nombres": ["x_1"]})
+
+    def test_magnitud_extrema_sin_error_interno_4300_digitos(self):
+        for caso in ("1e1000000x1 = 1", "1e-1000000x1 = 1", "9" * 5000 + "x1 = 1", "(1e200)*(1e200)*x1 = 1"):
+            with self.subTest(caso=caso[:30]):
+                with self.assertRaises(ValueError) as ctx:
+                    leer_ecuaciones(caso)
+                msg = str(ctx.exception)
+                self.assertNotIn("4300", msg)
+                self.assertNotIn("set_int_max_str_digits", msg)
+                self.assertRegex(msg, r"Línea 1.*(magnitud|rango|largo|representable)")
+                r = self._post_texto(caso, estado=400)
+                self.assertNotIn("4300", r["error"])
+                self.assertNotIn("set_int_max_str_digits", r["error"])
 
 
 if __name__ == "__main__":
