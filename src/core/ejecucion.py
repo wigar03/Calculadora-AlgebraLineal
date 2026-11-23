@@ -121,4 +121,61 @@ def _trabajador(conexion, memoria_mb):
         conexion.close()
         if job is not None:
             import ctypes
-            ctypes.windll.kernel32.CloseHandle(job)
+            ctypes.WinDLL("kernel32").CloseHandle(ctypes.c_void_p(job))
+
+
+class Supervisor:
+    def __init__(self, trabajadores=2, memoria_mb=None):
+        self._contexto = multiprocessing.get_context("spawn")
+        self._memoria = memoria_mb if memoria_mb is not None else limites.MEMORIA_CALCULO_MB
+        self._disponibles = queue.Queue()
+        self._activos = {}
+        self._candado = threading.RLock()
+        self._cerrado = False
+        try:
+            for _ in range(trabajadores):
+                self._disponibles.put(self._crear())
+        except Exception:
+            self.cerrar()
+            raise
+
+    @property
+    def procesos(self):
+        with self._candado:
+            return tuple(self._activos)
+
+    def _crear(self):
+        padre, hijo = self._contexto.Pipe()
+        proceso = self._contexto.Process(target=_trabajador, args=(hijo, self._memoria), daemon=True)
+        proceso.start()
+        hijo.close()
+        with self._candado:
+            self._activos[proceso] = padre
+        if not padre.poll(limites.TIEMPO_CALCULO_S) or padre.recv_bytes() != b"listo":
+            self._retirar(proceso, padre)
+            raise ErrorEjecucion("No se pudo iniciar el proceso de cálculo.")
+        return proceso, padre
+
+    def _retirar(self, proceso, conexion):
+        if proceso.is_alive():
+            proceso.terminate()
+        proceso.join(timeout=1)
+        if proceso.is_alive():
+            proceso.kill()
+            proceso.join()
+        conexion.close()
+        with self._candado:
+            self._activos.pop(proceso, None)
+
+    def cerrar(self):
+        with self._candado:
+            self._cerrado = True
+            activos = tuple(self._activos.items())
+        for proceso, conexion in activos:
+            self._retirar(proceso, conexion)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.cerrar()
