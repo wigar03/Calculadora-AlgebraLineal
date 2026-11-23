@@ -15,7 +15,6 @@ import os
 import sys
 import json
 import math
-import logging
 import re
 import socket
 import threading
@@ -80,6 +79,10 @@ def _validar_literal(valor):
 def _numero_json(texto, convertir):
     _validar_literal(texto)
     return convertir(texto)
+
+
+def _constante_json(texto):
+    raise ValueError("Constante JSON no permitida.")
 
 
 def _validar_celda(valor):
@@ -299,10 +302,10 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             try:
                 body = json.loads(self._leer_cuerpo(longitud) if longitud else b"{}",
                                   parse_int=lambda t: _numero_json(t, int),
-                                  parse_float=lambda t: _numero_json(t, float))
+                                  parse_float=lambda t: _numero_json(t, float), parse_constant=_constante_json)
             except limites.LimiteExcedido:
                 raise
-            except (ValueError, UnicodeError):
+            except (ValueError, UnicodeError, RecursionError):
                 raise ErrorEjecucion("El cuerpo de la petición no es JSON válido", "entrada", "json_invalido", 400)
             if not isinstance(body, dict):
                 raise ValueError("El cuerpo de la petición debe ser un objeto JSON.")
