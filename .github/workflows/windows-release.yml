@@ -34,6 +34,28 @@ jobs:
       - name: Robustez (medición informativa)
         run: python scripts/medir_robustez.py >> "$GITHUB_STEP_SUMMARY"
 
+  # Validación con herramientas externas reales: pdflatex (exportación LaTeX) y hojas de cálculo (CSV).
+  externos:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      REQUIERE_EXTERNOS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar TeX Live, LibreOffice Calc y Gnumeric
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended \
+            texlive-latex-extra texlive-lang-spanish libreoffice-calc-nogui gnumeric
+      - name: Exportaciones con herramientas reales
+        run: python -m unittest discover tests -p "test_externo_*.py" -v
+
   windows:
     runs-on: windows-2022
     timeout-minutes: 20
