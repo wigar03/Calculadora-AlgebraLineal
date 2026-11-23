@@ -55,6 +55,13 @@ class PasosGaussSeidel(unittest.TestCase):
         for obtenido, esperado in zip(x, REFERENCIAS["principal"]["iteraciones_gauss_seidel"][0]):
             self.assertAlmostEqual(obtenido, float(F(esperado)), places=14)
 
+    def test_latex_cientifico_y_dimensiones(self):
+        _, detalle = paso_gauss_seidel([[1.0]], [1e-20], [0.0])
+        self.assertIn(r"\times 10^{-20}", detalle[0]["sustitucion_latex"])
+        for A, b, x in (([], [], []), ([[1, 2]], [1], [0]), ([[1]], [1], [])):
+            with self.assertRaisesRegex(ValueError, "dimensión"):
+                paso_gauss_seidel(A, b, x)
+
 
 if __name__ == "__main__":
     unittest.main()

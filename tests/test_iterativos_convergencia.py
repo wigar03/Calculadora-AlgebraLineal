@@ -174,3 +174,56 @@ class ResolucionIterativa(unittest.TestCase):
             self.assertEqual(r["analisis"]["reordenamiento"]["permutacion"], [1, 0, 2])
             for x in r["solucion"]:
                 self.assertAlmostEqual(x, 1, delta=1e-10)
+
+    def test_estancamiento_no_finito_y_maximo(self):
+        from src.iterativos.resolver import resolver_iterativo
+        for metodo in ("jacobi", "gauss_seidel"):
+            r = self.resolver("dd_2x2", metodo, tolerancia=1e-30)
+            self.assertEqual(r["motivo"], "estancamiento")
+            self.assertFalse(r["convergio"])
+            r = self.resolver("principal", metodo, max_iteraciones=1)
+            self.assertEqual(r["motivo"], "max_iteraciones")
+            r = resolver_iterativo([["1e-308"]], ["1e308"], metodo)
+            self.assertEqual(r["motivo"], "no_finito")
+            self.assertFalse(r["convergio"])
+            json.dumps(r, allow_nan=False)
+        r = resolver_iterativo([["1e308", "-9e307"], ["-9e307", "1e308"]],
+                               [1, 1], "gauss_seidel", x0=[1, 1], criterio="residuo")
+        self.assertEqual(r["motivo"], "no_finito")
+        self.assertFalse(r["verificacion"]["cumple"])
+        json.dumps(r, allow_nan=False)
+
+    def test_observada_sin_analisis_espectral_y_limite_api(self):
+        from src.iterativos.resolver import resolver_iterativo
+        A = [[int(i == j) for j in range(13)] for i in range(13)]
+        A[0][1], A[1][0] = 2, "1/10"
+        for metodo in ("jacobi", "gauss_seidel"):
+            r = resolver_iterativo(A, [1] * 13, metodo, tolerancia=1e-12)
+            self.assertTrue(r["convergio"])
+            self.assertEqual(r["convergencia"], "observada")
+            self.assertEqual(r["analisis"]["garantia"], "no_asegurada")
+            self.assertIsNone(r["analisis"]["radio_espectral"][metodo])
+            self.assertAlmostEqual(r["solucion"][0], -1.25, delta=1e-10)
+        r = resolver_iterativo([[int(i == j) for j in range(20)] for i in range(20)],
+                               [1] * 20, "jacobi")
+        self.assertTrue(r["convergio"])
+
+    def test_opciones_invalidas_y_tres_criterios(self):
+        for opciones in ({"tolerancia": 0}, {"tolerancia": "nan"},
+                         {"tolerancia": True}, {"max_iteraciones": 10001},
+                         {"max_iteraciones": True}, {"max_iteraciones": 1.5},
+                         {"criterio": "inventado"}, {"reordenar": "false"}):
+            with self.subTest(opciones=opciones), self.assertRaises(ValueError):
+                self.resolver("principal", **opciones)
+        for criterio in ("cambio", "residuo", "ambos"):
+            r = self.resolver("principal", criterio=criterio, tolerancia=1e-12)
+            self.assertTrue(r["convergio"])
+            self.assertLessEqual(r["verificacion"]["residuo_rel"], 1e-12)
+
+    def test_comparacion_no_presupone_que_gs_converge(self):
+        from src.iterativos.resolver import comparar_metodos
+        r = comparar_metodos(**CASOS["jacobi_si_gs_no"])
+        self.assertEqual(set(r), {"jacobi", "gauss_seidel", "resumen"})
+        self.assertTrue(r["jacobi"]["convergio"])
+        self.assertFalse(r["gauss_seidel"]["convergio"])
+        self.assertIn("distinta convergencia", r["resumen"])
