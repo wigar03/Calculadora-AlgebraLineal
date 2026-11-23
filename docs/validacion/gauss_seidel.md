@@ -156,3 +156,50 @@ Commits de esta revisión (líneas añadidas + eliminadas):
 
 Quedan revisión e integración del coordinador y asignación de los hallazgos de la auditoría;
 no se hizo push, merge a main ni release y no se requiere decisión del propietario.
+
+## Verificación exacta final de R1 (2026-11-23)
+
+Rama `orca/gauss-seidel` rebasada sobre main `bd3107f` (incluye el motivo y texto
+de vista integrados por el coordinador). No se modificaron matriz.py, jacobi.py ni la vista.
+
+Antes de aceptar convergencia se calcula una sola vez el residuo de la x final
+con `Fraction(float)` de A, b y x: se preserva exactamente el racional binario
+que realmente usó la iteración, sin reinterpretarlo como decimal.
+Ax, b−Ax, norma infinita y escala se calculan racionalmente; la comparación
+`residuo_rel_exacto <= Fraction(tolerancia)` precede a cualquier redondeo para JSON.
+Esa comprobación proporciona también todos los campos de `verificacion`.
+Las iteraciones siguen usando la primitiva existente; no se añadió este cálculo
+exacto dentro del bucle. Una prueba con espía demuestra una llamada final por
+resolución, tanto con parada por tolerancia como por máximo de iteraciones.
+
+Si una candidata por tolerancia flotante no pasa la verificación final, se devuelve
+`convergio=false`, `verificacion.cumple=false` y `motivo=precision_insuficiente`.
+Texto: «La verificación exacta final no cumple la tolerancia; la precisión flotante
+es insuficiente». Se avisó al coordinador, que actualizó contrato y vista en main.
+Si la primitiva de residuo robusto detiene antes por estancamiento, se conserva ese motivo.
+Los números JSON se muestran redondeados a doble, pero `cumple` se decide racionalmente;
+un residuo absoluto subnormal puede redondearse a cero sin perder su razón relativa.
+
+R1 por HTTP: A=[[1e-200,5e-201],[5e-201,1e-200]], b=[5e-324,5e-324], x0=0.
+La regresión falló primero en seis subcasos (ambos métodos y los tres criterios).
+Ahora informa residuo relativo final 0.19999999999999998 y rechaza convergencia;
+se contrasta con Fraction independiente de los mismos floats de la respuesta.
+También se verifica `/comparar`; no se sustituye la iteración por una solución directa.
+Otra prueba usa la razón exacta 1/(2^53+1), ligeramente mayor que su float redondeado:
+la verificación rechaza ese umbral aun cuando la presentación JSON coincida con él.
+Se cubre además la escala nula; se mantienen las regresiones de nilpotencia y 1e308.
+
+Ejecución completa sobre la base actualizada, antes del cambio documental:
+
+- `python -m unittest discover tests -v`: **403 pruebas, OK**, 12.803 segundos.
+- Los 10 archivos `tests/*.cjs` con `node --test`: **58 pruebas, 58 OK, 0 fallos**.
+- `git diff --check bd3107f..HEAD`: sin errores.
+- Logs: `%TEMP%/gauss-seidel-final-exacto-python.log` y `gauss-seidel-final-exacto-node.log`.
+- La primera pasada detectó una huella web antigua; se incorporó el arreglo ya
+  disponible en main `bd3107f` y la repetición completa pasó.
+
+Commits (añadidas + eliminadas): `2260479` — fix(iterativos): exigir residuo racional
+exacto al finalizar, 58 líneas; `ef62e96` — test(iterativos): verificar una vez y comparar
+el umbral exacto, 36 líneas; este registro añade el commit documental, todos <=100 líneas.
+Queda revisión e integración del coordinador; el cambio paralelo en matriz.residuo
+es independiente de esta barrera final y no forma parte de esta rama.
