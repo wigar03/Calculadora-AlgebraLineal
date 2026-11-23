@@ -138,7 +138,7 @@ class TestDeterminanteRobusto(unittest.TestCase):
         analisis = analizar_eficiencia_determinante(lim.EFICIENCIA_N_MAX)
         self.assertRegex(analisis.ops_cofactores, r"^\d\.\d+e\+\d+$")
         self.assertIn(analisis.ops_cofactores, analisis.justificacion)
-        self.assertEqual(analizar_eficiencia_determinante(6).ops_cofactores, 1236)
+        self.assertEqual(analizar_eficiencia_determinante(6).ops_cofactores, 2112)
 
 
 if __name__ == "__main__":

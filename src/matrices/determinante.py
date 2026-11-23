@@ -67,6 +67,9 @@ un único número real denotado como det(A) o |A|.
 """
 
 from fractions import Fraction
+from math import lcm
+from src.core.limites import (DETERMINANTE_MAX, COFACTORES_MAX, EFICIENCIA_N_MAX,
+                             DIGITOS_MAX, LimiteExcedido, exigir_dimension)
 from typing import List, Tuple, Dict, Any, Optional, Union
 
 from src.core.arithmetic import (
@@ -121,6 +124,7 @@ class AnalisisEficiencia:
     entre el Método de Cofactores y la Descomposición LU para una dimensión dada.
     """
     def __init__(self, n: int, ceros_totales: int = 0):
+        exigir_dimension("El orden para analizar eficiencia", n, EFICIENCIA_N_MAX)
         self.orden_n = n
         self.ceros_totales = ceros_totales
         
@@ -258,10 +262,9 @@ def analizar_eficiencia_determinante(
         Instancia de AnalisisEficiencia con conteos y recomendaciones.
     """
     if isinstance(matriz_o_n, int):
-        n = max(1, matriz_o_n)
-        return AnalisisEficiencia(n=n, ceros_totales=0)
+        return AnalisisEficiencia(n=matriz_o_n, ceros_totales=0)
     
-    matriz = validar_matriz_numerica(matriz_o_n)
+    matriz = validar_matriz_numerica(matriz_o_n, max_filas=EFICIENCIA_N_MAX, max_columnas=EFICIENCIA_N_MAX)
     n = len(matriz)
     ceros = sum(1 for fila in matriz for val in fila if val == 0)
     return AnalisisEficiencia(n=n, ceros_totales=ceros)
@@ -270,6 +273,34 @@ def analizar_eficiencia_determinante(
 # ==============================================================================
 # BLOQUE 3: MÉTODO 1 - EXPANSIÓN POR COFACTORES (DESARROLLO DE LAPLACE)
 # ==============================================================================
+
+def determinante_bareiss(matriz_in: Any) -> Fraction:
+    """Determinante exacto O(n³): elimina denominadores por fila y usa solo enteros."""
+    matriz = validar_matriz_numerica(matriz_in, max_filas=DETERMINANTE_MAX, max_columnas=DETERMINANTE_MAX)
+    n = len(matriz)
+    if len(matriz[0]) != n:
+        raise ValueError("Bareiss exige una matriz cuadrada.")
+    enteros, escala = [], 1
+    for fila in matriz:
+        factor = lcm(*(x.denominator for x in fila))
+        escala *= factor
+        enteros.append([x.numerator * (factor // x.denominator) for x in fila])
+    anterior, signo = 1, 1
+    for k in range(n - 1):
+        fila_pivote = next((i for i in range(k, n) if enteros[i][k]), None)
+        if fila_pivote is None:
+            return Fraction(0)
+        if fila_pivote != k:
+            enteros[k], enteros[fila_pivote] = enteros[fila_pivote], enteros[k]
+            signo = -signo
+        pivote = enteros[k][k]
+        for i in range(k + 1, n):
+            for j in range(k + 1, n):
+                enteros[i][j] = (pivote * enteros[i][j] - enteros[i][k] * enteros[k][j]) // anterior
+            enteros[i][k] = 0
+        anterior = pivote
+    return Fraction(signo * enteros[-1][-1], escala)
+
 
 def calcular_determinante_cofactores(matriz_in: Any) -> ResultadoDeterminante:
     """
@@ -294,7 +325,9 @@ def calcular_determinante_cofactores(matriz_in: Any) -> ResultadoDeterminante:
     Lanza:
         ValueError: Si la matriz no es cuadrada o está vacía.
     """
-    matriz = validar_matriz_numerica(matriz_in)
+    if isinstance(matriz_in, (list, tuple)) and len(matriz_in) > COFACTORES_MAX:
+        raise LimiteExcedido(f"El desarrollo por cofactores admite orden hasta {COFACTORES_MAX}. Usa descomposición LU.")
+    matriz = validar_matriz_numerica(matriz_in, max_filas=DETERMINANTE_MAX, max_columnas=DETERMINANTE_MAX)
     n = len(matriz)
     if len(matriz[0]) != n:
         raise ValueError(
@@ -451,6 +484,8 @@ def calcular_determinante_cofactores(matriz_in: Any) -> ResultadoDeterminante:
 
     # Ejecución del desarrollo recursivo
     det_final, detalles_desarrollo = resolver_recursivo(matriz, nivel=1, etiqueta_submatriz="A")
+    if det_final != determinante_bareiss(matriz):
+        raise ArithmeticError("Falló la comprobación exacta del determinante con Bareiss.")
     res.determinante = det_final
     res.es_invertible = (det_final != 0)
 
@@ -526,7 +561,7 @@ def calcular_determinante_lu(matriz_in: Any) -> ResultadoDeterminante:
     Lanza:
         ValueError: Si la matriz no es cuadrada o está vacía.
     """
-    matriz = validar_matriz_numerica(matriz_in)
+    matriz = validar_matriz_numerica(matriz_in, max_filas=DETERMINANTE_MAX, max_columnas=DETERMINANTE_MAX)
     n = len(matriz)
     if len(matriz[0]) != n:
         raise ValueError(
@@ -733,6 +768,8 @@ def calcular_determinante_lu(matriz_in: Any) -> ResultadoDeterminante:
         "permutaciones": permutaciones,
         "es_singular": matriz_es_singular,
     }
+    if det_final != determinante_bareiss(matriz):
+        raise ArithmeticError("Falló la comprobación exacta del determinante con Bareiss.")
     return res
 
 
