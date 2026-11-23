@@ -8,6 +8,7 @@ import contextlib
 import functools
 import io
 import json
+import locale
 import os
 import re
 import shutil
@@ -47,9 +48,9 @@ def normalizar_saltos(texto):
     return texto.replace("\r\n", "\n").replace("\r", "\n")
 
 
-def ejecutar(args):
+def ejecutar(args, env=None):
     p = subprocess.run([str(a) for a in args], cwd=ROOT, capture_output=True,
-                       encoding="utf-8", errors="replace", timeout=120)
+                       encoding="utf-8", errors="replace", timeout=120, env=env)
     if p.returncode:
         raise AssertionError(f"{args[0]} devolvió {p.returncode}: {p.stdout[-2000:]} {p.stderr[-2000:]}")
     return p.stdout
@@ -207,6 +208,35 @@ def texto_ods(nodo, espacio):
     return salida
 
 
+def entorno_stf(base):
+    """El detector general usa ; si la configuración regional usa coma decimal."""
+    anterior = locale.setlocale(locale.LC_NUMERIC)
+    candidatos = [os.environ.get("CSV_GNUMERIC_LOCALE", "es_ES.UTF-8"), "de_DE.UTF-8", "fr_FR.UTF-8"]
+    if os.name != "nt":
+        candidatos += ejecutar(["locale", "-a"]).splitlines()
+    elegido = None
+    try:
+        for candidato in candidatos:
+            try:
+                locale.setlocale(locale.LC_NUMERIC, candidato)
+                if locale.localeconv()["decimal_point"] == ",":
+                    elegido = candidato
+                    break
+            except locale.Error:
+                pass
+    finally:
+        locale.setlocale(locale.LC_NUMERIC, anterior)
+    env = dict(os.environ)
+    if elegido is None:
+        # Compila en TEMP: no altera el archivo de locales del sistema ni requiere root.
+        destino = base / "locales/es_ES.UTF-8"
+        destino.parent.mkdir()
+        ejecutar(["localedef", "--no-archive", "-i", "es_ES", "-f", "UTF-8", destino])
+        env["LOCPATH"], elegido = str(destino.parent), "es_ES.UTF-8"
+    env.update(LC_ALL=elegido, LANG=elegido)
+    return env
+
+
 class TestCSVExterno(unittest.TestCase):
     def herramienta(self, nombre, variable):
         ejecutable = shutil.which(os.environ.get(variable, nombre))
@@ -249,6 +279,7 @@ class TestCSVExterno(unittest.TestCase):
                 ejecutar([*comun, "--convert-to", "ods", "--outdir", destinos[1], *destinos[0].glob("*.xlsx")])
                 ejecutar([*comun, "--convert-to", "xlsx", "--outdir", destinos[2], *destinos[1].glob("*.ods")])
             else:
+                regional = entorno_stf(base)
                 for _, ruta in entradas:
                     inicial = destinos[0] / (ruta.stem + ".ods")
                     intermedio = destinos[1] / (ruta.stem + ".gnumeric")
@@ -257,9 +288,9 @@ class TestCSVExterno(unittest.TestCase):
                     texto = ruta.with_suffix(".txt")
                     texto.write_bytes(ruta.read_bytes())
                     self.assertEqual(texto.read_bytes(), ruta.read_bytes())
-                    ejecutar([ejecutable, "--import-type=Gnumeric_stf:stf_csvtab", "--import-encoding=UTF-8", texto, inicial])
-                    ejecutar([ejecutable, inicial, intermedio])
-                    ejecutar([ejecutable, intermedio, final])
+                    ejecutar([ejecutable, "--import-type=Gnumeric_stf:stf_csvtab", "--import-encoding=UTF-8", texto, inicial], regional)
+                    ejecutar([ejecutable, inicial, intermedio], regional)
+                    ejecutar([ejecutable, intermedio, final], regional)
             resultados = []
             for p, ruta in entradas:
                 for etapa in (destinos[0], destinos[2]):
