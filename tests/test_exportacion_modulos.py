@@ -26,6 +26,21 @@ from tests.test_golden_api import GOLDEN, consultar, equivalentes
 ROOT = Path(__file__).resolve().parents[1]
 NUMERO = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?\Z")
 FRACCION = re.compile(r"-?\d+/\d+\Z")
+ENTERO = re.compile(r"-?\d+\Z")
+PREFIJO_PELIGROSO = re.compile(r"^[\s\x00-\x1f\x7f-\x9f\ufeff]*[=+\-@]")
+
+
+def fraccion_valida(texto):
+    return bool(FRACCION.fullmatch(texto) and texto.rsplit("/", 1)[1].lstrip("0"))
+
+
+def entero_largo(texto):
+    return bool(ENTERO.fullmatch(texto) and len(texto.lstrip("-").lstrip("0")) > 15)
+
+
+def texto_protegido(texto):
+    numerico = NUMERO.fullmatch(texto) or fraccion_valida(texto)
+    return "'" + texto if PREFIJO_PELIGROSO.match(texto) and not numerico else texto
 
 
 def problemas_csv(texto, tabla):
@@ -51,10 +66,16 @@ def problemas_csv(texto, tabla):
         for j, (celda, valor) in enumerate(zip(actual, original)):
             lugar = f"[{i},{j}] {valor!r} -> {celda!r}"
             s = "" if valor is None else str(valor)
-            if isinstance(valor, (int, float)) and not isinstance(valor, bool):
+            if i == 0:
+                if celda != texto_protegido(s):
+                    errores.append(f"Cabecera insegura o alterada {lugar}")
+            elif entero_largo(s):
+                if celda != f'=\"{s}\"':
+                    errores.append(f"Entero de más de 15 cifras sin texto validado {lugar}")
+            elif isinstance(valor, (int, float)) and not isinstance(valor, bool):
                 try:
                     n = celda.replace(",", ".")
-                    igual = (Decimal(n) == valor if isinstance(valor, int)
+                    igual = (celda == "0" if valor == 0 else Decimal(n) == valor if isinstance(valor, int)
                              else float(n).hex() == valor.hex())
                 except (ValueError, ArithmeticError):
                     igual = False
@@ -62,17 +83,18 @@ def problemas_csv(texto, tabla):
                     errores.append(f"Pérdida numérica {lugar}")
                 if "." in celda or ("e" in celda.lower() and not re.search(r"E[+-]\d{2,}$", celda)):
                     errores.append(f"Decimal/científica fuera del contrato {lugar}")
-            elif FRACCION.fullmatch(s):
+            elif fraccion_valida(s):
                 if celda != f'="{s}"':
                     errores.append(f"Fracción expuesta a conversión de fecha {lugar}")
             elif NUMERO.fullmatch(s):
                 try:
-                    igual = Decimal(celda.replace(",", ".")) == Decimal(s)
+                    igual = (celda == "0" if s.startswith("-") and Decimal(s).is_zero()
+                             else Decimal(celda.replace(",", ".")) == Decimal(s))
                 except ArithmeticError:
                     igual = False
                 if not igual or "." in celda:
                     errores.append(f"Cadena numérica alterada {lugar}")
-            elif celda != ("'" + s if s.startswith(("=", "+", "-", "@", "\t", "\r")) else s):
+            elif celda != texto_protegido(s):
                 errores.append(f"Texto inseguro o alterado {lugar}")
     return errores
 
@@ -275,13 +297,13 @@ class TestOraculoCSV(unittest.TestCase):
     def test_acepta_codificacion_contractual_sin_usar_exportador(self):
         tabla = {"columnas": ["x", "texto", "q"],
                  "filas": [[-0.0, "=cmd|x", "-1/2"], [1e-300, 'a;"b"\nfin', None]]}
-        texto = '\ufeffx;texto;q\r\n-0;\'=cmd|x;"=""-1/2"""\r\n1E-300;"a;""b""\nfin";'
+        texto = '\ufeffx;texto;q\r\n0;\'=cmd|x;"=""-1/2"""\r\n1E-300;"a;""b""\nfin";'
         self.assertEqual(problemas_csv(texto, tabla), [])
 
-    def test_detecta_truncado_redondeo_inyeccion_y_signo_de_cero(self):
+    def test_detecta_truncado_redondeo_e_inyeccion_sin_rechazar_cero_normalizado(self):
         tabla = {"columnas": ["x", "texto"], "filas": [[-0.0, "@SUM(1)"], [1.2345678901234567, "fin"]]}
         errores = problemas_csv("x;texto\r\n0;@SUM(1)\r\n1,2346;fin", tabla)
-        self.assertEqual(len(errores), 4)
+        self.assertEqual(len(errores), 3)
         self.assertTrue(any("Filas perdidas" in e for e in problemas_csv("\ufeffx;texto", tabla)))
 
 
