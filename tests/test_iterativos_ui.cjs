@@ -107,7 +107,6 @@ const HUELLA_SIN_MODULO_11 = '00c313d8e38776d46c827f91063b9bfe8ab6249024d652139a
 
 test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y valida el LaTeX nuevo', () => {
   const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
-  const base = execFileSync('git', ['show', 'main:src/ui/web/index.html'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
   const sinModulo11 = actual
     .replace(/\n  <link rel="stylesheet" href="iterativos\.css\?v=[0-9a-f]+">/, '')
