@@ -44,6 +44,17 @@ class PasosGaussSeidel(unittest.TestCase):
         self.assertNotEqual(nuevo[1], F(2, 3))  # resultado incorrecto si usa x viejo
         self.assertEqual(A, [[F(4), F(1)], [F(2), F(3)]])
 
+    def test_subnormales_conservan_el_valor_recien_actualizado(self):
+        A = [[1e-200, 5e-201], [5e-201, 1e-200]]
+        b, x0 = [float("5e-324")] * 2, [0.0, 0.0]
+        nuevo, detalle = paso_gauss_seidel(A, b, x0)
+        primero = float(F(b[0]) / F(A[0][0]))
+        segundo = float((F(b[1]) - F(A[1][0]) * F(primero)) / F(A[1][1]))
+        self.assertAlmostEqual(nuevo[0] / primero, 1, places=14)
+        self.assertAlmostEqual(nuevo[1] / segundo, 1, places=14)
+        self.assertEqual(detalle[1]["usa_nuevos"], [0])
+        self.assertEqual(x0, [0, 0])
+
     def test_diagonal_nula_informa_fila(self):
         with self.assertRaisesRegex(ValueError, "fila 1"):
             paso_gauss_seidel([[0, 1], [1, 2]], [1, 2], [0, 0])

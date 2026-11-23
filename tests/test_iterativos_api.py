@@ -254,3 +254,19 @@ class APIIterativos(unittest.TestCase):
         for metodo in ("jacobi", "gauss_seidel"):
             res = comparacion[metodo]
             self.assertFalse(res["convergio"] and not res["verificacion"]["cumple"])
+
+    def test_gauss_seidel_converge_realmente_con_productos_subnormales(self):
+        cuerpo = {"A": [["1e-200", "5e-201"], ["5e-201", "1e-200"]],
+                  "b": ["5e-324", "5e-324"], "x0": ["0", "0"],
+                  "metodo": "gauss_seidel", "tolerancia": "1e-6", "max_iteraciones": "100"}
+        r = self.post("resolver", cuerpo)
+        self.assertTrue(r["convergio"], r["mensaje"])
+        self.assertEqual(r["motivo"], "tolerancia")
+        self.assertTrue(r["verificacion"]["cumple"])
+        A = [[F(v) for v in fila] for fila in r["A"]]
+        b, x = list(map(F, r["b"])), list(map(F, r["solucion"]))
+        residuo = max(abs(bi - sum(a * v for a, v in zip(fila, x)))
+                      for fila, bi in zip(A, b))
+        escala = max(map(abs, b)) + max(sum(map(abs, fila)) for fila in A) * max(map(abs, x))
+        self.assertLessEqual(residuo / escala, F(r["tolerancia"]))
+        self.assertEqual(r["verificacion"]["residuo_rel"], float(residuo / escala))
