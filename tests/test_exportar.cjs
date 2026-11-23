@@ -78,7 +78,7 @@ test('CSV endurecido: espacios/controles antes de formula, 1/0, enteros >15 cifr
     titulo: '1/2',
     columnas: ['1/2', '-1/2', '1/2\n', '1/0', '1/000'],
     filas: [['1/0', '1/000', '-1/0', '1/2\n', ' 1/2 '], ['9007199254740993123456789', '-1234567890123456', '123456789012345', '0.12345678901234567890123456789', '-0']],
-  }, { titulo: 'T2', columnas: ['x'], filas: [[-0.0], [1000000000000000]] }]);
+  }, { titulo: 'T2', columnas: ['x'], filas: [[-0.0], ['1000000000000000']] }]);
   assert.ok(csvCasos.startsWith("\uFEFF'1/2\r\n'1/2;'-1/2;\"'1/2\n\";1/0;1/000\r\n"));
   assert.ok(!csvCasos.includes('"=""1/0"""') && !csvCasos.includes('"=""1/000"""'));
   assert.ok(csvCasos.includes("'-1/0") && csvCasos.includes("\"'1/2\n\"") && csvCasos.includes('"\' 1/2 "'));
@@ -97,6 +97,28 @@ test('tablaALatex usa tabular en tablas cortas y longtable en largas', () => {
   assert.equal((larga.match(/^.*\\\\\s*$/gm) || []).length, 47);
   const adv = procedimientoALatex({ version: 1, modulo: 'adv', titulo: 'T', entrada: [{ etiqueta: '\\input{ajeno}', latex: 'x^2+1' }, { etiqueta: 'Unicode: ñ á Ω 你好', latex: '2' }], pasos: [], resultado: [], verificacion: [], tablas: [{ titulo: 'T', columnas: ['\\input{ajeno}'], filas: [['\\input{ajeno}']] }], avisos: [] });
   assert.ok(!adv.includes('\\input{ajeno}') && adv.includes('x^2+1'));
+  assert.ok(adv.includes('\\textbackslash{}') && !adv.includes('\\textbackslash\\{\\}'));
+});
+
+test('LaTeX endurecido: MaxMatrixCols>=20, babel plainpercent, escape 1 pasada y ajuste de ancho', () => {
+  const doc = procedimientoALatex(EJEMPLO);
+  const mCols = doc.match(/\\setcounter\{MaxMatrixCols\}\{(\d+)\}/);
+  assert.ok(mCols && Number(mCols[1]) >= 20, 'Falta MaxMatrixCols >= 20');
+  assert.ok(doc.includes('\\usepackage[spanish]{babel}') && doc.includes('\\spanishplainpercent'));
+  assert.ok(doc.includes('\\usepackage{graphicx}') && doc.includes('\\resizebox'));
+  assert.ok(doc.includes('$\\varepsilon_a\\;(\\%)$'), 'Cabecera \\varepsilon_a\\;(\\%) debe ir en modo matemático');
+  const ancha = tablaALatex({
+    titulo: 'Jacobi 20x20',
+    columnas: Array.from({ length: 25 }, (_, i) => `x_{${i + 1}}`),
+    filas: Array.from({ length: 35 }, (_, k) => Array.from({ length: 25 }, (_, i) => (k + i) / 7)),
+  });
+  assert.ok(ancha.includes('\\begin{landscape}') && ancha.includes('\\begin{longtable}') && ancha.includes('\\end{landscape}'));
+  assert.equal((ancha.match(/^.*\\\\\s*$/gm) || []).length, 37);
+  const largoVec = procedimientoALatex({
+    version: 1, modulo: 'iterativos', titulo: 'V', entrada: [], pasos: [], resultado: [], tablas: [], avisos: [],
+    verificacion: [`$Ax \\approx \\left(${Array(20).fill('0.6321389535670303').join(',\\; ')}\\right)$`],
+  });
+  assert.ok(largoVec.includes('\\ajm{$Ax \\approx \\left('));
 });
 
 test('procedimientoALatex genera documento compilable con babel spanish, longtable y KaTeX estricto en los 33 golden', () => {

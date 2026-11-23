@@ -24,9 +24,7 @@
     if (valor === null || valor === undefined) return "";
     if (typeof valor === "number") {
       if (!Number.isFinite(valor)) throw new RangeError(`Valor numérico no finito no exportable en CSV: ${valor}`);
-      if (valor === 0) return "0";
-      const s = String(valor);
-      return ENTERO_LARGO.test(s) ? `="${s}"` : formatearNumeroCSV(s, decimal);
+      return valor === 0 ? "0" : formatearNumeroCSV(String(valor), decimal);
     }
     const txt = String(valor);
     if (ENTERO_LARGO.test(txt) || FRACCION_EXACTA.test(txt)) return `="${txt}"`;
@@ -140,10 +138,16 @@
     "∉": "$\\notin$", "∈": "$\\in$", "³": "$^{3}$", "²": "$^{2}$", "¹": "$^{1}$", "⁰": "$^{0}$", "ℝ": "$\\mathbb{R}$", "‖": "$\\|$",
   };
 
+  const ESCAPES_LATEX = {
+    "\\": "\\textbackslash{}", "{": "\\{", "}": "\\}", "&": "\\&", "$": "\\$",
+    "%": "\\%", "#": "\\#", "_": "\\_", "^": "\\^{}", "~": "\\~{}", ...SIMBOLOS_UNICODE,
+  };
+  const RE_ESCAPE_LATEX = /[\\{}&$%#_^~←→−—–…✓✗≈≤≥≠·×∞ρεΔ∉∈³²¹⁰ℝ‖]/g;
+
   const COMANDOS_MAT = new Set(["det", "mid", "varepsilon", "Delta", "infty", "text", "left", "right", "frac", "cdot", "times", "vec", "operatorname", "mathbb", "rho", "sum", "|", ";", ",", "%", " "]);
 
   function esMathSeguro(s) {
-    if (!s || s !== s.trim() || /[^\x20-\x7EáéíóúÁÉÍÓÚñÑüÜ]/.test(s) || /[=@;!"\t\r\n]/.test(s)) return false;
+    if (!s || s !== s.trim() || /[^\x20-\x7EáéíóúÁÉÍÓÚñÑüÜ]/.test(s) || /[=@!"\t\r\n]/.test(s) || /(?<!\\);/.test(s)) return false;
     if (/[áéíóúÁÉÍÓÚñÑüÜ]/.test(s) && !/^\\text\{[^\\{}]+\}$/.test(s)) return false;
     const cmds = [...s.matchAll(/\\([a-zA-Z]+|[^a-zA-Z])/g)];
     if (cmds.some(m => !COMANDOS_MAT.has(m[1]))) return false;
@@ -151,9 +155,7 @@
   }
 
   function escaparTextoLatex(texto) {
-    return String(texto ?? "").replace(/\\/g, "\\textbackslash{}").replace(/([{}&$%#_])/g, "\\$1")
-      .replace(/\^/g, "\\^{}").replace(/~/g, "\\~{}")
-      .replace(/[←→−—–…✓✗≈≤≥≠·×∞ρεΔ∉∈³²¹⁰ℝ‖]/g, ch => SIMBOLOS_UNICODE[ch] || ch).replace(/[\r\n\t]+/g, " ");
+    return String(texto ?? "").replace(RE_ESCAPE_LATEX, ch => ESCAPES_LATEX[ch]).replace(/[\r\n\t]+/g, " ");
   }
 
   function textoMixtoALatex(texto) {
@@ -162,7 +164,8 @@
         return `\\[\n${parte.slice(2, -2).trim().replace(/—/g, "---").replace(/−/g, "-")}\n\\]`;
       }
       if (parte.startsWith("$") && parte.endsWith("$") && parte.length >= 2) {
-        return parte.replace(/—/g, "---").replace(/−/g, "-");
+        const mat = parte.replace(/—/g, "---").replace(/−/g, "-");
+        return mat.length > 90 && mat.includes("\\left") ? `\\ajm{${mat}}` : mat;
       }
       return escaparTextoLatex(parte);
     }).join("");
@@ -191,28 +194,36 @@
   function tablaALatex(t, opciones = {}) {
     const cols = Array.isArray(t && t.columnas) ? t.columnas : [];
     const filas = Array.isArray(t && t.filas) ? t.filas : [];
-    const spec = cols.length ? cols.map(() => "c").join(" ") : "c";
+    const n = Math.max(1, cols.length);
     const umbral = opciones.umbralLongtable ?? UMBRAL_LONGTABLE;
     const usarLong = Boolean(opciones.longtable) || filas.length > umbral;
     const cabecera = cols.length ? `${cols.map(cabeceraALatex).join(" & ")} \\\\` : "";
     if (usarLong) {
+      const apaisado = n >= 8;
+      const sep = n >= 12 ? 1.5 : n >= 6 ? 2.5 : 4;
+      const tam = n >= 12 ? "\\tiny" : n >= 6 ? "\\scriptsize" : "\\footnotesize";
+      const ancho = `\\dimexpr(\\linewidth-${(2 * n + 1) * sep}pt)/${n}\\relax`;
+      const spec = Array.from({ length: n }, () => `C{${ancho}}`).join(" ");
       const out = [];
-      if (t && t.titulo) out.push(`\\paragraph*{${textoMixtoALatex(t.titulo)}}`);
-      out.push(`\\begin{longtable}{${spec}}`, "\\hline");
+      if (apaisado) out.push("\\begin{landscape}");
+      if (t && t.titulo) out.push(`\\subsubsection*{${textoMixtoALatex(t.titulo)}}`);
+      out.push(`\\begingroup\\setlength{\\tabcolsep}{${sep}pt}${tam}`, `\\begin{longtable}{${spec}}`, "\\hline");
       if (cabecera) out.push(cabecera, "\\hline");
       out.push("\\endfirsthead", "\\hline");
       if (cabecera) out.push(cabecera, "\\hline");
       out.push("\\endhead", "\\hline", "\\endfoot", "\\hline", "\\endlastfoot");
       for (const fila of filas) out.push(`${fila.map(celdaLatex).join(" & ")} \\\\`);
-      out.push("\\end{longtable}");
+      out.push("\\end{longtable}", "\\endgroup");
+      if (apaisado) out.push("\\end{landscape}");
       return out.join("\n");
     }
+    const spec = Array.from({ length: n }, () => "c").join(" ");
     const out = ["\\begin{table}[htbp]", "\\centering"];
     if (t && t.titulo) out.push(`\\caption{${textoMixtoALatex(t.titulo)}}`);
-    out.push(`\\begin{tabular}{${spec}}`, "\\hline");
+    out.push("\\setlength{\\tabcolsep}{4pt}", "\\footnotesize", "\\resizebox{\\ifdim\\width>\\linewidth\\linewidth\\else\\width\\fi}{!}{%", `\\begin{tabular}{${spec}}`, "\\hline");
     if (cabecera) out.push(cabecera, "\\hline");
     for (const fila of filas) out.push(`${fila.map(celdaLatex).join(" & ")} \\\\`);
-    out.push("\\hline", "\\end{tabular}", "\\end{table}");
+    out.push("\\hline", "\\end{tabular}}", "\\end{table}");
     return out.join("\n");
   }
 
@@ -223,14 +234,25 @@
   }
 
   function procedimientoALatex(p) {
-    const out = ["\\documentclass[11pt,a4paper]{article}", "\\usepackage[utf8]{inputenc}",
-      "\\usepackage[T1]{fontenc}", "\\usepackage[spanish]{babel}", "\\usepackage{amsmath,amssymb}", "\\usepackage{longtable}", "\\begin{document}"];
+    const out = [
+      "\\documentclass[11pt,a4paper]{article}", "\\usepackage[utf8]{inputenc}", "\\usepackage[T1]{fontenc}",
+      "\\usepackage[spanish]{babel}", "\\spanishplainpercent", "\\usepackage[a4paper,margin=1.2cm]{geometry}",
+      "\\usepackage{amsmath,amssymb}", "\\setcounter{MaxMatrixCols}{32}", "\\usepackage{graphicx}",
+      "\\usepackage{array}", "\\usepackage{pdflscape}", "\\usepackage{longtable}", "\\sloppy", "\\emergencystretch=3em",
+      "\\newsavebox{\\eqbox}", "\\makeatletter",
+      "\\@namedef{[}{\\par\\smallskip\\noindent\\setbox\\eqbox\\hbox\\bgroup\\math\\displaystyle}",
+      "\\@namedef{]}{\\endmath\\egroup\\makebox[\\linewidth][c]{\\ifdim\\wd\\eqbox>\\linewidth\\resizebox{\\linewidth}{!}{\\box\\eqbox}\\else\\box\\eqbox\\fi}\\par\\smallskip}",
+      "\\makeatother",
+      "\\newcommand{\\ajm}[1]{\\setbox\\eqbox\\hbox{#1}\\ifdim\\wd\\eqbox>\\linewidth\\resizebox{0.98\\linewidth}{!}{\\box\\eqbox}\\else\\box\\eqbox\\fi}",
+      "\\newcolumntype{C}[1]{>{\\setbox\\eqbox\\hbox\\bgroup}c<{\\egroup\\ifdim\\wd\\eqbox>#1\\resizebox{#1}{!}{\\box\\eqbox}\\else\\box\\eqbox\\fi}}",
+      "\\begin{document}",
+    ];
     if (p && p.titulo) out.push(`\\section*{${textoMixtoALatex(p.titulo)}}`);
     if (Array.isArray(p && p.entrada) && p.entrada.length) out.push("\\subsection*{Datos de entrada}", ...p.entrada.map(bloqueEcuacion));
     if (Array.isArray(p && p.pasos) && p.pasos.length) {
       out.push("\\subsection*{Procedimiento}");
       for (const s of p.pasos) {
-        if (s.titulo) out.push(`\\paragraph{${textoMixtoALatex(s.titulo)}}`);
+        if (s.titulo) out.push(`\\subsubsection*{${textoMixtoALatex(s.titulo)}}`);
         if (s.texto) out.push(textoMixtoALatex(s.texto));
         for (const f of s.latex || []) out.push(`\\[\n${f}\n\\]`);
         if (Array.isArray(s.matriz) && s.matriz.length) {
