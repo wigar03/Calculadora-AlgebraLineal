@@ -116,6 +116,41 @@ permite; ahora la admite y la valida con `src/procedimientos/base.py`.
 Windows Application Control bloqueó en la máquina de Codex 2 un ejecutable recompilado («An Application Control
 policy has blocked this file»). No se eludió: el diagnóstico del ejecutable empaquetado lo hace la CI de Windows.
 
+## Etapa 5 — Consolidación con herramientas reales
+
+### INC-023 · 2026-11-23 · documentación · CERRADA (0b04d8e; regla feaf7e8)
+En github.com la fórmula de Gauss-Seidel de la guía perdía `<i} … \sum_{j>` (GitHub lo tomó como etiqueta HTML) y
+mostraba un único sumatorio. Corregido con `\lt`/`\gt`; `scripts/verificar_markdown.py` detecta ahora el patrón.
+
+### INC-024 · 2026-11-23 · exportación LaTeX · CERRADA (7776f9d)
+pdflatex real (Codex 2): Jacobi 20×20 abortaba (MaxMatrixCols = 10), regla falsa abortaba con babel español y `\%`,
+tablas desbordaban 270-670 pt y la barra invertida dejaba llaves visibles. Ahora 37/37 PDF sin desbordes > 1 pt.
+
+### INC-025 · 2026-11-23 · seguridad CSV · CERRADA (5592934)
+Gnumeric ejecutaba como fórmula un texto con espacios, saltos o NBSP antes de `=` (p. ej. « =1+2» daba 3), también en
+cabeceras: el prefijo `'` solo miraba el primer carácter. Ahora se decide tras todos los espacios y controles.
+
+### INC-026 · 2026-11-23 · fidelidad CSV · CERRADA (5592934, 0df5554, a4a85a0)
+`1/0` salía como `="1/0"`; enteros de más de 15 cifras perdían dígitos; `-0` perdía el signo y `-0e8` salía `0E+08`;
+«1/2» en cabeceras se convertía en fecha o mostraba apóstrofo en Calc. Ahora: solo racionales con q ≠ 0 como
+`="p/q"`, enteros largos como `="n"`, cero canónico `0`, cifras significativas sin ceros iniciales.
+
+### INC-027 · 2026-11-23 · exportación LaTeX · CERRADA (35cd3cb)
+Un texto con `Ω` o `你好` abortaba pdflatex. Ahora griego y símbolos van con su comando y lo no soportado se muestra
+como `[U+XXXX]`, nunca se omite. La CI compila ese adversario en el job `externos`.
+
+### INC-028 · 2026-11-23 · entorno · CERRADA (4f9eb9b) — no es fallo de la aplicación
+Localmente Chrome y Edge salían con código 0 sin abrir CDP: Orca corre elevado y Chromium se relanza des-elevado sin
+heredar stderr. La prueba usa `--do-not-de-elevate` en Windows. Diagnóstico: `docs/validacion/chrome-local.md`.
+
+### INC-029 · 2026-11-23 · limitaciones externas · REGISTRADA
+- Excel no está disponible en ningún entorno autorizado: la compatibilidad se comprobó con LibreOffice Calc 26.2 y
+  Gnumeric 1.12 (abrir, guardar y reabrir), no con Excel.
+- Calc y Excel conservan 15 cifras significativas en números; el valor exacto viaja en la fracción cuando existe.
+- `ssconvert` no permite elegir el separador por línea de comandos; en Gnumeric se elige en el asistente.
+- Los textos protegidos con `'` (fórmulas o aspecto de fecha no racional) muestran el apóstrofo en Calc.
+- GitHub: en móvil las fórmulas anchas se desplazan dentro de su recuadro; el MathML añade espacios estéticos.
+
 ## INC-004 · 2026-11-23 · infraestructura · CERRADA
 `pytest` no está instalado; la suite oficial usa `unittest` (README y CI). Línea base: 169 pruebas OK y
 5 archivos `node --test` OK. No es un fallo.
