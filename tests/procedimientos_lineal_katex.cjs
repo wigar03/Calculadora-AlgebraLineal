@@ -8,7 +8,11 @@ const katex = require('../src/ui/web/vendor/katex/katex.min.js');
 function verificar(procedimientos) {
   let bloques = 0;
   function render(latex) {
-    assert.ok(katex.renderToString(latex, { throwOnError: true, strict: 'error' }).includes('katex'));
+    try {
+      assert.ok(katex.renderToString(latex, { throwOnError: true, strict: 'error' }).includes('katex'));
+    } catch (error) {
+      assert.fail(`${latex}: ${error.message}`);
+    }
     bloques++;
   }
   function recorrer(valor, clave = '') {

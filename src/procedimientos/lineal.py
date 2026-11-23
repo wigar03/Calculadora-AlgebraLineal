@@ -11,6 +11,8 @@ def _matriz_latex(matriz):
 
 
 def _item(etiqueta, latex):
+    if latex == "Sin solución":
+        latex = r"\text{" + latex + "}"
     return {"etiqueta": etiqueta, "latex": str(latex)}
 
 
@@ -49,4 +51,54 @@ def adaptar_matrices(respuesta, cuerpo):
     p = _base(respuesta, "matrices", "Matrices")
     p["resultado"] = [_item("Resultado", _matriz_latex(respuesta["matriz_resultado"]))]
     p["verificacion"] = list(respuesta.get("propiedades", []))
+    return p
+
+
+@registrar("/api/vectores/combinacion")
+def adaptar_combinacion(respuesta, cuerpo):
+    p = _base(respuesta, "combinacion", "Combinación lineal")
+    p["resultado"] = [_item(nombre, valor) for nombre, valor in respuesta["escalares"].items()]
+    p["verificacion"] = list(respuesta["comprobacion"])
+    p["avisos"].extend(respuesta[k] for k in ("tipo_solucion", "expresion_algebraica") if respuesta.get(k))
+    return p
+
+
+@registrar("/api/matrices/inversa")
+def adaptar_inversa(respuesta, cuerpo):
+    p = _base(respuesta, "inversa", "Inversa de una matriz")
+    p["entrada"] = [_item(r"[A \mid I]", _matriz_latex(respuesta["matriz_aumentada_inicial"]))]
+    if respuesta["matriz_inversa"] is not None:
+        p["resultado"] = [_item(r"A^{-1}", _matriz_latex(respuesta["matriz_inversa"]))]
+    p["verificacion"] = list(respuesta["verificacion_A_por_Ainv"]) + list(respuesta["verificacion_Ainv_por_A"])
+    return p
+
+
+@registrar("/api/ecuaciones/resolver")
+def adaptar_ecuaciones(respuesta, cuerpo):
+    p = _base(respuesta, "ecuaciones", "Ecuaciones matriciales")
+    if p["pasos"] and p["pasos"][0]["matriz"]:
+        p["entrada"] = [_item(r"[A \mid b]", _matriz_latex(p["pasos"][0]["matriz"]))]
+    p["resultado"] = [_item(nombre, valor) for nombre, valor in respuesta["solucion_dict"].items()]
+    p["verificacion"] = list(respuesta["verificacion"])
+    p["avisos"].extend(respuesta.get("sustitucion", []))
+    return p
+
+
+@registrar("/api/matrices/determinante")
+def adaptar_determinante(respuesta, cuerpo):
+    p = _base(respuesta, "determinante", "Determinante")
+    if p["pasos"] and p["pasos"][0]["matriz"]:
+        p["entrada"] = [_item("A", _matriz_latex(p["pasos"][0]["matriz"]))]
+    p["resultado"] = [_item(r"\det(A)", respuesta["determinante"])]
+    return p
+
+
+@registrar("/api/matrices/eficiencia-determinante")
+def adaptar_eficiencia(respuesta, cuerpo):
+    p = _base(respuesta, "eficiencia-determinante", respuesta["metodo_recomendado_nombre"])
+    p["entrada"] = [_item("n", respuesta["orden_n"])]
+    p["resultado"] = [_item("Cofactores", respuesta["ops_cofactores"]), _item("LU", respuesta["ops_lu"])]
+    p["tablas"] = [tabla("Operaciones estimadas", ["Cofactores", "LU"],
+                        [[respuesta["ops_cofactores"], respuesta["ops_lu"]]])]
+    p["avisos"] = [respuesta["justificacion"], respuesta["complejidad_cofactores"], respuesta["complejidad_lu"]]
     return p
