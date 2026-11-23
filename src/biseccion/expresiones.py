@@ -4,6 +4,8 @@ import ast
 import math
 import operator
 
+from .dominio import evaluar_binaria, evaluar_funcion
+
 
 FUNCIONES = {
     "asin": math.asin, "acos": math.acos, "atan": math.atan,
@@ -80,12 +82,10 @@ class Expresion:
             valor = self._evaluar(nodo.operand, x)
             return -valor if isinstance(nodo.op, ast.USub) else valor
         if isinstance(nodo, ast.Call):
-            return FUNCIONES[nodo.func.id](self._evaluar(nodo.args[0], x))
+            return evaluar_funcion(nodo.func.id, FUNCIONES[nodo.func.id], self._evaluar(nodo.args[0], x))
         izquierda = self._evaluar(nodo.left, x)
         derecha = self._evaluar(nodo.right, x)
-        if isinstance(nodo.op, ast.Pow) and abs(derecha) > 1000:
-            raise ValueError("El exponente excede el límite de 1000.")
-        return numero_real(OPERACIONES[type(nodo.op)](izquierda, derecha), "f(x)")
+        return evaluar_binaria(nodo.op, izquierda, derecha)
 
     def latex(self):
         """Representa el mismo árbol validado sin evaluar la función ni aceptar LaTeX libre."""
@@ -146,4 +146,7 @@ class Expresion:
         try:
             return numero_real(self._evaluar(self.arbol, x), "f(x)")
         except (ValueError, ZeroDivisionError, OverflowError) as exc:
-            raise ValueError(f"No se puede evaluar f(x) en x={x:g}: {exc}") from exc
+            detalle = str(exc)
+            if detalle.startswith("Error de dominio:"):
+                detalle = detalle[len("Error de dominio:"):].strip()
+            raise ValueError(f"Error de dominio en x={x:g}: {detalle}") from exc
