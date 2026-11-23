@@ -1,0 +1,88 @@
+/* Hoja de impresión (media="print"): imprime solo el módulo activo sin alterar pantalla. */
+@page {
+  margin: 1.4cm;
+}
+
+:root,
+[data-theme="dark"],
+body,
+.notebook-pane,
+.biseccion-pane {
+  --notebook-paper: #ffffff;
+  --notebook-ink: #111111;
+  --notebook-muted: #444444;
+  --notebook-rule: #cccccc;
+  --notebook-accent: #7a2822;
+  --notebook-field: #ffffff;
+  --notebook-soft: #f5f5f5;
+  --bis-paper: #ffffff;
+  --bis-ink: #111111;
+  --bis-muted: #444444;
+  --bis-rule: #cccccc;
+  --bis-accent: #7a2822;
+  --bis-field: #ffffff;
+  --bis-soft: #f5f5f5;
+  --bg-primary: #ffffff;
+  --bg-card: #ffffff;
+  --text-main: #111111;
+  --text-muted: #444444;
+  background: #ffffff !important;
+  color: #111111 !important;
+}
+
+body {
+  background-image: none !important;
+  min-height: auto !important;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.app-container { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+.tab-pane { display: none !important; }
+.tab-pane.active { display: block !important; border: 0 !important; padding: 0 !important; animation: none !important; }
+
+/* Ocultar barra lateral, navegación, controles interactivos y botones. */
+.sidebar, .sidebar-backdrop, .main-header, .header-actions, .toast-container, #notification-toast,
+.exp-control, .exp-menu, .rf-steps, .card-footer-actions, .sample-actions, .action-grid,
+.notation-toggle-group, .it-actions-row, .it-text-box, .bis-keyboard, .bis-keyboard-toolbar,
+.bis-syntax-reference, .bis-graph-controls, .nr-controls, .rf-readout, #nr-readout, #sc-readout,
+.bis-detail-cell, .rf-link, .rf-candidates-block, .solver-method-selector, .nr-criteria, .it-checkbox,
+.efficiency-panel, .bis-theory, .btn-step, .mini-stepper button, button {
+  display: none !important;
+}
+
+/* Flujo vertical limpio con entrada resumida y resultado completo. */
+.pane-grid, .rf-layout, .bis-results-layout, .it-compare-grid { display: block !important; }
+.notebook-pane .card-result { border-left: 0 !important; padding-left: 0 !important; border-top: 1px solid #999; padding-top: .8rem; margin-top: .8rem; }
+.notebook-pane .steps-container, .biseccion-pane .bis-table-scroll,
+.iterativos-pane .it-grid-scroll, .iterativos-pane .it-table-wide {
+  max-height: none !important;
+  overflow: visible !important;
+}
+input, select, textarea { border: 1px solid #bbb !important; background: #fff !important; color: #111 !important; box-shadow: none !important; }
+
+/* Tablas: encabezado repetido en cada página y filas indivisibles. */
+.biseccion-pane table, table { display: table !important; width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; font-size: 8.5pt !important; }
+.biseccion-pane thead, thead { display: table-header-group !important; position: static !important; width: auto !important; height: auto !important; overflow: visible !important; clip-path: none !important; }
+.biseccion-pane tbody, tbody { display: table-row-group !important; }
+.biseccion-pane tbody > tr:not(.bis-detail-row), tr { display: table-row !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+.biseccion-pane th, .biseccion-pane td, .biseccion-pane td.bis-cell, th, td {
+  display: table-cell !important;
+  position: static !important;
+  border-bottom: 1px solid #bbb !important;
+  padding: 3.5pt 5pt !important;
+  text-align: right !important;
+}
+.biseccion-pane .bis-cell-label { display: none !important; }
+.bis-detail-row[hidden] { display: none !important; }
+
+/* Evitar cortes de títulos, fórmulas KaTeX, matrices, pasos y gráficas. */
+h2, h3, h4, .card-header { break-after: avoid !important; page-break-after: avoid !important; }
+.step-item, .verification-box, .latex-display-box, .katex-display, .katex, .bis-summary, .nr-summary,
+.bis-plot, .bis-plot svg, .it-chart-block, .it-step-block, .matrix-grid, .augmented-grid, .it-augmented-grid {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+.katex, .katex * { color: #111111 !important; }
+.katex-display { overflow: visible !important; }
+.bis-plot svg { max-width: 100% !important; height: auto !important; }
