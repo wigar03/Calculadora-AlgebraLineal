@@ -5,7 +5,7 @@
 | v1.0.0-rc.1 | 2026-11-14 | prerelease publicada (anterior a esta orquestación) | línea base |
 | v1.0.0-rc.2 | 2026-11-23 | prerelease publicada (CI 45209275071 en verde) | 47/47 ejercicios definidos validados; ver abajo |
 | v1.0.0-rc.3 | 2026-11-23 | **etiqueta sin release** (CI 45224566698 falló) | diagnóstico del ejecutable esperaba 10 módulos |
-| v1.0.0-rc.4 | 2026-11-23 | prerelease | módulo 11 validado + diagnóstico corregido; ver abajo |
+| v1.0.0-rc.4 | 2026-11-23 | **prerelease publicada** (CI 45225495488 en verde) | módulo 11 validado + diagnóstico corregido; ver abajo |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -40,3 +40,6 @@
   derivando el número de la navegación, con prueba nueva (`tests/test_diagnostico_escritorio.py`). La etiqueta
   publicada no se mueve (no se reescribe lo publicado).
 - **Notas:** `docs/notas-v1.0.0-rc.4.md`.
+- **Publicación rc.4:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.4 (prerelease).
+  CI del tag (45225495488) y de `main` (45225490930) en verde; portable, instalada y reinstalada: «11 módulos,
+  346 fórmulas, sin recursos externos». Sumas SHA-256 de los tres archivos verificadas.
