@@ -3,6 +3,7 @@
 import argparse
 import ctypes
 import logging
+import multiprocessing
 import os
 from pathlib import Path
 import sys
@@ -54,4 +55,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     raise SystemExit(main())

@@ -163,6 +163,11 @@ def validar_peticion(ruta, cuerpo):
         _entero_acotado("La cantidad de puntos", cuerpo["cantidad"], limites.PUNTOS_GRAFICA_MAX, 2)
 
 
+def es_ruta_trivial(ruta):
+    return ruta in {"/api/biseccion/preview", "/api/regla-falsa/preview", "/api/iterativos/texto",
+                    "/api/biseccion/muestrear", "/api/regla-falsa/graficar", "/api/secante/graficar"}
+
+
 def calcular_respuesta(ruta, cuerpo):
     """Adaptador importable del motor HTTP; no crea sockets en el trabajador."""
     resultado = []
@@ -286,8 +291,14 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
                 raise ErrorEjecucion("El cuerpo de la petición no es JSON válido", "entrada", "json_invalido", 400)
             if not isinstance(body, dict):
                 raise ValueError("El cuerpo de la petición debe ser un objeto JSON.")
-            validar_peticion(urlparse(self.path).path, body)
-            datos, estado = calcular_respuesta(urlparse(self.path).path, body)
+            ruta = urlparse(self.path).path
+            validar_peticion(ruta, body)
+            if es_ruta_trivial(ruta):
+                datos, estado = calcular_respuesta(ruta, body)
+            else:
+                ejecutor = getattr(self.server, "ejecutor", None) or supervisor_compartido()
+                tiempo = getattr(self.server, "tiempos_calculo", {}).get(ruta)
+                datos, estado = ejecutor.ejecutar("src.ui.web_server:calcular_respuesta", ruta, body, tiempo=tiempo)
             self._send_json(datos, estado)
         except TimeoutError:
             self._send_json({"error": "Se agotó el tiempo de lectura de la petición.",

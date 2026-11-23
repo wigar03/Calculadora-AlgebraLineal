@@ -25,6 +25,7 @@ MÓDULOS INTEGRADOS:
 """
 
 import argparse
+import multiprocessing
 from src.core.version import APP_NAME, VERSION
 from src.core.config import (
     INSTITUCION,
@@ -104,4 +105,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     main()
