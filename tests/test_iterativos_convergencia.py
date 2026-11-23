@@ -79,3 +79,26 @@ class AnalisisExacto(unittest.TestCase):
             self.assertIsNone(radios["jacobi"])
             self.assertIsNone(estables["gauss_seidel"])
             self.assertIn("No calculado", radios["metodo_calculo"])
+
+
+class CriteriosParada(unittest.TestCase):
+    def test_cambio_y_residuo_escalado_siempre_obligatorio(self):
+        self.assertEqual(medir_cambio([1, -1], [2, -3]), (2, F(2, 3)))
+        self.assertEqual(medir_cambio([0, 0], [0, 0]), (0, 0))
+        for criterio in ("cambio", "residuo", "ambos"):
+            self.assertFalse(cumple_tolerancia(0, 1, 1e-6, criterio))
+            self.assertFalse(cumple_tolerancia(float("nan"), 0, 1e-6, criterio))
+            self.assertTrue(cumple_tolerancia(1e-8, 1e-8, 1e-6, criterio))
+        self.assertTrue(cumple_tolerancia(1, 0, 1e-6, "residuo"))
+        self.assertFalse(cumple_tolerancia(1, 0, 1e-6, "ambos"))
+
+    def test_diagnosticos_de_parada(self):
+        fila = {"cambio_inf": 1, "residuo_inf": 1}
+        self.assertEqual(detectar_parada([fila], [[0], [float("inf")]]), "no_finito")
+        self.assertEqual(detectar_parada([fila], [[1], [1]]), "estancamiento")
+        self.assertEqual(detectar_parada([fila] * 2, [[0], [1], [0]]), "oscilacion")
+        crecimiento = [{"cambio_inf": 2 ** k, "residuo_inf": 3 ** k} for k in range(7)]
+        self.assertEqual(detectar_parada(crecimiento, [[k] for k in range(8)]), "divergencia")
+        self.assertEqual(detectar_parada([fila] * 8, [[k] for k in range(9)]), "estancamiento")
+        decrece = [{"cambio_inf": 2 ** -k, "residuo_inf": 3 ** -k} for k in range(8)]
+        self.assertIsNone(detectar_parada(decrece, [[k] for k in range(9)]))
