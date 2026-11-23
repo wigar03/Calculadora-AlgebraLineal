@@ -83,6 +83,9 @@ class ResultadoEcuacionMatricial:
         self.pasos_reduccion: List[Step] = []
         self.pasos_sustitucion: List[str] = []
         self.verificacion_residual: List[str] = []
+        self.parametros: List[str] = []
+        self.solucion_particular: List[Fraction] = []
+        self.base_nucleo: List[List[Fraction]] = []
 
 
 def resolver_ecuacion_matricial(
@@ -146,11 +149,7 @@ def resolver_ecuacion_matricial(
     )
     
     # Reasignar nombres de variables correctos si se especificaron
-    if nombres_variables:
-        for idx, var in enumerate(nombres_variables):
-            clave_original = f"x_{idx+1}"
-            if clave_original in gauss_res.solution:
-                gauss_res.solution[var] = gauss_res.solution.pop(clave_original)
+    gauss_res.solution = dict(zip(nombres_variables, gauss_res.solution_vector))
                 
     # 4. Empaquetar el resultado
     res = ResultadoEcuacionMatricial()
@@ -168,6 +167,9 @@ def resolver_ecuacion_matricial(
     res.vector_solucion = gauss_res.solution_vector
     res.pasos_reduccion = gauss_res.steps
     res.pasos_sustitucion = gauss_res.backward_substitution_steps
+    res.parametros = gauss_res.parameter_names
+    res.solucion_particular = gauss_res.particular_solution
+    res.base_nucleo = gauss_res.nullspace_basis
     
     # 5. Comprobación de consistencia si el sistema es compatible
     if res.tipo_sistema == "SCD":
@@ -203,10 +205,17 @@ def resolver_ecuacion_matricial(
             )
             
     elif res.tipo_sistema == "SCI":
-        res.verificacion_residual = [
-            "El sistema admite infinitas soluciones parametrizadas. "
-            "Cualquier asignación concreta a los parámetros libres satisface $A\\vec{x} = \\vec{b}$."
-        ]
+        for i, fila in enumerate(A):
+            constante = sum((a * x for a, x in zip(fila, res.solucion_particular)), Fraction(0))
+            coeficientes = [sum((a * v for a, v in zip(fila, base)), Fraction(0))
+                            for base in res.base_nucleo]
+            terminos = "".join(f" + ({format_latex_number(c)}){p}"
+                               for c, p in zip(coeficientes, res.parametros))
+            valido = constante == b[i] and all(c == 0 for c in coeficientes)
+            res.verificacion_residual.append(
+                f"Fila {i + 1}: $(A\\vec{{x}})_{{{i + 1}}} = {format_latex_number(constante)}"
+                f"{terminos} = {format_latex_number(b[i])}$ "
+                f"para todo parámetro real: {'✓ Satisface' if valido else '✗ Discrepancia'}")
     else:
         res.verificacion_residual = [
             "Sistema Incompatible: No existe ningún vector $\\vec{x} \\in \\mathbb{R}^n$ tal que $A\\vec{x} = \\vec{b}$."
