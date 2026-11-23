@@ -110,6 +110,12 @@ class TestBancoRaices(unittest.TestCase):
             self.assertLessEqual(float(diferencia), res["cota_error"] + 2e-15)
         else:
             self.assertLessEqual(abs(fx), 1e-6)
+        if metodo in ("newton", "secante"):
+            cert = res["certificacion"]
+            self.assertTrue(cert["certificada"])
+            self.assertLessEqual(cert["intervalo"][0], float(referencia))
+            self.assertGreaterEqual(cert["intervalo"][1], float(referencia))
+            self.assertNotEqual(cert["f_extremos"][0] < 0, cert["f_extremos"][1] < 0)
         self.assertTrue(res["pasos"])
         self.comprobar_tabla(metodo, f, res["pasos"])
 
@@ -177,7 +183,7 @@ class TestBancoRaices(unittest.TestCase):
 
     def test_dominio_en_puntos_iniciales(self):
         for ejercicio, x in (("III-4", 0), ("III-11", 0), ("IV-1", 1),
-                             ("IV-4", -1), ("IV-3", 0), ("IV-3", math.pi),
+                             ("IV-4", -1), ("IV-3", 0),
                              ("IV-3", math.pi/2)):
             for metodo in RUTAS:
                 with self.subTest(ejercicio=ejercicio, x=x, metodo=metodo):

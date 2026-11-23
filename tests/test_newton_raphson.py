@@ -27,7 +27,7 @@ class TestDerivada(unittest.TestCase):
 
     def test_derivada_conserva_dominio_antes_de_simplificar(self):
         for f, x in (("tan(x)", math.pi/2), ("0*ln(x)", -1),
-                     ("(1/x)^0", 0), ("2*x/tan(x)", math.pi)):
+                     ("(1/x)^0", 0), ("2*x/tan(x)", 0)):
             with self.subTest(f=f, x=x), self.assertRaises(ValueError):
                 derivada_simbolica(f)(x)
 
@@ -86,10 +86,11 @@ class TestNewton(unittest.TestCase):
         self.assertEqual(r['motivo'],'max_iteraciones')
         self.assertEqual(r['advertencias'][0]['tipo'],'derivada_pequena')
 
-    def test_raiz_inicial_incluso_con_derivada_nula(self):
+    def test_cero_inicial_sin_cambio_de_signo_queda_sin_certificar(self):
         for f in ('x^2','abs(x)','sqrt(x)'):
             r=resolver_newton(f,0)
-            self.assertEqual(r['motivo'],'raiz_en_x0'); self.assertEqual(r['iteraciones'],0)
+            self.assertEqual(r['motivo'],'no_certificada'); self.assertEqual(r['iteraciones'],0)
+            self.assertFalse(r['convergio']); self.assertFalse(r['certificacion']['certificada'])
             self.assertIsNone(r['error_relativo'])
 
     def test_raiz_cero_no_inventa_error_relativo(self):
@@ -132,4 +133,4 @@ class TestNewton(unittest.TestCase):
         r=resolver_newton('1e308+1e-308*x',0)
         self.assertEqual(r['motivo'],'divergencia'); self.assertFalse(r['convergio'])
         r=resolver_newton('x^2-5',1,tolerancia=1e-100)
-        self.assertEqual(r['motivo'],'sin_progreso'); self.assertFalse(r['convergio'])
+        self.assertEqual(r['motivo'],'no_certificada'); self.assertFalse(r['convergio'])

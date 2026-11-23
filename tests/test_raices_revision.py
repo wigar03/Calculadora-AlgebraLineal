@@ -33,6 +33,8 @@ class TestRevisionRaices(unittest.TestCase):
                                           condicion="positiva_no_nula")
                 self.assertEqual(estado, 200)
                 self.assertFalse(r["convergio"], r)
+                self.assertEqual(r["motivo"], "no_certificada")
+                self.assertFalse(r["certificacion"]["certificada"])
 
     def test_2_limite_excluido_no_es_raiz_de_iv3(self):
         for metodo, semillas in (("newton-raphson", dict(x0=-2.75)),
@@ -41,11 +43,19 @@ class TestRevisionRaices(unittest.TestCase):
                 estado, r = self.resolver(metodo, funcion=IV3, **semillas)
                 self.assertEqual(estado, 200)
                 self.assertFalse(r["convergio"], r)
+                self.assertEqual(r["motivo"], "no_certificada")
+                self.assertTrue(r["advertencias"])
 
     def test_3_tan_conserva_valores_definidos(self):
         x = math.nextafter(math.pi, math.inf)
         self.assertEqual(ExpresionNumerica("1e16*tan(x)")(x), 1e16*math.tan(x))
         self.assertEqual(ExpresionNumerica("tan(x)")(1e16), math.tan(1e16))
+        estado, r = self.resolver("newton-raphson", funcion="1e16*tan(x)", x0=x)
+        self.assertEqual(estado, 200)
+        self.assertEqual(r["pasos"][0]["fx"], 1e16*math.tan(x))
+        estado, r = self.resolver("newton-raphson", funcion="tan(x)", x0=1e16)
+        self.assertEqual(estado, 200)
+        self.assertEqual(r["pasos"][0]["fx"], math.tan(1e16))
 
     def test_4_cuadratica_positiva_no_inventa_polos(self):
         for f, a, b, raiz in (("(x-100000000)/((x-100000000)^2+1)", 99999999, 100000001, 1e8),
@@ -60,12 +70,16 @@ class TestRevisionRaices(unittest.TestCase):
         estado, r = self.resolver("newton-raphson", funcion="exp(1e8*x)", x0=1e-6)
         self.assertEqual(estado, 200)
         self.assertFalse(r["convergio"], r)
+        self.assertEqual(r["motivo"], "no_certificada")
+        self.assertTrue(r["cumple"]["absoluto"])
 
     def test_5_raiz_escalada_no_depende_de_la_semilla(self):
         for x in (math.sqrt(2), 1.5):
             estado, r = self.resolver("newton-raphson", funcion="1e20*(x^2-2)", x0=x)
             self.assertEqual(estado, 200)
             self.assertTrue(r["convergio"], r)
+            self.assertTrue(r["certificacion"]["certificada"])
+            self.assertGreater(r["residuo"], 1e-6)  # El residuo grande no implica error grande en x.
             self.assertAlmostEqual(r["raiz"], math.sqrt(2), delta=1e-6)
 
     def test_6_division_constante_preserva_restricciones(self):
