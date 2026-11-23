@@ -378,20 +378,22 @@ Todas las rutas son `POST` con `Content-Type: application/json`; los errores de 
 Abra **Método de Newton-Raphson** desde el índice o la barra lateral. El flujo sigue el ejemplo de la presentación de métodos abiertos:
 
 1. **Función y derivada.** Ingrese la función y la región de interés. «Derivar y graficar» presenta su derivada simbólica y la gráfica. Admite las mismas funciones y constantes que bisección, con reglas de suma, producto, cociente, potencia y cadena.
-2. **Valor inicial.** El campo comienza vacío. Observe la gráfica y escriba su propio $x_0$, o active «Marcar» y pulse la gráfica. Los ejemplos cargan la función y la región; nunca seleccionan el punto inicial. Se admiten decimales, fracciones y notación científica.
+2. **Valor inicial.** El campo comienza vacío. Observe la gráfica y escriba su propio $`x_0`$, o active «Marcar» y pulse la gráfica. Los ejemplos cargan la función y la región; nunca seleccionan el punto inicial. Se admiten decimales, fracciones y notación científica.
 3. **Primera iteración.** Se evalúan la función y la derivada en el punto elegido, y se muestra la sustitución numérica de la fórmula:
 
-$$x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}$$
+```math
+x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}
+```
 
-4. **Iteraciones y raíz.** Elija tolerancia, máximo de iteraciones y criterio de parada. La tabla incluye $n$, $x_n$, $f(x_n)$, $f'(x_n)$ y ambos errores, con detalles desplegables de las sustituciones. La gráfica muestra las primeras ocho tangentes y la aproximación final; permite ampliar, desplazar, restablecer y enfocar la raíz.
+4. **Iteraciones y raíz.** Elija tolerancia, máximo de iteraciones y criterio de parada. La tabla incluye $`n`$, $`x_n`$, $`f(x_n)`$, $`f'(x_n)`$ y ambos errores, con detalles desplegables de las sustituciones. La gráfica muestra las primeras ocho tangentes y la aproximación final; permite ampliar, desplazar, restablecer y enfocar la raíz.
 
-El error absoluto aproximado es $E_a=|x_n-x_{n-1}|$ y el relativo es $\varepsilon_r=E_a/|x_n|$, expresado como **fracción, sin porcentaje**. El relativo no está definido cuando $x_n=0$. Para cambios distintos de cero, es menor que el absoluto cuando $|x_n|>1$, mayor cuando $|x_n|<1$ e igual cuando $|x_n|=1$. Estos cambios no son cotas del error respecto a la raíz verdadera.
+El error absoluto aproximado es $`E_a=|x_n-x_{n-1}|`$ y el relativo es $`\varepsilon_r=E_a/|x_n|`$, expresado como **fracción, sin porcentaje**. El relativo no está definido cuando $`x_n=0`$. Para cambios distintos de cero, es menor que el absoluto cuando $`|x_n|>1`$, mayor cuando $`|x_n|<1`$ e igual cuando $`|x_n|=1`$. Estos cambios no son cotas del error respecto a la raíz verdadera.
 
-Se detiene cuando el criterio elegido cumple estrictamente $E_a<\varepsilon$, $\varepsilon_r<\varepsilon$ o $|f(x_n)|<\varepsilon$. El resultado comprueba los tres criterios, el residuo y las iteraciones; un cambio pequeño no garantiza un residuo pequeño. También reconoce una raíz evaluada como cero. Detecta derivada nula o no definida, salida del dominio, aproximaciones no finitas, ciclos, falta de progreso en punto flotante y agotamiento de iteraciones. Una derivada muy pequeña o pasos crecientes generan avisos. La convergencia es local y depende del punto inicial.
+Se detiene cuando el criterio elegido cumple estrictamente $`E_a<\varepsilon`$, $`\varepsilon_r<\varepsilon`$ o $`|f(x_n)|<\varepsilon`$. El resultado comprueba los tres criterios, el residuo y las iteraciones; un cambio pequeño no garantiza un residuo pequeño. También reconoce una raíz evaluada como cero. Detecta derivada nula o no definida, salida del dominio, aproximaciones no finitas, ciclos, falta de progreso en punto flotante y agotamiento de iteraciones. Una derivada muy pequeña o pasos crecientes generan avisos. La convergencia es local y depende del punto inicial.
 
 La derivación opera sobre el árbol de expresiones validado, sin ejecutar código del usuario ni utilizar dependencias externas. Las fórmulas se evalúan en su dominio real, sin extenderlas por límites en puntos singulares; por ejemplo, la derivada de `abs(x)` no se evalúa en cero. La gráfica es orientativa y puede omitir singularidades estrechas. Las entradas conservan sintaxis editable; fórmulas, resultados, tabla y etiquetas matemáticas de la gráfica se presentan con KaTeX.
 
-**Ejemplo de la presentación:** para `x^3-x-2`, $x_0=1.5$ introducido manualmente, tolerancia $10^{-6}$ y criterio absoluto, se obtiene $f(1.5)=-0.125$, $f'(1.5)=5.75$ y $x_1\approx1.5217391304347827$. En tres iteraciones se llega a $x_n\approx1.5213797068045751$, con residuo de aproximadamente $4.53\times10^{-14}$. El ejemplo `x^3-2*x+2` con $x_0=0$ detecta el ciclo $0,1,0$.
+**Ejemplo de la presentación:** para `x^3-x-2`, $`x_0=1.5`$ introducido manualmente, tolerancia $`10^{-6}`$ y criterio absoluto, se obtiene $`f(1.5)=-0.125`$, $`f'(1.5)=5.75`$ y $`x_1\approx1.5217391304347827`$. En tres iteraciones se llega a $`x_n\approx1.5213797068045751`$, con residuo de aproximadamente $`4.53\times10^{-14}`$. El ejemplo `x^3-2*x+2` con $`x_0=0`$ detecta el ciclo $`0,1,0`$.
 
 #### API de Newton-Raphson
 
@@ -411,17 +413,19 @@ Rutas `POST` con JSON; entradas inválidas devuelven HTTP 400 con `error`. Las p
 
 `src/derivadas/motor.py` contiene la derivación simbólica independiente de Newton. `derivada_simbolica(funcion)` devuelve una expresión evaluable; `analizar_derivada(funcion)` devuelve función y derivada en sintaxis editable y LaTeX. Newton consume este motor. La ruta `POST /api/derivadas/derivar` acepta `{"funcion":"asin(x)"}` y deja preparado el contrato para un futuro módulo de derivadas.
 
-El motor cubre las operaciones del lenguaje admitido y sus composiciones: suma, resta, producto, cociente, potencias, reglas de cadena y funciones elementales. No pretende resolver expresiones fuera de ese lenguaje ni extender fórmulas por límites en singularidades. Las funciones inversas `asin`, `acos` y `atan` aparecen como arcoseno, arcocoseno y arcotangente en KaTeX y en el teclado compartido. Sus valores se expresan en radianes; `asin` y `acos` requieren argumentos en $[-1,1]$ y sus derivadas son singulares en los extremos.
+El motor cubre las operaciones del lenguaje admitido y sus composiciones: suma, resta, producto, cociente, potencias, reglas de cadena y funciones elementales. No pretende resolver expresiones fuera de ese lenguaje ni extender fórmulas por límites en singularidades. Las funciones inversas `asin`, `acos` y `atan` aparecen como arcoseno, arcocoseno y arcotangente en KaTeX y en el teclado compartido. Sus valores se expresan en radianes; `asin` y `acos` requieren argumentos en $`[-1,1]`$ y sus derivadas son singulares en los extremos.
 
 ### Módulo 10: Método de la secante
 
 Desde **Método de la secante**, grafique la función, elija manualmente dos valores distintos y revise la primera sustitución. Los ejemplos dejan ambos campos vacíos. Después seleccione tolerancia, máximo de iteraciones y criterio absoluto, relativo (fracción) o residuo. En cada iteración se actualizan los dos valores:
 
-$$x_{n+1}=x_n-\frac{f(x_n)(x_n-x_{n-1})}{f(x_n)-f(x_{n-1})}$$
+```math
+x_{n+1}=x_n-\frac{f(x_n)(x_n-x_{n-1})}{f(x_n)-f(x_{n-1})}
+```
 
 La gráfica muestra las primeras ocho rectas secantes y la aproximación final. Comparte el controlador de navegación con Newton-Raphson: zoom con botones y rueda centrado en el cursor, arrastre horizontal y vertical, flechas, teclas + y - e Inicio, doble clic para restablecer, porcentaje de ampliación y enfoque en la raíz. El zoom conserva los resultados y la escala vertical; el remuestreo cancela respuestas anteriores. Los botones Marcar permiten elegir manualmente ambos puntos en la gráfica. La tabla presenta las dos entradas, la nueva aproximación, el residuo y ambos errores, con la sustitución desplegable. No se exige cambio de signo ni se utiliza la derivada. Se detectan denominadores nulos, pasos no finitos, salidas del dominio, ciclos, falta de progreso y máximo de iteraciones; las diferencias muy pequeñas entre evaluaciones generan avisos.
 
-El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primero $1.333333333$, luego $1.462686567$ y finalmente una raíz cercana a $1.521379707$.
+El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primero $`1.333333333`$, luego $`1.462686567`$ y finalmente una raíz cercana a $`1.521379707`$.
 
 | Ruta POST | Entrada | Respuesta |
 |---|---|---|
