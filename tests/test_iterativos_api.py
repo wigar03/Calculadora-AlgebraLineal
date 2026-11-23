@@ -125,3 +125,59 @@ class APIIterativos(unittest.TestCase):
         r = self.post("resolver", {"A": [["1e-308"]], "b": ["1e308"], "metodo": "jacobi"})
         self.assertEqual(r["motivo"], "no_finito")
         self.assertFalse(r["convergio"])
+
+    def test_cuerpo_real_del_editor_con_opciones_en_texto(self):
+        # iterativos.js: celdas y controles .value son texto; .checked es bool.
+        for ruta in ("resolver", "comparar", "analizar"):
+            for tolerancia in ("1e-6", "0.000001"):
+                for metodo in ("jacobi", "gauss_seidel"):
+                    cuerpo = {"A": [["4", "1"], ["2", "3"]], "b": ["1", "2"],
+                              "x0": ["0", "0"], "metodo": metodo,
+                              "tolerancia": tolerancia, "max_iteraciones": "100",
+                              "criterio": "ambos", "reordenar": False}
+                    with self.subTest(ruta=ruta, tol=tolerancia, metodo=metodo):
+                        r = self.post(ruta, cuerpo)
+                        if ruta == "analizar":
+                            self.assertEqual(set(r), CLAVES_ANALISIS)
+                            self.assertEqual(r["rango"], {"A": 2, "aumentada": 2})
+                            continue
+                        resultados = [r] if ruta == "resolver" else [r["jacobi"], r["gauss_seidel"]]
+                        for solucion in resultados:
+                            self.comprobar_forma(solucion)
+                            self.assertTrue(solucion["convergio"])
+                            self.assertIs(type(solucion["max_iteraciones"]), int)
+                            self.assertEqual(solucion["max_iteraciones"], 100)
+                            self.assertEqual(solucion["tolerancia"], 1e-6)
+                            for valor, esperado in zip(solucion["solucion"], (0.1, 0.6)):
+                                self.assertAlmostEqual(valor, esperado, delta=1e-6)
+
+    def test_reordenar_como_texto_en_todas_las_rutas(self):
+        for ruta in ("resolver", "comparar", "analizar"):
+            for reordenar in ("false", "true"):
+                cuerpo = {"A": [["2", "3"], ["4", "1"]], "b": ["2", "1"],
+                          "x0": ["0", "0"], "metodo": "gauss_seidel",
+                          "tolerancia": "1e-6", "max_iteraciones": "100",
+                          "criterio": "ambos", "reordenar": reordenar}
+                with self.subTest(ruta=ruta, reordenar=reordenar):
+                    r = self.post(ruta, cuerpo)
+                    resultados = [r] if ruta != "comparar" else [r["jacobi"], r["gauss_seidel"]]
+                    for resultado in resultados:
+                        analisis = resultado if ruta == "analizar" else resultado["analisis"]
+                        self.assertEqual(analisis["reordenamiento"]["aplicado"], reordenar == "true")
+                        self.assertEqual(analisis["reordenamiento"]["permutacion"],
+                                         [1, 0] if reordenar == "true" else [0, 1])
+                        if ruta != "analizar":
+                            self.assertEqual(resultado["convergio"], reordenar == "true")
+
+    def test_enteros_decimales_en_texto_y_limites_validos(self):
+        for ruta in ("resolver", "comparar"):
+            for maximo in ("1", "100", " 100 ", "000100", "10000"):
+                with self.subTest(ruta=ruta, maximo=maximo):
+                    r = self.post(ruta, {"A": [["4", "1"], ["2", "3"]],
+                        "b": ["1", "2"], "x0": ["0", "0"], "metodo": "jacobi",
+                        "tolerancia": "1e-6", "max_iteraciones": maximo,
+                        "criterio": "ambos", "reordenar": "false"})
+                    resultados = [r] if ruta == "resolver" else [r["jacobi"], r["gauss_seidel"]]
+                    for resultado in resultados:
+                        self.assertEqual(resultado["max_iteraciones"], int(maximo))
+                        self.assertLessEqual(len(resultado["iteraciones"]), int(maximo))
