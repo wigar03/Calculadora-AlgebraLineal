@@ -18,6 +18,7 @@ import math
 import logging
 import socket
 import threading
+import time
 import webbrowser
 from contextlib import contextmanager
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -97,6 +98,10 @@ class HTTPServer(ThreadingHTTPServer):
 
 
 class AlgebraLinearHandler(SimpleHTTPRequestHandler):
+    def setup(self):
+        self.request.settimeout(limites.LECTURA_SOCKET_S)
+        super().setup()
+
     def __init__(self, *args, **kwargs):
         # Directorio base de archivos estáticos
         web_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
@@ -107,20 +112,65 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         pass
 
     def _send_json(self, data, status=200):
-        body = json.dumps(data, default=serialize_fraction_or_str).encode("utf-8")
+        body = serializar(data)
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            try:
+                self.wfile.write(body)
+            except (BrokenPipeError, ConnectionError, TimeoutError):
+                self.close_connection = True
+
+    def parse_request(self):
+        if not super().parse_request():
+            return False
+        hosts = self.headers.get_all("Host", [])
+        permitidos = {f"127.0.0.1:{self.server.server_port}", f"localhost:{self.server.server_port}"}
+        origenes = self.headers.get_all("Origin", [])
+        if (len(hosts) != 1 or hosts[0].lower() not in permitidos
+                or len(origenes) > 1 or (origenes and origenes[0] != "http://" + hosts[0])):
+            self._send_json({"error": "La petición debe proceder del servidor local.",
+                             "tipo": "entrada", "codigo": "origen_no_permitido"}, 403)
+            self.close_connection = True
+            return False
+        return True
+
+    def end_headers(self):
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                         "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; "
+                         "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
+        self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
+
+    def send_error(self, code, message=None, explain=None):
+        self._send_json({"error": "Recurso no encontrado." if code == 404 else "La petición HTTP no es válida.",
+                         "tipo": "entrada", "codigo": "recurso_no_encontrado" if code == 404 else "http_invalido"}, code)
+
+    def list_directory(self, path):
+        self.send_error(404)
+        return None
 
     def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_response(204)
         self.end_headers()
+
+    def _leer_cuerpo(self, longitud):
+        plazo = time.monotonic() + limites.LECTURA_SOCKET_S
+        cuerpo = bytearray()
+        while len(cuerpo) < longitud:
+            restante = plazo - time.monotonic()
+            if restante <= 0:
+                raise TimeoutError()
+            self.connection.settimeout(restante)
+            parte = self.rfile.read1(longitud - len(cuerpo))
+            if not parte:
+                raise ValueError("El cuerpo de la petición está incompleto.")
+            cuerpo.extend(parte)
+        return cuerpo
 
     def do_POST(self):
         try:
@@ -130,13 +180,16 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             if longitud > limites.CUERPO_MAX_BYTES:
                 raise ErrorEjecucion("El cuerpo supera el tamaño máximo permitido.", "limite", "cuerpo_grande", 413)
             try:
-                body = json.loads(self.rfile.read(longitud) if longitud else b"{}")
+                body = json.loads(self._leer_cuerpo(longitud) if longitud else b"{}")
             except (ValueError, UnicodeError):
                 raise ErrorEjecucion("El cuerpo de la petición no es JSON válido", "entrada", "json_invalido", 400)
             if not isinstance(body, dict):
                 raise ValueError("El cuerpo de la petición debe ser un objeto JSON.")
             datos, estado = calcular_respuesta(urlparse(self.path).path, body)
             self._send_json(datos, estado)
+        except TimeoutError:
+            self._send_json({"error": "Se agotó el tiempo de lectura de la petición.",
+                             "tipo": "tiempo", "codigo": "tiempo_lectura"}, 503)
         except Exception as exc:
             error = clasificar_error(exc)
             self._send_json(error.respuesta(), error.estado)
