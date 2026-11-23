@@ -85,3 +85,63 @@ class TestMatrizIterativos(unittest.TestCase):
         self.assertIn("No existe", info["motivo"])
         A, b, _ = leer_sistema(**CASOS["principal"])
         self.assertFalse(reordenar(A, b)[2]["aplicado"])
+
+    def test_reordenamiento_en_limite_exhaustivo_y_heuristica_hasta_veinte(self):
+        for n in (8, 9, 20):
+            base = [[F(n + 1 if i == j else 1) for j in range(n)] for i in range(n)]
+            orden = list(range(1, n)) + [0]
+            A = [base[i] for i in orden]
+            b = [F(i + 1) for i in orden]
+            nueva, nuevo_b, info = reordenar(A, b)
+            with self.subTest(n=n):
+                self.assertTrue(dominancia_diagonal(nueva)["estricta"])
+                self.assertEqual(nueva, base)
+                self.assertEqual(nuevo_b, [F(i + 1) for i in range(n)])
+                self.assertEqual(info["permutacion"], [n - 1] + list(range(n - 1)))
+                self.assertIn("exhaustiva" if n <= 8 else "heurística", info["motivo"])
+
+    def test_diagonal_no_nula_sin_garantia_y_camino_aumentante(self):
+        bloques = ([[0, 1], [1, 2]], [[1, 2, 0], [1, 0, 2], [0, 1, 1]])
+        for bloque in bloques:
+            n = 2 if len(bloque) == 2 else 9
+            A = [[int(i == j) for j in range(n)] for i in range(n)]
+            for i, fila in enumerate(bloque):
+                A[i][:len(fila)] = fila
+            b = [sum(fila) for fila in A]
+            nueva, nuevo_b, info = reordenar(A, b)
+            with self.subTest(n=n):
+                self.assertTrue(info["aplicado"])
+                self.assertEqual(diagonal_nula(nueva), [])
+                self.assertFalse(dominancia_diagonal(nueva)["estricta"])
+                self.assertEqual([sum(fila) for fila in nueva], nuevo_b)
+                self.assertIn("ninguna permutación", info["motivo"])
+        A, b, _ = leer_sistema(**CASOS["diverge_ambos"])
+        # Este caso se puede hacer dominante; el singular no admite esa mejora.
+        self.assertTrue(dominancia_diagonal(reordenar(A, b)[0])["estricta"])
+        A, b, _ = leer_sistema(**CASOS["singular_infinitas"])
+        self.assertFalse(reordenar(A, b)[2]["aplicado"])
+
+    def test_asignacion_imposible_aunque_cada_columna_tenga_un_no_nulo(self):
+        for n in (3, 9):
+            A = [[int(i == j) for j in range(n)] for i in range(n)]
+            for i, fila in enumerate([[1, 1, 1], [0, 0, 1], [0, 0, 1]]):
+                A[i][:3] = fila
+            nueva, _, info = reordenar(A, list(range(n)))
+            with self.subTest(n=n):
+                self.assertTrue(all(any(fila[j] for fila in A) for j in range(n)))
+                self.assertFalse(info["aplicado"])
+                self.assertTrue(diagonal_nula(nueva))
+                self.assertIn("No existe", info["motivo"])
+
+    def test_asignacion_contra_todas_las_permutaciones_de_matrices_binarias_3x3(self):
+        for mascara in range(512):
+            A = [[(mascara >> (3 * i + j)) & 1 for j in range(3)] for i in range(3)]
+            posibles = [[A[i] for i in p] for p in permutations(range(3))]
+            estricta = any(all(abs(fila[i]) > sum(abs(v) for j, v in enumerate(fila) if i != j)
+                               for i, fila in enumerate(B)) for B in posibles)
+            sin_ceros = any(all(B[i][i] != 0 for i in range(3)) for B in posibles)
+            nueva, nuevo_b, info = reordenar(A, [1, 2, 3])
+            with self.subTest(mascara=mascara):
+                self.assertEqual(dominancia_diagonal(nueva)["estricta"], estricta)
+                self.assertEqual(not diagonal_nula(nueva), sin_ceros)
+                self.assertEqual(nuevo_b, [i + 1 for i in info["permutacion"]])
