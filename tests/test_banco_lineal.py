@@ -152,6 +152,48 @@ class TestBancoLineal(unittest.TestCase):
                     self.assertEqual(len(res[campo]), len(a) ** 2)
                     self.assertTrue(all("Correcto" in v for v in res[campo]))
 
+    def test_singular_explicada(self):
+        a = [[2, 3, 4]] * 3
+        for metodo in ("gauss", "gauss_jordan"):
+            res = self.post("matrices/inversa", {"A": a, "metodo": metodo})
+            self.assertFalse(res["es_invertible"])
+            self.assertIsNone(res["matriz_inversa"])
+            self.assertFalse(res["residuo_cero"])
+            self.assertIn("pivote", res["mensaje_diagnostico"])
+            self.assertIn("rango", res["mensaje_diagnostico"])
+            self.assertIn("no existe", res["mensaje_diagnostico"])
+            self.comprobar_pasos(res["pasos"], [fila + [int(i == j) for j in range(3)]
+                                                for i, fila in enumerate(a)])
+        for metodo in ("lu", "cofactores"):
+            res = self.post("matrices/determinante", {"A": a, "metodo": metodo})
+            self.assertEqual(F(res["determinante"]), 0)
+            self.assertFalse(res["es_invertible"])
+
+    def test_I_12_con_decimales_y_fracciones(self):
+        datos = SISTEMAS["I-12"]
+        equivalencias = {"1/2": "0.5", "-3/4": "-0.75", "3/2": "1.5",
+                         "-5/2": "-2.5", "3/4": "0.75", "5/4": "1.25"}
+        a = [[equivalencias.get(v, v) for v in fila] for fila in datos["A"]]
+        for jordan in (True, False):
+            res = self.post("ecuaciones/resolver", dict(A=a, b=datos["b"], usar_gauss_jordan=jordan))
+            self.assertEqual(res["vector_solucion"], REFERENCIAS["lineales"]["I-12"]["solucion"])
+            self.assertEqual(producto(fracciones(a), [[F(v)] for v in res["vector_solucion"]]),
+                             [[F(v)] for v in datos["b"]])
+
+    def test_sci_varios_parametros_y_columnas_sin_pivote(self):
+        for a, b in (([[1, 2, 3], [0, 0, 0]], [5, 0]), ([[0, 2, 3], [0, 0, 4]], [7, 8])):
+            for jordan in (True, False):
+                res = self.post("ecuaciones/resolver", dict(A=a, b=b, usar_gauss_jordan=jordan))
+                self.assertEqual(res["tipo_sistema"], "SCI")
+                valores = {p: F(i + 2, 3) for i, p in enumerate(res["parametros"])}
+                x = [evaluar_parametrica(v, valores) for v in res["vector_solucion"]]
+                self.assertEqual(producto(fracciones(a), [[v] for v in x]), [[F(v)] for v in b])
+                self.assertEqual(len(res["base_nucleo"]), len(a[0]) - res["rango_A"])
+
+    def test_incompatible_rango_aumentado_no_cuenta_filas_dependientes(self):
+        res = self.post("ecuaciones/resolver", dict(A=[[0, 0], [0, 0]], b=[1, 2]))
+        self.assertEqual((res["tipo_sistema"], res["rango_A"], res["rango_aumentada"]), ("SI", 0, 1))
+
 
 def caso(clave, metodo):
     def prueba(self):
