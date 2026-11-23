@@ -155,7 +155,7 @@ def problemas_libro(celdas, procedimiento, texto_racional_exacto=False):
         fraccion = not solo_texto and racional(fuente)
         exacto = fraccion or (not solo_texto and entero_largo(fuente))
         lugar = f"{direccion}: {fuente!r} -> {(tipo, actual, formula)!r}"
-        if formula is not None and not (exacto and formula == f'"{fuente}"'):
+        if formula is not None and not ((exacto or racional(fuente)) and formula == f'"{fuente}"'):
             errores.append("Fórmula no autorizada " + lugar)
         if exacto:
             if tipo not in ("s", "str", "inlineStr") or actual != fuente:
@@ -331,8 +331,12 @@ class TestOraculoLibroCSV(unittest.TestCase):
     def test_texto_racional_detecta_apostrofo_visible(self):
         p = {"tablas": [{"columnas": ["1/2"], "filas": []}]}
         self.assertEqual(problemas_libro({"A1": ("s", "1/2", None)}, p, True), [])
+        self.assertEqual(problemas_libro({"A1": ("str", "1/2", '"1/2"')}, p, True), [])
         errores = problemas_libro({"A1": ("s", "'1/2", None)}, p, True)
         self.assertTrue(any("apóstrofo visible" in e for e in errores), errores)
+        p["tablas"][0]["columnas"] = ["1/0"]
+        self.assertTrue(any("Fórmula no autorizada" in e for e in problemas_libro(
+            {"A1": ("str", "1/0", '"1/0"')}, p, True)))
 
     def test_acepta_fraccion_textual_y_decimal_exactos(self):
         p = {"tablas": [{"columnas": ["q", "x", "texto"], "filas": [["-1/2", 1.25, "=1+2"]]}]}
