@@ -61,3 +61,77 @@ def analizar_sistema(A, b, metodo="jacobi", x0=None, reordenar=False):
     """Análisis sin iterar, usado por /api/iterativos/analizar."""
     _opciones(metodo, 1e-6, 100, "ambos", reordenar)
     return _preparar(A, b, x0, metodo, reordenar)[3]
+
+
+def _finito(valor):
+    if isinstance(valor, dict):
+        return all(_finito(v) for v in valor.values())
+    if isinstance(valor, (list, tuple)):
+        return all(_finito(v) for v in valor)
+    return not isinstance(valor, float) or math.isfinite(valor)
+
+
+def _json_finito(valor):
+    if isinstance(valor, dict):
+        return {k: _json_finito(v) for k, v in valor.items()}
+    if isinstance(valor, list):
+        return [_json_finito(v) for v in valor]
+    return valor if _finito(valor) else None
+
+
+def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
+                       max_iteraciones=100, criterio="ambos", reordenar=False):
+    from .entrada import sistema_float
+    from .jacobi import paso_jacobi
+    from .matriz import residuo
+
+    tol = _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar)
+    A, b, x0, analisis = _preparar(A, b, x0, metodo, reordenar)
+    A, b, x0 = sistema_float(A, b, x0)
+    x, historial, vectores = list(x0), [], [list(x0)]
+    motivo, convergio = "max_iteraciones", False
+    if analisis["rango"]["aumentada"] > analisis["rango"]["A"]:
+        motivo = "incompatible"
+    elif analisis["singular"]:
+        motivo = "singular"
+    elif analisis["diagonal_nula"]:
+        motivo = "diagonal_nula"
+    else:
+        paso = paso_jacobi if metodo == "jacobi" else paso_gauss_seidel
+        for k in range(1, max_iteraciones + 1):
+            try:
+                nuevo, detalle = paso(A, b, x)
+                cambio, relativo = medir_cambio(x, nuevo)
+                verificacion = residuo(A, b, nuevo)
+            except (OverflowError, FloatingPointError):
+                motivo = "no_finito"
+                break
+            if not _finito([nuevo, cambio, relativo, verificacion]):
+                motivo = "no_finito"
+                break
+            fila = {"k": k, "x": nuevo, "cambio_inf": cambio,
+                    "cambio_rel": relativo, "residuo_inf": verificacion["residuo_inf"],
+                    "residuo_rel": verificacion["residuo_rel"]}
+            if k <= 3:
+                fila["detalle"] = detalle
+            historial.append(fila)
+            x = nuevo
+            vectores = (vectores + [nuevo])[-9:]
+            if cumple_tolerancia(relativo, verificacion["residuo_rel"], tol, criterio):
+                motivo, convergio = "tolerancia", True
+                break
+            detectado = detectar_parada(historial, vectores)
+            if detectado:
+                motivo = detectado
+                break
+    verificacion = residuo(A, b, x)
+    verificacion["cumple"] = _finito(verificacion) and verificacion["residuo_rel"] <= tol
+    categoria = analisis["garantia"]
+    if convergio and categoria != "demostrada":
+        categoria = "observada"
+    return _json_finito({"metodo": metodo, "n": len(b),
+        "nombres": [f"x_{i + 1}" for i in range(len(b))], "A": A, "b": b,
+        "x0": x0, "tolerancia": tol, "criterio": criterio,
+        "max_iteraciones": max_iteraciones, "iteraciones": historial, "solucion": x,
+        "convergio": convergio, "motivo": motivo, "mensaje": MENSAJES[motivo],
+        "verificacion": verificacion, "analisis": analisis, "convergencia": categoria})
