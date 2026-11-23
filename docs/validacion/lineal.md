@@ -85,4 +85,4 @@ La rama se rebasó sobre main actualizado, base `e3bdbf9` (incluye `c6fdf36`); l
 - Batería completa ejecutada después de los cambios: `python -m unittest discover tests -v`: **308 pruebas OK**; todos los `tests/*.cjs`: **8 archivos OK, 50 pruebas OK** (6+5+3+13+4+3+11+5). `git diff --check` sin errores.
 - Commits de código/pruebas: `ffe4cf2` (56 líneas), `b3bccc8` (48), `194e30c` (47), `000ec50` (16); todos por debajo de 100 líneas modificadas, sin cambios UX, push ni merge.
 
-La revisión numérica solicitada por separado fue de solo lectura y se entregó al coordinador en `C:/Users/wigar/AppData/Local/Temp/orca-audit-numerico-lineal.md`, con siete hallazgos reproducidos por HTTP, severidad, comparación con la versión anterior y correcciones sugeridas; esta rama solo modifica el área lineal.
+La revisión numérica solicitada por separado fue de solo lectura y se entregó al coordinador en `%TEMP%/orca-audit-numerico-lineal.md`, con siete hallazgos reproducidos por HTTP, severidad, comparación con la versión anterior y correcciones sugeridas; esta rama solo modifica el área lineal.

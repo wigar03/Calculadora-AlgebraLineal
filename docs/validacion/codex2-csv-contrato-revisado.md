@@ -57,7 +57,7 @@ Cabeceras y primera fila: `1/2`, `-17/19`, `0003/0007`, `90071992547409931234567
 - Las fracciones/enteros de la fila de datos usan constantes y preservan los dígitos en ambos motores.
 
 Se leyeron valores, tipos y fórmulas con ZIP/XML estándar; en ODS se reconstruyeron espacios `text:s`.
-Artefactos locales: `C:/Users/wigar/AppData/Local/Temp/csv-619898b-reapertura-zwaif0wf/`:
+Artefactos locales: `%TEMP%/csv-619898b-reapertura-zwaif0wf/`:
 CSV, XLSX/ODS/Gnumeric de ambas etapas e `informe.json`, sin modificar el sistema.
 El script local reproducible queda en `scratch/reabrir_csv_619898b.py` (no se publica como dependencia).
 

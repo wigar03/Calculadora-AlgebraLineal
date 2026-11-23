@@ -139,7 +139,7 @@ máximo independiente, 600 permutaciones con solución preservada, 208 rangos co
 Hallazgos reproducidos pendientes: P1 de residuo/iteración subnormal (API informa relativo 0
 con razón racional real 0.2), P2 de magnitud sin celda y P2 de celda tras reordenar.
 Detalles y correcciones sugeridas en
-`C:/Users/wigar/AppData/Local/Temp/revision_iterativos_codex1_task_36b5663b4c45.md`.
+`%TEMP%/revision_iterativos_codex1_task_36b5663b4c45.md`.
 La auditoría no cambió los módulos de Codex 1; los P2 son fallos de integración de la preparación.
 
 Commits de esta revisión (líneas añadidas + eliminadas):

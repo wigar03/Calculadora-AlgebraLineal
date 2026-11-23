@@ -123,4 +123,4 @@ máximo 10000: ambos consumen las 10000 iteraciones; Jacobi **2.848 s**, Gauss-S
 
 Pendiente del integrador: revisar y unir estas correcciones con la verificación final exacta de Codex 2
 en `resolver.py`. Los dos P2 de la auditoría del analizador de texto se entregan aparte, sin corregir archivos ajenos,
-en `C:/Users/wigar/AppData/Local/Temp/orca_texto_audit_task_fa36e0a61ef6/HALLAZGOS.md`.
+en `%TEMP%/orca_texto_audit_task_fa36e0a61ef6/HALLAZGOS.md`.
