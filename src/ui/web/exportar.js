@@ -1,44 +1,77 @@
-/* Utilidades puras de exportación (base de P2, sin cargar en index.html). */
+/* Utilidades puras de exportación P2 (CSV según contrato y LaTeX compilable). */
 (() => {
   "use strict";
 
-  const NUMERO_DECIMAL = /^[+-]?(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+  const NUMERO_VALIDO = /^([+-]?(?:\d+(?:\.\d*)?|\.\d+))(?:[eE]([+-]?\d+))?$/;
+  const FRACCION_EXACTA = /^-?\d+\/\d+$/;
+  const PREFIJO_FORMULA = /^[=+\-@\t\r]/;
+  const UMBRAL_LONGTABLE = 30;
+
+  function formatearNumeroCSV(texto, decimal) {
+    const m = NUMERO_VALIDO.exec(texto);
+    if (!m) return texto;
+    const mant = decimal !== "." ? m[1].replace(".", decimal) : m[1];
+    if (!m[2]) return mant;
+    const signo = m[2].startsWith("-") ? "-" : "+";
+    const exp = m[2].replace(/^[+-]/, "").padStart(2, "0");
+    return `${mant}E${signo}${exp}`;
+  }
 
   function formatearCeldaCSV(valor, decimal) {
     if (valor === null || valor === undefined) return "";
     if (typeof valor === "number") {
-      if (!Number.isFinite(valor)) return "";
-      const txt = String(valor);
-      return decimal !== "." ? txt.replace(".", decimal) : txt;
+      return Number.isFinite(valor) ? formatearNumeroCSV(String(Object.is(valor, -0) ? 0 : valor), decimal) : "";
     }
     const txt = String(valor);
-    if (decimal !== "." && NUMERO_DECIMAL.test(txt.trim())) {
-      return txt.replace(".", decimal);
-    }
-    return txt;
+    if (NUMERO_VALIDO.test(txt)) return formatearNumeroCSV(txt, decimal);
+    if (FRACCION_EXACTA.test(txt)) return `="${txt}"`;
+    return PREFIJO_FORMULA.test(txt) ? `'${txt}` : txt;
+  }
+
+  function protegerTextoCSV(valor) {
+    const txt = String(valor ?? "");
+    return PREFIJO_FORMULA.test(txt) && !NUMERO_VALIDO.test(txt) && !FRACCION_EXACTA.test(txt) ? `'${txt}` : txt;
   }
 
   function escaparCampoCSV(texto, separador) {
-    if (texto.includes(separador) || texto.includes('"') || texto.includes("\n") || texto.includes("\r")) {
+    if (texto.includes(separador) || texto.includes('"') || texto.includes("\n") || texto.includes("\r") || /^\s|\s$/.test(texto)) {
       return `"${texto.replace(/"/g, '""')}"`;
     }
     return texto;
   }
 
-  function tablaACSV(t, opciones = {}) {
-    const separador = opciones.separador || ",";
-    const decimal = opciones.decimal || ".";
+  function lineasTablaCSV(t, separador, decimal) {
     const columnas = Array.isArray(t && t.columnas) ? t.columnas : [];
     const filas = Array.isArray(t && t.filas) ? t.filas : [];
-    if (!columnas.length && !filas.length) return "";
+    if (!columnas.length && !filas.length) return [];
     const lineas = [];
-    if (columnas.length) {
-      lineas.push(columnas.map(c => escaparCampoCSV(String(c ?? ""), separador)).join(separador));
+    if (columnas.length) lineas.push(columnas.map(c => escaparCampoCSV(protegerTextoCSV(c), separador)).join(separador));
+    for (const fila of filas) lineas.push(fila.map(v => escaparCampoCSV(formatearCeldaCSV(v, decimal), separador)).join(separador));
+    return lineas;
+  }
+
+  function tablaACSV(t, opciones = {}) {
+    const separador = opciones.separador || ";";
+    const decimal = opciones.decimal || ",";
+    const lineas = lineasTablaCSV(t, separador, decimal);
+    if (!lineas.length) return "";
+    return `${opciones.bom === false ? "" : "\uFEFF"}${lineas.join("\r\n")}`;
+  }
+
+  function tablasACSV(tablas, opciones = {}) {
+    if (!Array.isArray(tablas) || !tablas.length) return "";
+    if (tablas.length === 1) return tablaACSV(tablas[0], opciones);
+    const separador = opciones.separador || ";";
+    const decimal = opciones.decimal || ",";
+    const bloques = [];
+    for (const t of tablas) {
+      const lineas = lineasTablaCSV(t, separador, decimal);
+      if (!lineas.length) continue;
+      if (t && t.titulo) lineas.unshift(escaparCampoCSV(protegerTextoCSV(t.titulo), separador));
+      bloques.push(lineas.join("\r\n"));
     }
-    for (const fila of filas) {
-      lineas.push(fila.map(v => escaparCampoCSV(formatearCeldaCSV(v, decimal), separador)).join(separador));
-    }
-    return lineas.join("\r\n");
+    if (!bloques.length) return "";
+    return `${opciones.bom === false ? "" : "\uFEFF"}${bloques.join("\r\n\r\n")}`;
   }
 
   function textoPlano(p) {
@@ -172,7 +205,7 @@
     return out.join("\n");
   }
 
-  const api = { procedimientoALatex, tablaALatex, tablaACSV, textoPlano };
+  const api = { procedimientoALatex, tablaALatex, tablaACSV, tablasACSV, textoPlano };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof window !== "undefined") window.ExportarProcedimiento = api;
 })();
