@@ -401,6 +401,7 @@ def crear_matriz_identidad(n: int) -> List[List[Fraction]]:
     if n <= 0:
         raise ValueError(f"El orden de la matriz identidad debe ser n >= 1, recibido: {n}.")
         
+    exigir_dimension("El orden de la matriz identidad", n, MATRIZ_OPERAR_MAX)
     I: List[List[Fraction]] = []
     for i in range(n):
         fila = [Fraction(1, 1) if i == j else Fraction(0, 1) for j in range(n)]

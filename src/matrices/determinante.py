@@ -67,6 +67,7 @@ un único número real denotado como det(A) o |A|.
 """
 
 from fractions import Fraction
+from decimal import Decimal
 from math import lcm
 from src.core.limites import (DETERMINANTE_MAX, COFACTORES_MAX, EFICIENCIA_N_MAX,
                              DIGITOS_MAX, LimiteExcedido, exigir_dimension)
@@ -118,6 +119,10 @@ class PasoDeterminante:
         self.detalles = detalles or []
 
 
+def _operaciones_texto(valor):
+    return format(Decimal(valor), ".6e") if valor >= 10 ** DIGITOS_MAX else format(valor, ",")
+
+
 class AnalisisEficiencia:
     """
     Estructura que almacena la evaluación comparativa previa de eficiencia
@@ -164,12 +169,14 @@ class AnalisisEficiencia:
             self.metodo_recomendado_nombre = "Descomposición LU (Ampliamente Superior)"
             self.justificacion = (
                 f"¡Para n = {n}, la Descomposición LU es drásticamente más eficiente! "
-                f"Cofactores requiere un orden factorial de ~{self.ops_cofactores:,} operaciones, "
-                f"mientras que LU resuelve la triangulación en únicamente ~{self.ops_lu:,} operaciones (O(n³)). "
-                f"La diferencia de velocidad es de más de {max(1, self.ops_cofactores // max(1, self.ops_lu)):,} veces."
+                f"Cofactores requiere un orden factorial de ~{_operaciones_texto(self.ops_cofactores)} operaciones, "
+                f"mientras que LU resuelve la triangulación en únicamente ~{_operaciones_texto(self.ops_lu)} operaciones (O(n³)). "
+                f"La diferencia de velocidad es de más de {_operaciones_texto(max(1, self.ops_cofactores // max(1, self.ops_lu)))} veces."
             )
             self.insignia_cofactores = "Inviable / Factorial O(n!)"
             self.insignia_lu = "ALTAMENTE RECOMENDADO (O(n³))"
+        if self.ops_cofactores >= 10 ** DIGITOS_MAX:
+            self.ops_cofactores = _operaciones_texto(self.ops_cofactores)
 
     def _calcular_operaciones_cofactores(self, n: int) -> int:
         """Calcula el número aproximado de operaciones para la expansión de Laplace."""
