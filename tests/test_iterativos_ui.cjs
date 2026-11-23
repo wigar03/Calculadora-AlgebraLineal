@@ -110,12 +110,19 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
   const sinModulo11 = actual
     .replace(/\n  <link rel="stylesheet" href="iterativos\.css\?v=[0-9a-f]+">/, '')
+    .replace(/\n  <link rel="stylesheet" href="impresion\.css(?:\?v=[0-9a-f]+)?" media="print">/, '')
+    .replace(
+      '<p class="subtitle" id="header-subtitle">Álgebra lineal y métodos numéricos con procedimientos paso a paso</p>',
+      '<p class="subtitle" id="header-subtitle" data-math>Vectores en $\\mathbb{R}^n$, Combinación Lineal, Matrices, Inversa $A^{-1}$, Ecuaciones $Ax=b$, Determinante $|A|$, Bisección, Regla Falsa, Newton-Raphson y Secante</p>'
+    )
     .replace(/\n      <button class="nav-tab" data-tab="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n<button class="home-module" type="button" data-open-module="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n\n      <section id="tab-iterativos"[\s\S]*?<\/section>/, '')
-    .replace(/\n  <script src="iterativos\.js\?v=[0-9a-f]+"><\/script>/, '');
+    .replace(/\n  <script src="iterativos\.js\?v=[0-9a-f]+"><\/script>/, '')
+    .replace(/\n  <script src="exportar\.js(?:\?v=[0-9a-f]+)?"><\/script>/, '')
+    .replace(/\n  <script src="exportar-ui\.js(?:\?v=[0-9a-f]+)?"><\/script>/, '');
   const huella = require('node:crypto').createHash('sha256').update(normalizarV(sinModulo11)).digest('hex');
-  assert.equal(huella, HUELLA_SIN_MODULO_11, 'Se alteró marcado existente fuera del módulo 11');
+  assert.equal(huella, HUELLA_SIN_MODULO_11, 'Se alteró marcado existente fuera del módulo 11 y P2');
 
   const sec = actual.match(/<section id="tab-iterativos"[\s\S]*?<\/section>/);
   assert.ok(sec, 'Falta la sección #tab-iterativos');
