@@ -60,6 +60,30 @@ El motor devuelve `motivo = "raiz_no_admisible"` (condición positiva o positiva
 `MOTIVOS` de las cuatro páginas lo contiene: el mensaje se mostraría como «undefined». Lo mismo ocurrirá con
 `no_certificada` (INC-010). Corrección: añadir los textos y una prueba de contrato entre motivos y diccionarios.
 
+## Etapa 2 — Módulo 11 (Jacobi y Gauss-Seidel)
+
+### INC-012 · 2026-11-23 · fuente · REGISTRADA (no es un fallo de la calculadora)
+La presentación tiene errores aritméticos en los desarrollos paso a paso: diapositiva 15, x₂⁽²⁾ = 1.704545
+(correcto 1.715909) y x₄⁽²⁾ = 0.906818 (correcto 0.885227); diapositiva 20, x₄⁽¹⁾ = 0.751591 (correcto 0.878864);
+diapositiva 21, toda la iteración 2 (x₁⁽²⁾ = 0.830182, correcto 1.030182). Las tablas 16 y 22 son correctas.
+Verificado con aritmética exacta (`tests/validacion/referencias_iterativos.json`).
+
+### INC-013 · 2026-11-23 · referencias · CERRADA
+`mpmath.eig` dio ρ(T_J) ≈ 1.57 para una T_J nilpotente (exacto: 0). Las referencias y el motor usan el polinomio
+característico exacto; el motor decide ρ < 1 con Schur-Cohn en aritmética racional.
+
+### INC-014 · 2026-11-23 · web · CERRADA (9fd4b99, 6016c13)
+10 de 13 `?v=` de `index.html` no identificaban el contenido (algunos desde antes de esta orquestación) y el servidor
+no envía `Cache-Control`: la ventana de escritorio podía usar JS o CSS antiguos. Prueba nueva con hash en LF.
+
+### INC-015 · 2026-11-23 · integración · EN CURSO (Codex 2)
+En la página real, «Resolver» del módulo 11 fallaba siempre: la vista envía `max_iteraciones` como cadena («100»),
+igual que el resto de módulos, y el resolvedor solo aceptaba enteros. Las pruebas simuladas y la de aceptación usaban
+números. Detectado al probar en el navegador.
+
+### INC-016 · 2026-11-23 · presentación · EN CURSO (Antigravity)
+La tabla de iteraciones y los radios espectrales se muestran con 6 cifras significativas (1.14306); se pasan a 10.
+
 ## INC-004 · 2026-11-23 · infraestructura · CERRADA
 `pytest` no está instalado; la suite oficial usa `unittest` (README y CI). Línea base: 169 pruebas OK y
 5 archivos `node --test` OK. No es un fallo.
