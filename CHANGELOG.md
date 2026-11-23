@@ -1,5 +1,13 @@
 # Historial de versiones
 
+## 1.0.0-rc.7
+
+Candidata de consolidación: exportaciones validadas con pdflatex, LibreOffice Calc y Gnumeric reales.
+
+- CSV protegido contra fórmulas precedidas de espacios; fracciones, enteros largos y ceros conservados.
+- Documentos LaTeX que compilan con matrices grandes, tablas largas, porcentajes, griego y Unicode.
+- Fórmula de Gauss-Seidel de la guía corregida en GitHub.
+
 ## 1.0.0-rc.6
 
 Candidata con exportación de resultados (P2) y documentación pública revisada.
