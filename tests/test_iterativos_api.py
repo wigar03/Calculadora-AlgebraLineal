@@ -225,3 +225,24 @@ class APIIterativos(unittest.TestCase):
             analisis = self.post("analizar", cuerpo)
             self.assertEqual(analisis["garantia"], "demostrada")
             self.assertEqual(analisis["radio_espectral"]["jacobi"], 0)
+
+    def test_verificacion_final_exacta_rechaza_falsa_convergencia_subnormal(self):
+        cuerpo = {"A": [["1e-200", "5e-201"], ["5e-201", "1e-200"]],
+                  "b": ["5e-324", "5e-324"], "x0": ["0", "0"],
+                  "tolerancia": "1e-6", "max_iteraciones": "100"}
+        for criterio in ("ambos", "cambio", "residuo"):
+            for metodo in ("jacobi", "gauss_seidel"):
+                with self.subTest(metodo=metodo, criterio=criterio):
+                    r = self.post("resolver", {**cuerpo, "metodo": metodo, "criterio": criterio})
+                    # Referencia sobre los mismos floats que realmente iteraron.
+                    A = [[F(v) for v in fila] for fila in r["A"]]
+                    b, x = list(map(F, r["b"])), list(map(F, r["solucion"]))
+                    residuos = [bi - sum(a * v for a, v in zip(fila, x))
+                                for fila, bi in zip(A, b)]
+                    escala = max(map(abs, b)) + max(sum(map(abs, fila)) for fila in A) * max(map(abs, x))
+                    esperado = float(max(map(abs, residuos)) / escala)
+                    self.assertAlmostEqual(esperado, 0.2)
+                    self.assertAlmostEqual(r["verificacion"]["residuo_rel"], esperado)
+                    self.assertFalse(r["verificacion"]["cumple"])
+                    self.assertFalse(r["convergio"])
+                    self.assertNotEqual(r["motivo"], "tolerancia")

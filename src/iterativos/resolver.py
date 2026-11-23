@@ -1,6 +1,7 @@
 """Resolvedor iterativo y comparación, con verificación de residuo obligatoria."""
 import math
 import re
+from fractions import Fraction
 
 from .convergencia import (analizar_espectro, garantia_convergencia, medir_cambio,
                            cumple_tolerancia, detectar_parada)
@@ -16,6 +17,8 @@ MENSAJES = {
     "diagonal_nula": "Hay un cero en la diagonal; intenta reordenar las ecuaciones.",
     "singular": "El sistema es singular y no tiene solución única; no se itera.",
     "incompatible": "El rango aumentado supera al de A: el sistema no tiene solución.",
+    "precision_insuficiente": "La verificación exacta final no cumple la tolerancia; "
+                             "la precisión flotante es insuficiente.",
 }
 
 
@@ -95,6 +98,32 @@ def _verificar(A, b, x):
     return residuo(A, b, x)
 
 
+def _verificar_final(A, b, x, tolerancia):
+    """Una única comprobación racional sobre los floats que realmente iteraron.
+
+    Fraction(float) conserva su racional binario exacto. La comparación se hace
+    antes de redondear los valores que se muestran en JSON.
+    """
+    Q = [[Fraction(a) for a in fila] for fila in A]
+    B, X = list(map(Fraction, b)), list(map(Fraction, x))
+    Ax = [sum(a * v for a, v in zip(fila, X)) for fila in Q]
+    residuos = [bi - axi for bi, axi in zip(B, Ax)]
+    norma = max(map(abs, residuos))
+    escala = max(map(abs, B)) + max(sum(map(abs, fila)) for fila in Q) * max(map(abs, X))
+    relativo = norma / escala if escala else norma
+
+    def mostrar(valor):
+        try:
+            return float(valor)
+        except OverflowError:
+            return math.inf if valor > 0 else -math.inf
+
+    verificacion = {"Ax": list(map(mostrar, Ax)), "residuo": list(map(mostrar, residuos)),
+                    "residuo_inf": mostrar(norma), "residuo_rel": mostrar(relativo)}
+    verificacion["cumple"] = relativo <= Fraction(tolerancia) and _finito(verificacion)
+    return verificacion
+
+
 def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
                        max_iteraciones=100, criterio="ambos", reordenar=False):
     from .entrada import sistema_float
@@ -134,7 +163,7 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
             x = nuevo
             vectores = (vectores + [nuevo])[-9:]
             if cumple_tolerancia(relativo, verificacion["residuo_rel"], tol, criterio):
-                motivo, convergio = "tolerancia", True
+                motivo = "tolerancia"  # candidata; la verificación exacta final decide
                 break
             detectado = detectar_parada(historial, vectores)
             if detectado == "divergencia" and analisis["garantia"] == "demostrada":
@@ -144,8 +173,10 @@ def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
             if detectado:
                 motivo = detectado
                 break
-    verificacion = _verificar(A, b, x)
-    verificacion["cumple"] = _finito(verificacion) and verificacion["residuo_rel"] <= tol
+    verificacion = _verificar_final(A, b, x, tol)
+    convergio = motivo == "tolerancia" and verificacion["cumple"]
+    if motivo == "tolerancia" and not convergio:
+        motivo = "precision_insuficiente"
     categoria = analisis["garantia"]
     if convergio and categoria != "demostrada":
         categoria = "observada"
