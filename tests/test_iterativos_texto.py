@@ -69,5 +69,46 @@ class TestSistemaTextoValido(unittest.TestCase):
         self.assertEqual(b0, [Fraction(1), Fraction(1)])
 
 
+class TestSistemaTextoErrores(unittest.TestCase):
+    def _assert_error(self, texto, patron):
+        with self.assertRaisesRegex(ValueError, patron):
+            leer_ecuaciones(texto)
+
+    def test_terminos_no_lineales(self):
+        self._assert_error("x1*x2 + x2 = 1\nx1 + x2 = 2", r"no lineal|producto")
+        self._assert_error("x1 x2 + x1 = 1\nx1 + x2 = 2", r"no lineal|producto")
+        self._assert_error("x1^2 + x2 = 1\nx1 + x2 = 2", r"no lineal|potencia")
+        self._assert_error("x1**2 + x2 = 1\nx1 + x2 = 2", r"no lineal|potencia")
+        self._assert_error("x1² + x2 = 1\nx1 + x2 = 2", r"no lineal|exponente")
+        self._assert_error("sin(x1) + x2 = 1\nx1 + x2 = 2", r"no lineal|funciones")
+        self._assert_error("log10(x1) + x2 = 1\nx1 + x2 = 2", r"no lineal|funciones")
+        self._assert_error("1/x1 + x2 = 1\nx1 + x2 = 2", r"no lineal|división")
+        self._assert_error("1/2x1 + x2 = 1\nx1 + x2 = 2", r"no lineal|división")
+
+    def test_variables_e_indices_invalidos(self):
+        self._assert_error("2x + 3y = 1\nx - y = 0", r"sin índice")
+        self._assert_error("x0 + x1 = 1\nx0 - x1 = 0", r"índice inválido")
+        self._assert_error("x_a + x_1 = 1\nx_1 = 2", r"inválido")
+        self._assert_error("x1 + y2 = 1\nx1 - y2 = 0", r"mezclaron")
+        self._assert_error("x1 + x3 = 5\n2x1 - x3 = 1", r"inconsistentes.*x_2")
+
+    def test_igualdad_lado_derecho_y_cuadrado(self):
+        self._assert_error("10x1 - x2 + 2x3", r"falta el signo '='")
+        self._assert_error("x1 + x2 = 3 = 4", r"más de un signo '='")
+        self._assert_error("x1 + x2 =", r"ambos lados")
+        self._assert_error("10x1 - x2 = 6 + x3\nx1 + x2 + x3 = 1\nx1 - x3 = 0", r"lado derecho")
+        self._assert_error("x1 + x2 = 1\nx1 - x2 = 0\n2x1 + x2 = 3", r"no es cuadrado")
+        self._assert_error("x1 + x2 + x3 = 1\nx1 - x2 + x3 = 0", r"no es cuadrado")
+
+    def test_sintaxis_y_limites(self):
+        self._assert_error("", r"al menos una ecuación")
+        self._assert_error("(1/0)x1 + x2 = 1\nx1 + x2 = 2", r"división por cero")
+        self._assert_error("0,5x1 + x2 = 1\nx1 + x2 = 2", r"coma")
+        self._assert_error("x1 + x2 = 1; x1 - x2 = 0", r"una sola ecuación")
+        self._assert_error("3 = 3\nx1 = 1", r"no contiene incógnitas")
+        self._assert_error("2 3x1 + x2 = 1\nx1 + x2 = 2", r"operador|inesperado")
+        self._assert_error("(1/2 x1 + x2 = 1\nx1 + x2 = 2", r"paréntesis")
+
+
 if __name__ == "__main__":
     unittest.main()
