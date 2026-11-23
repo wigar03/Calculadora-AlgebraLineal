@@ -618,6 +618,9 @@ def iniciar_servidor_web(puerto: int = 8080, abrir_navegador: bool = True):
     puerto_libre = buscar_puerto_disponible(puerto)
     servidor = HTTPServer(("127.0.0.1", puerto_libre), AlgebraLinearHandler)
     url = f"http://127.0.0.1:{puerto_libre}"
+    # Una consola cp1252 no puede codificar el emoji del encabezado: sustituirlo en vez de abortar.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="replace")
     print("=" * 72)
     print("🚀 CALCULADORA DE ÁLGEBRA LINEAL - UAM (MTM0120)")
     print(f"🌐 Servidor web interactivo iniciado en: {url}")
