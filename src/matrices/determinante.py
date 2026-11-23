@@ -12,11 +12,11 @@ un único número real denotado como det(A) o |A|.
 
 1. INTERPRETACIÓN GEOMÉTRICA Y ALGEBRAICA:
    - Para n = 1: det([a]) = a (longitud con signo en R).
-   - Para n = 2: |det(A)| representa el área orientada del paralelogramo generado por
-     los vectores fila (o columna) en R^2.
-   - Para n = 3: |det(A)| representa el volumen orientado del paralelepípedo generado
-     en R^3.
-   - Para n >= 4: Hipervolumen n-dimensional en R^n.
+   - Para n = 2: |det(A)| representa el área del paralelogramo generado por
+     los vectores fila (o columna) en R^2; el signo de det(A) recoge la orientación.
+   - Para n = 3: |det(A)| representa el volumen del paralelepípedo generado
+     en R^3; el signo de det(A) recoge la orientación.
+   - Para n >= 4: |det(A)| es el hipervolumen sin signo en R^n.
    - Invertibilidad: Una matriz cuadrada A es invertible (no singular) si y solo si
      det(A) != 0. Si det(A) = 0, la matriz es singular (rango r < n, filas L.D.).
 
@@ -30,15 +30,13 @@ un único número real denotado como det(A) o |A|.
       y M_ij es la submatriz menor de orden (n - 1) x (n - 1) que resulta de suprimir
       la fila i y la columna j de A.
       
-      Complejidad Computacional: O(n!) operaciones factoriales.
-      - Para n = 1: 1 operación.
-      - Para n = 2: 2 multiplicaciones (ad - bc).
-      - Para n = 3: 6 multiplicaciones y sumas (regla de Sarrus).
-      - Para n = 4: 24 evaluaciones de menores 3x3 (~40 operaciones).
-      - Para n = 5: 120 evaluaciones de menores (~205 operaciones).
-      - Para n = 8: 40,320 evaluaciones.
-      Estrategia óptima: Selección de la fila o columna con mayor cantidad de ceros
-      para anular términos a_ij * C_ij y minimizar la recursión.
+      Complejidad computacional: O(n!) operaciones aritméticas en el caso general.
+      Al expandir una fila aparecen n menores inmediatos de orden n - 1,
+      no n! menores; n! cuenta los términos de la fórmula de Leibniz.
+      Modelo estimado: C(1) = 1, C(2) = 3 (dos productos y una resta),
+      C(n) = n * (C(n - 1) + 2) para n >= 3, sin aprovechar ceros.
+      Estrategia: seleccionar la fila o columna con más ceros para anular términos
+      a_ij * C_ij y reducir el trabajo recursivo.
 
    B) DESCOMPOSICIÓN LU CON PIVOTEO PARCIAL (PA = LU):
       Mediante eliminación gaussiana por renglones con pivoteo parcial, se obtienen:
@@ -53,12 +51,14 @@ un único número real denotado como det(A) o |A|.
           (-1)^s * det(A) = 1 * prod_{i=1}^n u_ii
           det(A) = (-1)^s * prod_{i=1}^n u_ii
           
-      Complejidad Computacional: O(n^3) operaciones polinomiales (~ 2/3 * n^3 flops).
-      - Para n = 2: ~2 operaciones.
-      - Para n = 3: ~14 operaciones.
-      - Para n = 4: ~36 operaciones.
-      - Para n = 5: ~75 operaciones.
-      - Para n = 8: ~320 operaciones.
+      Complejidad Computacional: O(n^3) operaciones aritméticas.
+      Modelo para n >= 2: sum_{j=1}^{n-1} j * (2*j + 1) + (n - 1),
+      con término dominante 2/3 * n^3; el coste de cada fracción depende de sus enteros.
+      - Para n = 2: ~4 operaciones.
+      - Para n = 3: ~15 operaciones.
+      - Para n = 4: ~37 operaciones.
+      - Para n = 5: ~74 operaciones.
+      - Para n = 8: ~315 operaciones.
 
 3. RESTRICCIÓN DIDÁCTICA Y TÉCNICA:
    100% Python estándar con aritmética exacta fraccionaria (fractions.Fraction).
@@ -134,12 +134,12 @@ class AnalisisEficiencia:
         self.ceros_totales = ceros_totales
         
         # Estimación de operaciones para Cofactores: O(n!)
-        # n! evaluaciones de menores
+        # Modelo: C(2) = 3; C(n) = n * (C(n - 1) + 2) para n >= 3, sin aprovechar ceros.
         self.ops_cofactores = self._calcular_operaciones_cofactores(n)
         self.complejidad_cofactores = f"O(n!) = O({n}!)"
         
         # Estimación de operaciones para LU: O(n^3)
-        # Aproximadamente 2/3 * n^3 + n multiplicaciones
+        # Modelo para n >= 2: sum_{j=1}^{n-1} j * (2*j + 1) + (n - 1).
         self.ops_lu = self._calcular_operaciones_lu(n)
         self.complejidad_lu = f"O(n³) = O({n}³)"
         
@@ -191,7 +191,7 @@ class AnalisisEficiencia:
         return total
 
     def _calcular_operaciones_lu(self, n: int) -> int:
-        """Calcula el número aproximado de operaciones (flops) para la descomposición LU."""
+        """Estima operaciones aritméticas para LU; término dominante 2/3 * n^3."""
         if n <= 1:
             return 1
         # Suma de operaciones de eliminación: sum_{k=1}^{n-1} (n - k) * (2*(n - k) + 1) + (n - 1)
