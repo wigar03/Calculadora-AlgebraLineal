@@ -429,6 +429,21 @@ El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primer
 
 Nuevos archivos: `src/derivadas/{__init__,motor}.py`, `src/secante/{__init__,metodo}.py`, `src/ui/web/secante.js`, `tests/test_secante.py` y `tests/test_secante_ui.cjs`. Para la revisión manual pruebe el ejemplo, `x^2+1` con puntos `-1` y `1` (denominador nulo), la vista móvil y ambos temas.
 
+### Módulo 11: Métodos iterativos de Jacobi y Gauss-Seidel
+
+Con $A = D + L + U$ (diagonal, estrictamente inferior y estrictamente superior):
+
+- **Jacobi**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)$; todas las componentes usan $x^{(k)}$. Matriz de iteración $T_J = -D^{-1}(L+U)$.
+- **Gauss-Seidel**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}\right)$; usa de inmediato los valores nuevos. $T_{GS} = -(D+L)^{-1}U$.
+
+**Convergencia.** El método converge para todo $x^{(0)}$ si y solo si $\rho(T) < 1$. La calculadora obtiene el polinomio característico exacto de $T$ (Faddeev-LeVerrier con fracciones) y decide $\rho(T) < 1$ con la prueba de Schur-Cohn en aritmética racional, sin redondeo. Son condiciones suficientes la dominancia diagonal estricta por filas (ambos métodos) y, solo para Gauss-Seidel, que $A$ sea simétrica definida positiva. La dominancia **no es necesaria** y Gauss-Seidel **no siempre** es más rápido: en $A = \begin{pmatrix}1&2&-2\1&1&1\2&2&1\end{pmatrix}$, $\rho(T_J) = 0$ (Jacobi converge) y $\rho(T_{GS}) = 2$ (diverge).
+
+**Parada.** Cambio $\|x^{(k+1)} - x^{(k)}\|_\infty$ y residuo $\|b - Ax^{(k+1)}\|_\infty$, ambos relativos. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
+
+**Nota sobre la presentación de clase.** Las tablas de las diapositivas 16 y 22 son correctas; los desarrollos de las diapositivas 15, 20 y 21 contienen errores aritméticos (ver [INCIDENCIAS.md](INCIDENCIAS.md), INC-012).
+
+---
+
 ## 4. Estructura del código
 
 ```text
@@ -532,16 +547,3 @@ El desarrollo del proyecto se estructuró e integró cronológicamente mediante 
 32. `docs(code): estructurar y delimitar con comentarios los apartados del programa y transpuesta`: Inclusión de comentarios de bloque uniformes y prominentes que delimitan con claridad el inicio de cada apartado (Vectores, Combinación Lineal, Matrices Básicas, Sub-apartado de Transpuesta, Inversa, Ecuaciones Matriciales y Determinantes) en backend, frontend y módulos de cálculo.
 
 ---
-
-### Módulo 11: Métodos iterativos de Jacobi y Gauss-Seidel
-
-Con $A = D + L + U$ (diagonal, estrictamente inferior y estrictamente superior):
-
-- **Jacobi**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)$; todas las componentes usan $x^{(k)}$. Matriz de iteración $T_J = -D^{-1}(L+U)$.
-- **Gauss-Seidel**: $x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}\right)$; usa de inmediato los valores nuevos. $T_{GS} = -(D+L)^{-1}U$.
-
-**Convergencia.** El método converge para todo $x^{(0)}$ si y solo si $\rho(T) < 1$. La calculadora obtiene el polinomio característico exacto de $T$ (Faddeev-LeVerrier con fracciones) y decide $\rho(T) < 1$ con la prueba de Schur-Cohn en aritmética racional, sin redondeo. Son condiciones suficientes la dominancia diagonal estricta por filas (ambos métodos) y, solo para Gauss-Seidel, que $A$ sea simétrica definida positiva. La dominancia **no es necesaria** y Gauss-Seidel **no siempre** es más rápido: en $A = \begin{pmatrix}1&2&-2\1&1&1\2&2&1\end{pmatrix}$, $\rho(T_J) = 0$ (Jacobi converge) y $\rho(T_{GS}) = 2$ (diverge).
-
-**Parada.** Cambio $\|x^{(k+1)} - x^{(k)}\|_\infty$ y residuo $\|b - Ax^{(k+1)}\|_\infty$, ambos relativos. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
-
-**Nota sobre la presentación de clase.** Las tablas de las diapositivas 16 y 22 son correctas; los desarrollos de las diapositivas 15, 20 y 21 contienen errores aritméticos (ver `docs/INCIDENCIAS.md`, INC-012).
