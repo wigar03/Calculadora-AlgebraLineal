@@ -15,6 +15,7 @@ Las operaciones de suma, resta, multiplicación y división inversa son cerradas
 """
 
 from fractions import Fraction
+from decimal import Decimal, localcontext
 import re
 from typing import Any, List, Union, Tuple
 
@@ -87,6 +88,23 @@ def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
         raise ValueError(f"No se pudo convertir '{s}' a un número racional válido.") from exc
 
 
+def _entero_texto(valor):
+    """Conversión exacta por bloques, sin cambiar el límite global de Python."""
+    signo = "-" if valor < 0 else ""
+    valor, bloques = abs(valor), []
+    base = 10 ** DIGITOS_MAX
+    while valor >= base:
+        valor, bloque = divmod(valor, base)
+        bloques.append(str(bloque).zfill(DIGITOS_MAX))
+    return signo + str(valor) + "".join(reversed(bloques))
+
+
+def _cientifico(frac, decimales):
+    with localcontext() as contexto:
+        contexto.prec = max(28, decimales + 2)
+        return format(Decimal(frac.numerator) / Decimal(frac.denominator), f".{decimales}e")
+
+
 def format_number(frac: Fraction, as_decimal: bool = False, decimal_places: int = 4) -> str:
     """
     Formatea un número racional para visualización limpia en interfaces y consolas.
@@ -97,14 +115,19 @@ def format_number(frac: Fraction, as_decimal: bool = False, decimal_places: int 
     - En caso contrario, se muestra en su notación irreducible: 'a/b'.
     """
     if as_decimal:
-        f_val = float(frac)
+        try:
+            f_val = float(frac)
+        except OverflowError:
+            return _cientifico(frac, decimal_places)
+        if f_val == 0 and frac != 0:
+            return _cientifico(frac, decimal_places)
         if f_val.is_integer():
             return str(int(f_val))
         return f"{f_val:.{decimal_places}f}".rstrip("0").rstrip(".")
         
     if frac.denominator == 1:
-        return str(frac.numerator)
-    return f"{frac.numerator}/{frac.denominator}"
+        return _entero_texto(frac.numerator)
+    return f"{_entero_texto(frac.numerator)}/{_entero_texto(frac.denominator)}"
 
 
 def format_latex_number(frac_in: Any) -> str:
@@ -115,10 +138,10 @@ def format_latex_number(frac_in: Any) -> str:
     """
     frac = parse_number(frac_in)
     if frac.denominator == 1:
-        return str(frac.numerator)
+        return _entero_texto(frac.numerator)
     if frac.numerator < 0:
-        return f"-\\frac{{{-frac.numerator}}}{{{frac.denominator}}}"
-    return f"\\frac{{{frac.numerator}}}{{{frac.denominator}}}"
+        return f"-\\frac{{{_entero_texto(-frac.numerator)}}}{{{_entero_texto(frac.denominator)}}}"
+    return f"\\frac{{{_entero_texto(frac.numerator)}}}{{{_entero_texto(frac.denominator)}}}"
 
 
 def format_latex_scalar(frac_in: Any, parenthesize_if_negative: bool = False) -> str:
