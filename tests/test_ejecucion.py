@@ -1,5 +1,6 @@
 """Pruebas reales con spawn: cancelación, memoria y salida acotada."""
 import os
+import threading
 import time
 import unittest
 
@@ -21,6 +22,36 @@ def salida_grande():
 
 
 class TestEjecucion(unittest.TestCase):
+    def test_cierre_durante_calculo_no_deja_reemplazo(self):
+        with Supervisor(trabajadores=1) as supervisor:
+            procesos = supervisor.procesos
+            errores = []
+
+            def ejecutar():
+                try:
+                    supervisor.ejecutar("tests.test_ejecucion:dormir", 30)
+                except ErrorEjecucion as exc:
+                    errores.append(exc)
+
+            hilo = threading.Thread(target=ejecutar)
+            hilo.start()
+            time.sleep(0.05)
+            supervisor.cerrar()
+            hilo.join(2)
+            self.assertFalse(hilo.is_alive())
+            self.assertTrue(errores)
+            self.assertEqual(supervisor.procesos, ())
+            self.assertTrue(all(not proceso.is_alive() for proceso in procesos))
+
+    def test_error_interno_remoto_se_registra_y_no_expone_detalle(self):
+        with Supervisor(trabajadores=1) as supervisor:
+            with self.assertLogs("src.core.ejecucion", level="ERROR") as registro:
+                with self.assertRaises(ErrorEjecucion) as error:
+                    supervisor.ejecutar("os:esta_funcion_no_existe")
+            self.assertEqual(error.exception.estado, 500)
+            self.assertNotIn("AttributeError", str(error.exception))
+            self.assertIn("AttributeError", "\n".join(registro.output))
+
     def test_tiempo_termina_proceso_y_reemplaza(self):
         with Supervisor(trabajadores=1) as supervisor:
             anterior = supervisor.procesos[0]
