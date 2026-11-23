@@ -74,7 +74,7 @@ test('resolver desde la vista envia las 25 celdas y cinco terminos sin redondeo'
   el('eq-b-4').value = '181/60';
   c.metodo = 'gauss';
   c.respuesta = { tipo_sistema: 'SCD', vector_solucion: ['2', '-1', '3', '1', '-2'],
-    pasos: [{ step_number: 1, title: 'Inicio', description: 'Matriz', matrix: [['1/3', '2']] }],
+    pasos: [{ step_number: 1, title: 'Inicio', description: 'Matriz', matrix: [['1/3', '0', '0', '0', '0', '2']] }],
     sustitucion: ['Sustitución exacta visible'], verificacion: ['Fila 1: Satisface'] };
   await c.resolverEcuacionMatricialUI();
   assert.equal(c.enviado.url, '/api/ecuaciones/resolver');
@@ -121,4 +121,20 @@ test('el diagnostico singular recibido aparece en la vista de inversa', async ()
   await c.calcularInversaUI();
   assert.match(el('inv-badge-status').innerText, /Singular/);
   assert.ok(renderizados.includes(c.respuesta.mensaje_diagnostico));
+});
+
+test('determinante e inversa envian celdas textuales y el metodo seleccionado', async () => {
+  const { el, contexto: c } = pagina();
+  for (const prefijo of ['det', 'inv']) {
+    el(prefijo === 'det' ? 'det-order-n' : 'inv-dim-n').value = '5';
+    if (prefijo === 'det') c.renderizarMatrizDeterminante(); else c.renderizarMatrizInversaInput();
+    el(`${prefijo}-a-0-0`).value = '1/3'; el(`${prefijo}-a-0-1`).value = '-2.5';
+    c.metodo = prefijo === 'det' ? 'cofactores' : 'gauss';
+    c.respuesta = { orden_n: 5, es_invertible: false, determinante: '0', determinante_decimal: '0' };
+    if (prefijo === 'det') await c.calcularDeterminanteUI(); else await c.calcularInversaUI();
+    assert.equal(c.enviado.datos.A.length, 5);
+    assert.equal(c.enviado.datos.A[0][0], '1/3');
+    assert.equal(c.enviado.datos.A[0][1], '-2.5');
+    assert.equal(c.enviado.datos.metodo, c.metodo);
+  }
 });
