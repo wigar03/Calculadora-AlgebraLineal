@@ -245,4 +245,11 @@ class APIIterativos(unittest.TestCase):
                     self.assertAlmostEqual(r["verificacion"]["residuo_rel"], esperado)
                     self.assertFalse(r["verificacion"]["cumple"])
                     self.assertFalse(r["convergio"])
-                    self.assertNotEqual(r["motivo"], "tolerancia")
+                    self.assertIn(r["motivo"], ("precision_insuficiente", "estancamiento"))
+                    if r["motivo"] == "precision_insuficiente":
+                        self.assertIn("verificación exacta final", r["mensaje"])
+        comparacion = self.post("comparar", cuerpo)
+        for metodo in ("jacobi", "gauss_seidel"):
+            self.assertFalse(comparacion[metodo]["convergio"])
+            self.assertFalse(comparacion[metodo]["verificacion"]["cumple"])
+            self.assertAlmostEqual(comparacion[metodo]["verificacion"]["residuo_rel"], 0.2)

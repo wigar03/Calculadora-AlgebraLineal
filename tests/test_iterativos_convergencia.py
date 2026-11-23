@@ -283,3 +283,30 @@ class ResolucionIterativa(unittest.TestCase):
                 self.assertEqual(len(r["iteraciones"]), 1)
                 self.assertEqual(r["verificacion"]["residuo_rel"], 0)
                 self.assertTrue(r["verificacion"]["cumple"])
+
+    def test_comprobacion_racional_se_ejecuta_una_vez_al_final(self):
+        from unittest.mock import patch
+        import src.iterativos.resolver as modulo
+        for metodo in ("jacobi", "gauss_seidel"):
+            for maximo in (1, 100):
+                with self.subTest(metodo=metodo, maximo=maximo), patch.object(
+                    modulo, "_verificar_final", wraps=modulo._verificar_final
+                ) as comprobacion:
+                    r = modulo.resolver_iterativo(**CASOS["principal"], metodo=metodo,
+                                                  max_iteraciones=maximo, tolerancia=1e-12)
+                    comprobacion.assert_called_once_with(r["A"], r["b"], r["solucion"], 1e-12)
+                    if maximo == 100:
+                        self.assertGreater(len(r["iteraciones"]), 3)
+                        self.assertTrue(r["convergio"])
+
+    def test_umbral_exacto_no_se_redondea_para_decidir(self):
+        from src.iterativos.resolver import _verificar_final
+        relativo_exacto = F(1, 2 ** 53 + 1)
+        tolerancia = float(relativo_exacto)
+        self.assertGreater(relativo_exacto, F(tolerancia))
+        r = _verificar_final([[1.0]], [1.0], [1.0 + 2.0 ** -52], tolerancia)
+        self.assertEqual(r["residuo_rel"], tolerancia)  # solo la presentación redondea
+        self.assertFalse(r["cumple"])
+        cero = _verificar_final([[0.0]], [0.0], [0.0], tolerancia)
+        self.assertEqual(cero["residuo_rel"], 0)
+        self.assertTrue(cero["cumple"])
