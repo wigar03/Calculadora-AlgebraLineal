@@ -1,8 +1,9 @@
 # Historial de versiones
 
-## 1.0.0-rc.3
+## 1.0.0-rc.4
 
-Tercera candidata: módulo 11, Jacobi y Gauss-Seidel.
+Candidata con el módulo 11, Jacobi y Gauss-Seidel. (La etiqueta `v1.0.0-rc.3` no se publicó: la CI del
+ejecutable falló porque su diagnóstico esperaba exactamente 10 módulos; corregido en esta versión.)
 
 ### Incluido
 

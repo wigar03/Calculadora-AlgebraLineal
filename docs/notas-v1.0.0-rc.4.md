@@ -1,4 +1,4 @@
-Tercera candidata de la Calculadora de Álgebra Lineal: nuevo módulo 11, **Jacobi y Gauss-Seidel**, con análisis de convergencia demostrable y verificación exacta.
+Nueva candidata de la Calculadora de Álgebra Lineal: nuevo módulo 11, **Jacobi y Gauss-Seidel**, con análisis de convergencia demostrable y verificación exacta.
 
 ### Novedades
 
@@ -14,11 +14,12 @@ Tercera candidata de la Calculadora de Álgebra Lineal: nuevo módulo 11, **Jaco
 
 ### Correcciones
 
+- El diagnóstico del ejecutable de Windows ahora cuenta los módulos a partir de la propia interfaz (antes esperaba exactamente 10 y rechazaba la versión con el módulo 11). La etiqueta `v1.0.0-rc.3` quedó sin release por este motivo.
 - Los recursos de la página llevan versiones que identifican su contenido: tras actualizar, la ventana de escritorio ya no puede quedarse con JavaScript o CSS antiguos.
 
 ### Validación
 
-417 pruebas de Python y 58 de JavaScript. Los ejemplos de la presentación de clase (diapositivas 9 y 28) y otros 15 casos se comparan con iteraciones exactas, soluciones y radios espectrales calculados con SymPy. Se probaron además 28 sistemas adversarios y se hizo una revisión cruzada entre agentes. La interfaz se comprobó en el navegador, con KaTeX en modo estricto y sin cambios en los módulos anteriores.
+420 pruebas de Python y 58 de JavaScript. Los ejemplos de la presentación de clase (diapositivas 9 y 28) y otros 15 casos se comparan con iteraciones exactas, soluciones y radios espectrales calculados con SymPy. Se probaron además 28 sistemas adversarios y se hizo una revisión cruzada entre agentes. La interfaz se comprobó en el navegador, con KaTeX en modo estricto y sin cambios en los módulos anteriores.
 
 ### Límites conocidos
 
