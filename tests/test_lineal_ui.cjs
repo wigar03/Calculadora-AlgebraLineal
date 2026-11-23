@@ -156,3 +156,50 @@ test('la lista de diez parametros agrupa el indice completo para KaTeX', async (
   const html = katex.renderToString(tex, { throwOnError: true });
   assert.ok(html.includes('<msub><mi>t</mi><mn>10</mn></msub>'));
 });
+
+test('el vector estructurado rechaza texto ambiguo sin reescribir partes de tokens', () => {
+  const { contexto: c } = pagina();
+  for (const texto of ['0.5/2+t', '1/2.5+t', 'x_1/2']) {
+    assert.throws(() => c.vectorSolucionLinealToLatex([texto]), /separados/);
+    assert.throws(() => c.vectorSolucionLinealToLatex({ solucion_particular: [texto],
+      base_nucleo: [['1']], parametros: ['t'] }), /coeficiente racional/);
+  }
+  const tex = c.vectorSolucionLinealToLatex({ solucion_particular: ['1/4', '2/5'],
+    base_nucleo: [['1', '1']], parametros: ['t'] });
+  assert.match(tex, /\\frac\{1\}\{4\} \+ t/);
+  assert.match(tex, /\\frac\{2\}\{5\} \+ t/);
+  assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
+});
+
+test('el vector estructurado conserva ceros, signos, coeficientes unitarios e indices', () => {
+  const { contexto: c } = pagina();
+  const tex = c.vectorSolucionLinealToLatex({ solucion_particular: ['0', '-1/2', '0'],
+    base_nucleo: [['-1', '3/4', '0'], ['1/2', '-1', '0']], parametros: ['t_10', 's'] });
+  assert.match(tex, /-t_\{10\} \+ \\frac\{1\}\{2\}s/);
+  assert.match(tex, /-\\frac\{1\}\{2\} \+ \\frac\{3\}\{4\}t_\{10\} - s/);
+  assert.match(tex, /\[0\.5em\] 0 \\end/);
+  assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
+});
+
+test('KaTeX estricto interpreta los indices emitidos por Python como un solo subindice', () => {
+  const { execFileSync } = require('node:child_process');
+  const codigo = `import json
+from src.ecuaciones.ecuacion_matricial import resolver_ecuacion_matricial as resolver
+r = resolver([[0]*10], [0])
+s = resolver([[1]*11], [0], usar_gauss_jordan=False)
+print(json.dumps([r.descripcion_sistema, *r.verificacion_residual, *s.pasos_sustitucion]))`;
+  const textos = JSON.parse(execFileSync('python', ['-c', codigo], {
+    cwd: require('node:path').resolve(__dirname, '..'), encoding: 'utf8' }));
+  let subindicesCompletos = 0;
+  for (const texto of textos) {
+    for (const formula of texto.matchAll(/\$([^$]+)\$/g)) {
+      assert.doesNotMatch(formula[1], /_\d{2}/);
+      const html = katex.renderToString(formula[1], { throwOnError: true });
+      if (formula[1].includes('t_{10}')) {
+        assert.ok(html.includes('<msub><mi>t</mi><mn>10</mn></msub>'));
+        subindicesCompletos++;
+      }
+    }
+  }
+  assert.equal(subindicesCompletos, 3);
+});
