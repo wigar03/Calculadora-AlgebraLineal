@@ -98,3 +98,93 @@ test('series de gráficas de evolución y convergencia log10 reutilizan grafica-
   assert.ok(Number.isFinite(conv.logTol) && Math.abs(conv.logTol + 6) < 1e-12);
   for (const s of conv.series) assert.ok(s.puntos.every(p => Number.isFinite(p.y)));
 });
+
+const { execFileSync } = require('node:child_process');
+const vm = require('node:vm');
+
+test('regresión: index.html conserva intactos los módulos existentes respecto a main y valida el LaTeX nuevo', () => {
+  const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
+  const base = execFileSync('git', ['show', 'main:src/ui/web/index.html'], { cwd: ROOT, encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
+  const sinModulo11 = actual
+    .replace(/\n  <link rel="stylesheet" href="iterativos\.css\?v=[0-9a-f]+">/, '')
+    .replace(/\n      <button class="nav-tab" data-tab="tab-iterativos">[\s\S]*?<\/button>/, '')
+    .replace(/\n<button class="home-module" type="button" data-open-module="tab-iterativos">[\s\S]*?<\/button>/, '')
+    .replace(/\n\n      <section id="tab-iterativos"[\s\S]*?<\/section>/, '')
+    .replace(/\n  <script src="iterativos\.js\?v=[0-9a-f]+"><\/script>/, '');
+  assert.equal(normalizarV(sinModulo11), normalizarV(base), 'Se alteró marcado existente fuera del módulo 11');
+
+  const sec = actual.match(/<section id="tab-iterativos"[\s\S]*?<\/section>/);
+  assert.ok(sec, 'Falta la sección #tab-iterativos');
+  for (const id of ['it-dim-n', 'it-augmented-grid', 'it-x0-grid', 'it-texto', 'it-tolerance', 'it-max-iter', 'it-reordenar', 'it-plot-vars', 'it-plot-conv']) {
+    assert.ok(sec[0].includes(`id="${id}"`), `Falta control #${id}`);
+  }
+  assert.match(sec[0], /id="it-dim-n"[^>]*min="2"[^>]*max="10"/);
+  const bloqueNuevo = sec[0] + actual.match(/data-open-module="tab-iterativos"[\s\S]*?<\/button>/)[0];
+  let conteo = 0;
+  for (const m of bloqueNuevo.matchAll(/data-math>([\s\S]*?)<\//g)) {
+    for (const f of m[1].matchAll(/\$([^$]+)\$/g)) {
+      renderEstricto(f[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>'), false);
+      conteo++;
+    }
+  }
+  assert.ok(conteo >= 8, `Pocas fórmulas data-math verificadas: ${conteo}`);
+});
+
+test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderizan KaTeX y SVGs', async () => {
+  const nodos = new Map(), listeners = {};
+  const crearNodo = (tag = 'div') => {
+    const n = {
+      tag, style: {}, children: [], attrs: {}, dataset: {}, value: '', checked: false, hidden: false, disabled: false, textContent: '',
+      listeners: {}, className: '',
+      setAttribute(k, v) { this.attrs[k] = String(v); },
+      addEventListener(t, fn) { (this.listeners[t] ||= []).push(fn); },
+      append(...hijos) { hijos.forEach(h => { this.children.push(h); if (h && h.id) nodos.set(h.id, h); }); },
+      replaceChildren(...hijos) { this.children = []; this.append(...hijos); },
+      querySelector() { return { disabled: false }; }
+    };
+    return n;
+  };
+  const el = id => { if (!nodos.has(id)) nodos.set(id, crearNodo()); return nodos.get(id); };
+  el('it-tolerance').value = '1e-6'; el('it-max-iter').value = '100'; el('it-texto').value = '4x1 + x2 = 1\n2x1 + 3x2 = 2';
+  const envios = [], latexs = [];
+  const doc = {
+    addEventListener(t, fn) { (listeners[t] ||= []).push(fn); },
+    getElementById: el, createElement: crearNodo, createElementNS: (_, tag) => crearNodo(tag),
+    querySelector: sel => ({ value: sel.includes('it-method') ? 'comparar' : 'ambos' }),
+    querySelectorAll: () => []
+  };
+  const rJ = respuestaSimulada(2, 'jacobi'), rG = respuestaSimulada(2, 'gauss_seidel');
+  const ctx = vm.createContext({
+    document: doc, window: { GraficaFunciones: G }, console, AbortController,
+    renderLatexElement: (n, tex, disp) => { n.textContent = tex; latexs.push([tex, disp]); },
+    renderMixedLatex: (n, txt) => { n.textContent = txt; for (const m of txt.matchAll(/\$([^$]+)\$/g)) latexs.push([m[1], false]); },
+    fetch: async (url, opts) => {
+      envios.push({ url, body: JSON.parse(opts.body) });
+      if (url.endsWith('/texto')) return { ok: true, json: async () => ({ A: [['4', '1'], ['2', '3']], b: ['1', '2'], nombres: ['x_1', 'x_2'] }) };
+      return { ok: true, json: async () => ({ jacobi: rJ, gauss_seidel: rG, resumen: 'Gauss-Seidel convergió antes.' }) };
+    }
+  });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'src/ui/web/iterativos.js'), 'utf8'), ctx);
+  listeners.DOMContentLoaded.forEach(fn => fn());
+  assert.equal(el('it-dim-n').value, '4');
+
+  el('it-cargar-texto').listeners.click[0]({ currentTarget: el('it-cargar-texto') });
+  await new Promise(r => setImmediate(r));
+  assert.equal(envios[0].url, '/api/iterativos/texto');
+  assert.equal(el('it-dim-n').value, '2');
+  assert.equal(el('it-a-0-0').value, '4'); assert.equal(el('it-b-1').value, '2');
+
+  el('it-solve-form').listeners.submit[0]({ preventDefault() {}, currentTarget: el('it-solve-form') });
+  await new Promise(r => setImmediate(r));
+  assert.equal(envios[1].url, '/api/iterativos/comparar');
+  assert.equal(el('it-analysis-card').hidden, false);
+  assert.equal(el('it-result-card').hidden, false);
+  assert.equal(el('it-charts-card').hidden, false);
+  assert.equal(el('it-steps-card').hidden, false);
+  assert.equal(el('it-table-card').hidden, false);
+  assert.equal(el('it-plot-vars').children[0].tag, 'svg');
+  assert.equal(el('it-plot-conv').children[0].tag, 'svg');
+  assert.ok(latexs.length > 30);
+  for (const [tex, disp] of latexs) renderEstricto(tex, Boolean(disp));
+});
