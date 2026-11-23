@@ -127,7 +127,7 @@ class TestRobustezServidor(unittest.TestCase):
                 self.assertIn(b"503", cliente.recv(4096))
 
     def test_fallo_inesperado_no_expone_python(self):
-        with servidor_local() as url, mock.patch("src.ui.web_server.calcular_respuesta",
+        with servidor_local() as url, mock.patch("src.ui.web_server.Supervisor.ejecutar",
                                                 side_effect=AttributeError("secret object has no attribute")):
             with self.assertLogs("src.core.ejecucion", level="ERROR"):
                 estado, datos, _ = post(url)
