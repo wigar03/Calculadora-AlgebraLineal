@@ -166,3 +166,46 @@ class TestEntradaIterativos(unittest.TestCase):
                 with self.subTest(nombre=nombre, valor=v):
                     with self.assertRaisesRegex(ValueError, nombre + ", fila 1, columna 1.*magnitud"):
                         sistema_float(*leer_sistema(*datos))
+
+    def test_magnitud_invalida_se_localiza_al_leer_antes_de_reordenar(self):
+        casos = (([[1, 0], ["1e400", 1]], [1, 2], None, "A, fila 2, columna 1"),
+                 ([[0, 1], [1, "1e-400"]], [1, 1], None, "A, fila 2, columna 2"),
+                 ([[0, 1], [1, 1]], [1, "1e400"], None, "b, fila 2, columna 1"),
+                 ([[0, 1], [1, 1]], [1, 1], ["1e-400", 0], "x0, fila 1, columna 1"))
+        for A, b, x, lugar in casos:
+            with self.subTest(lugar=lugar):
+                with self.assertRaisesRegex(ValueError, lugar + ".*magnitud representable"):
+                    leer_sistema(A, b, x)
+
+    def test_api_localiza_la_celda_original_antes_de_diagnosticos_y_permutacion(self):
+        from urllib.error import HTTPError
+        from urllib.request import Request, urlopen
+        from src.ui.web_server import servidor_local
+        casos = (([[1, 0], ["1e400", 1]], "fila 2, columna 1"),
+                 ([[0, 1], [1, "1e-400"]], "fila 2, columna 2"))
+        with servidor_local() as base:
+            for A, lugar in casos:
+                with self.subTest(A=A):
+                    payload = {"A": A, "b": [1, 2], "metodo": "jacobi", "reordenar": True}
+                    req = Request(base + "/api/iterativos/resolver", json.dumps(payload).encode(),
+                                  {"Content-Type": "application/json"})
+                    with self.assertRaises(HTTPError) as ctx:
+                        urlopen(req, timeout=5)
+                    with ctx.exception as response:
+                        result = json.loads(response.read())
+                        self.assertEqual(response.code, 400)
+                    self.assertIn(lugar, result["error"])
+                    self.assertIn("magnitud representable", result["error"])
+
+    def test_lectura_exacta_respeta_los_umbrales_de_redondeo_binario(self):
+        import sys
+        minimo, maximo = F(float.fromhex("0x0.0000000000001p-1022")), F(sys.float_info.max)
+        frontera_infinito = maximo + F(2 ** 970)
+        for valor in (minimo * F(3, 4), maximo, frontera_infinito - 1):
+            with self.subTest(valor=valor):
+                exactos = leer_sistema([[valor]], [0])
+                self.assertEqual(exactos[0][0][0], valor)
+                self.assertTrue(math.isfinite(sistema_float(*exactos)[0][0][0]))
+        for valor in (minimo / 2, frontera_infinito, -minimo / 2, -frontera_infinito):
+            with self.subTest(valor=valor), self.assertRaisesRegex(ValueError, "fila 1, columna 1.*magnitud"):
+                leer_sistema([[valor]], [0])

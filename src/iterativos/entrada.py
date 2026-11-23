@@ -6,16 +6,32 @@ from math import isfinite
 from src.core.arithmetic import parse_number
 
 
+# Umbrales exactos de redondeo IEEE-754 doble (empates al par): cero e infinito.
+_UMBRAL_CERO = Fraction(1, 1 << 1075)
+_UMBRAL_INFINITO = Fraction((1 << 1024) - (1 << 970))
+
+
+def _error_magnitud(lugar):
+    return ValueError(
+        f"{lugar}: no se puede representar como float finito sin perder su valor "
+        "no nulo; escribe un número de magnitud representable."
+    )
+
+
 def _celda(valor, lugar):
     try:
         if isinstance(valor, bool) or valor is None or str(valor).strip() == "":
             raise ValueError("falta un número")
-        return parse_number(valor)
+        numero = parse_number(valor)
     except (ValueError, TypeError, ZeroDivisionError, OverflowError) as exc:
         raise ValueError(
             f"{lugar}: valor inválido. Escribe un entero, un decimal como 0.75 "
             "o una fracción como 1/3 con denominador distinto de cero."
         ) from exc
+    # Validar en el orden original sin convertir celdas a float por segunda vez.
+    if numero != 0 and not _UMBRAL_CERO < abs(numero) < _UMBRAL_INFINITO:
+        raise _error_magnitud(lugar)
+    return numero
 
 
 def _vector(vector, n, nombre):
@@ -48,10 +64,7 @@ def _flotante(valor, lugar):
             raise ValueError("fuera del intervalo representable")
         return convertido
     except (ValueError, TypeError, OverflowError) as exc:
-        raise ValueError(
-            f"{lugar}: no se puede representar como float finito sin perder su valor "
-            "no nulo; escribe un número de magnitud representable."
-        ) from exc
+        raise _error_magnitud(lugar) from exc
 
 
 def sistema_float(A, b, x0):
