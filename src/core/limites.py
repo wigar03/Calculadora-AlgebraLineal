@@ -11,6 +11,7 @@ MATRIZ_OPERAR_MAX = 8
 INVERSA_MAX = 6
 SISTEMA_MAX = 10
 DETERMINANTE_MAX = 8
+COFACTORES_MAX = 6  # n = 7 ya supera 1 MB de procedimiento; para n > 6 se recomienda LU (medido por Codex 1)
 EFICIENCIA_N_MAX = 100
 ITERATIVOS_MAX = 20
 ITERATIVOS_ITER_MAX = 10_000
