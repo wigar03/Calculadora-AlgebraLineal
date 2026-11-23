@@ -175,3 +175,79 @@ def adaptar_regla_falsa(res, _cuerpo):
                        r"\varepsilon_a\;(\%)", r"\text{Acción}"], filas)],
         avisos=avisos,
     )
+
+
+@registrar("/api/newton-raphson/resolver")
+def adaptar_newton(res, _cuerpo):
+    fl, dl = res["funcion_latex"], res["derivada_latex"]
+    ps = res.get("pasos", ())
+    pasos_out = [paso("Derivada y fórmula de iteración", MOTIVOS_ABIERTO.get(res["motivo"], res["motivo"]),
+                      latex=[f"f(x) = {fl}", f"f'(x) = {dl}", r"x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}"])]
+    detalles_tex = []
+    for p, q in zip(ps[1:4], ps[:3]):
+        detalles_tex.append(f"x_{{{p['n']}}} = {_num(q['x'])} - \\frac{{{_num(q['fx'])}}}{{{_num(q['dfx'])}}} \\approx {_num(p['x'])}")
+        detalles_tex.append(f"E_a = \\left|{_num(p['x'])} - ({_num(q['x'])})\\right| = {_num(p['error_absoluto'])}")
+    if detalles_tex:
+        pasos_out.append(paso("Primeras iteraciones", "Sustitución en la fórmula de Newton-Raphson.", latex=detalles_tex))
+    filas = [[p["n"], p["x"], p["fx"], p["dfx"], p["error_absoluto"], p["error_relativo"]] for p in ps]
+    grupos = {}
+    avisos = []
+    for adv in res.get("advertencias", ()):
+        if isinstance(adv, dict) and "tipo" in adv and "n" in adv:
+            grupos.setdefault(adv["tipo"], []).append(str(adv["n"]))
+    if "derivada_pequena" in grupos:
+        avisos.append(f"Derivada pequeña en $n={','.join(grupos['derivada_pequena'])}$.")
+    if "paso_creciente" in grupos:
+        avisos.append(f"El cambio aumentó en $n={','.join(grupos['paso_creciente'])}$.")
+    if not res.get("convergio"):
+        avisos.append("Sin convergencia.")
+    return procedimiento(
+        "newton_raphson", "Método de Newton-Raphson",
+        entrada=[{"etiqueta": "f(x)", "latex": fl}, {"etiqueta": "f'(x)", "latex": dl},
+                 {"etiqueta": "x_0", "latex": _num(res["x0"])},
+                 {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}],
+        pasos=pasos_out,
+        resultado=[{"etiqueta": "x_n", "latex": _num(res["raiz"])},
+                   {"etiqueta": "|f(x_n)|", "latex": _num(res["residuo"])},
+                   {"etiqueta": "E_a", "latex": _num(res["error_absoluto"])},
+                   {"etiqueta": r"\varepsilon_r", "latex": _num(res["error_relativo"])},
+                   {"etiqueta": r"\text{Iteraciones}", "latex": str(res["iteraciones"])}],
+        verificacion=_verif_abiertos(res),
+        tablas=[tabla("Iteraciones de Newton-Raphson",
+                      ["n", "x_n", "f(x_n)", "f'(x_n)", "E_a", r"\varepsilon_r"], filas)],
+        avisos=avisos,
+    )
+
+
+@registrar("/api/secante/resolver")
+def adaptar_secante(res, _cuerpo):
+    x0, x1 = res["iniciales"]
+    ps = res.get("pasos", ())
+    pasos_out = [paso("Fórmula de la secante", MOTIVOS_ABIERTO.get(res["motivo"], res["motivo"]),
+                      latex=[r"x_{n+1} = x_n - \frac{f(x_n)(x_n - x_{n-1})}{f(x_n) - f(x_{n-1})}"])]
+    sust = [f"x_{{{p['n'] + 1}}} = {_num(p['b'])} - \\frac{{({_num(p['fb'])})({_num(p['b'])} - ({_num(p['a'])}))}}"
+            f"{{{_num(p['fb'])} - ({_num(p['fa'])})}} \\approx {_num(p['c'])}" for p in ps[:4]]
+    if sust:
+        pasos_out.append(paso("Sustituciones iniciales", "Cálculo de las primeras aproximaciones.", latex=sust))
+    filas = [[p["n"], p["a"], p["b"], p["c"], abs(p["fc"]), p["error_absoluto"], p["error_relativo"]] for p in ps]
+    avisos = []
+    if res.get("advertencias"):
+        avisos.append(f"Denominador pequeño en las iteraciones ${','.join(map(str, res['advertencias']))}$.")
+    if not res.get("convergio"):
+        avisos.append("Sin convergencia.")
+    return procedimiento(
+        "secante", "Método de la secante",
+        entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
+                 {"etiqueta": "x_0", "latex": _num(x0)}, {"etiqueta": "x_1", "latex": _num(x1)},
+                 {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}],
+        pasos=pasos_out,
+        resultado=[{"etiqueta": "x_n", "latex": _num(res["raiz"])},
+                   {"etiqueta": "|f(x_n)|", "latex": _num(res["residuo"])},
+                   {"etiqueta": "E_a", "latex": _num(res["error_absoluto"])},
+                   {"etiqueta": r"\varepsilon_r", "latex": _num(res["error_relativo"])},
+                   {"etiqueta": r"\text{Iteraciones}", "latex": str(res["iteraciones"])}],
+        verificacion=_verif_abiertos(res),
+        tablas=[tabla("Iteraciones de la secante",
+                      ["n", "x_{n-1}", "x_n", "x_{n+1}", "|f(x_{n+1})|", "E_a", r"\varepsilon_r"], filas)],
+        avisos=avisos,
+    )
