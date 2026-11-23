@@ -50,7 +50,7 @@ function respuestaSimulada(n, metodo = 'gauss_seidel') {
 
 test('contrato de motivos: todos los motivos del contrato tienen texto legible', () => {
   const contrato = fs.readFileSync(path.join(ROOT, 'docs/contratos/iterativos.md'), 'utf8');
-  const esperados = ['tolerancia', 'max_iteraciones', 'divergencia', 'no_finito', 'estancamiento', 'oscilacion', 'diagonal_nula', 'singular', 'incompatible'];
+  const esperados = ['tolerancia', 'max_iteraciones', 'divergencia', 'no_finito', 'estancamiento', 'oscilacion', 'diagonal_nula', 'singular', 'incompatible', 'precision_insuficiente'];
   for (const clave of esperados) {
     assert.ok(contrato.includes(`\`${clave}\``), `El contrato no lista ${clave}`);
     assert.equal(typeof it.MOTIVOS[clave], 'string', `Falta MOTIVOS.${clave}`);

@@ -14,7 +14,8 @@
     oscilacion: "Las aproximaciones oscilan o entran en un ciclo sin estabilizarse.",
     diagonal_nula: "Existe al menos un cero en la diagonal principal; reordene ecuaciones antes de iterar.",
     singular: "La matriz A es singular (rango deficiente); el sistema no tiene solución única.",
-    incompatible: "El sistema es incompatible (el rango aumentado supera al de A); no tiene solución."
+    incompatible: "El sistema es incompatible (el rango aumentado supera al de A); no tiene solución.",
+    precision_insuficiente: "La verificación exacta final no cumple la tolerancia: la precisión de punto flotante es insuficiente para este sistema (valores extremadamente pequeños o grandes). Reescale el sistema o relaje la tolerancia."
   };
 
   const GARANTIAS = {
