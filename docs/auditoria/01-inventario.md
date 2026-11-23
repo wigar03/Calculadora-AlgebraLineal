@@ -1,4 +1,4 @@
-# Auditoría 1/4 — Qué hace hoy la calculadora (estado final: v1.0.0-rc.3)
+# Auditoría 1/4 — Qué hace hoy la calculadora (estado final: v1.0.0-rc.4)
 
 Fecha: 2026-11-23. Método: lectura de código, pruebas y sondeo HTTP real (`servidor_local()`), sin modificar nada.
 Los hallazgos con evidencia (archivo:línea, mediciones) están en `02-limitaciones.md`.
@@ -40,7 +40,7 @@ funciones de varias variables; expresiones en celdas de matrices; elección del 
 Windows.
 
 ## Calidad medida
-- Pruebas: 322 Python y 52 Node antes del módulo 11; **417 Python y 58 Node en el estado final** (v1.0.0-rc.3).
+- Pruebas: 322 Python y 52 Node antes del módulo 11; **420 Python y 58 Node en el estado final** (v1.0.0-rc.4).
   CI de Windows con compilación e instalación real.
 - Analizador: sin `eval` ni `exec` en `src/` (solo `re.compile`). Lista blanca estricta.
 - Accesibilidad: `lang="es"`, `aria-live` en resultados y foco visible. Faltan `role="tab"` y `aria-selected`,

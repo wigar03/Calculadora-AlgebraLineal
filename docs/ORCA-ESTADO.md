@@ -4,10 +4,10 @@
 
 ## Resumen para el propietario
 - **Módulo 11 (Jacobi y Gauss-Seidel) integrado y validado** por API, navegador y referencias exactas.
-  Release `v1.0.0-rc.3`: ver `docs/RELEASES.md`.
+  Release `v1.0.0-rc.4` (rc.3 quedó sin release: CI del ejecutable; ver `docs/RELEASES.md`).
 - **Auditoría y roadmap**: `docs/auditoria/01..04`. Las 5 prioridades recomendadas y la siguiente etapa están en
   `04-arquitectura-y-roadmap.md`. **Esperan tu decisión.**
-- Batería: 417 pruebas Python y 58 Node OK. Pendiente tuyo desde la etapa 1: INC-001 (IV-2 e IV-5).
+- Batería: 420 pruebas Python y 58 Node OK. Pendiente tuyo desde la etapa 1: INC-001 (IV-2 e IV-5).
 
 ## Agentes (Run `run_e96b75f55a83`)
 | Agente | Cuenta / modelo | Rama | Entregado e integrado | Estado |
