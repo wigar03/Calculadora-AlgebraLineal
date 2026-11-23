@@ -37,10 +37,14 @@ def entero_largo(texto):
     return bool(re.fullmatch(r"[+-]?[0-9]{16,}", texto))
 
 
-def cifras15(texto):
+def coincide15(actual, original):
     """Alcance acordado: 15 cifras significativas; Calc/Excel no preservan más."""
-    numero = Decimal(str(texto))
-    return numero.quantize(Decimal(1).scaleb(numero.adjusted() - 14)) if numero else Decimal(0)
+    a, b = Decimal(actual), Decimal(original)
+    return a == b if not b else abs(a - b) <= Decimal(5).scaleb(b.adjusted() - 15)
+
+
+def normalizar_saltos(texto):
+    return texto.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def ejecutar(args):
@@ -152,13 +156,14 @@ def problemas_libro(celdas, procedimiento):
                 errores.append("Fracción/entero exacto alterado o convertido en fecha " + lugar)
         elif not solo_texto and NUMERO.fullmatch(fuente):
             try:
-                igual = cifras15(actual) == cifras15(fuente)
+                igual = coincide15(actual, fuente)
             except (ValueError, ArithmeticError):
                 igual = False
             if tipo != "n" or not igual:
                 errores.append("Pérdida numérica " + lugar)
         elif fuente:
-            if tipo not in ("s", "str", "inlineStr") or actual not in (fuente, "'" + fuente):
+            if tipo not in ("s", "str", "inlineStr") or normalizar_saltos(actual) not in (
+                    normalizar_saltos(fuente), "'" + normalizar_saltos(fuente)):
                 errores.append("Texto alterado o interpretado " + lugar)
         elif actual or formula:
             errores.append("Celda adicional " + lugar)
@@ -181,7 +186,7 @@ def leer_ods(ruta):
             if formula is not None:
                 formula = re.sub(r"^[^:]+:=", "", formula)
             valor = c.get("{" + ns["o"] + "}value", "") if tipo == "float" else "\n".join(
-                "".join(p.itertext()) for p in c.findall("p:p", ns))
+                texto_ods(p, ns["p"]) for p in c.findall("p:p", ns))
             rep = int(c.get("{" + ns["t"] + "}number-columns-repeated", "1"))
             if valor or formula:
                 for j in range(col, col + rep):
@@ -189,6 +194,17 @@ def leer_ods(ruta):
             col += rep
         fila += int(r.get("{" + ns["t"] + "}number-rows-repeated", "1"))
     return celdas
+
+
+def texto_ods(nodo, espacio):
+    salida = nodo.text or ""
+    especiales = {"line-break": "\n", "tab": "\t", "s": " "}
+    for hijo in nodo:
+        tipo = hijo.tag.removeprefix("{" + espacio + "}")
+        salida += (especiales[tipo] * int(hijo.get("{" + espacio + "}c", "1"))
+                   if tipo in especiales else texto_ods(hijo, espacio))
+        salida += hijo.tail or ""
+    return salida
 
 
 class TestCSVExterno(unittest.TestCase):
@@ -237,7 +253,11 @@ class TestCSVExterno(unittest.TestCase):
                     inicial = destinos[0] / (ruta.stem + ".ods")
                     intermedio = destinos[1] / (ruta.stem + ".gnumeric")
                     final = destinos[2] / inicial.name
-                    ejecutar([ejecutable, "--import-type=Gnumeric_stf:stf_csvtab", "--import-encoding=UTF-8", ruta, inicial])
+                    # Mismos bytes: detección automática de STF, no selección explícita de ;.
+                    texto = ruta.with_suffix(".txt")
+                    texto.write_bytes(ruta.read_bytes())
+                    self.assertEqual(texto.read_bytes(), ruta.read_bytes())
+                    ejecutar([ejecutable, "--import-type=Gnumeric_stf:stf_csvtab", "--import-encoding=UTF-8", texto, inicial])
                     ejecutar([ejecutable, inicial, intermedio])
                     ejecutar([ejecutable, intermedio, final])
             resultados = []
