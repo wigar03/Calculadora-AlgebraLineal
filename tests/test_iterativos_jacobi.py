@@ -81,3 +81,61 @@ class TestJacobi(unittest.TestCase):
                         ([[1, 2]], [1], [0])):
             with self.subTest(sistema=sistema), self.assertRaisesRegex(ValueError, "dimensión"):
                 paso_jacobi(*sistema)
+
+
+class TestEntradaIterativos(unittest.TestCase):
+    def test_decimales_fracciones_y_conversion_sin_mutacion(self):
+        datos = ([["1/3", "0.75"], ["-2.5", 7]], [1, "-1/2"], ["0.2", 3])
+        original = copy.deepcopy(datos)
+        exactos = leer_sistema(*datos)
+        self.assertEqual(exactos, ([[F(1, 3), F(3, 4)], [F(-5, 2), F(7)]],
+                                   [F(1), F(-1, 2)], [F(1, 5), F(3)]))
+        A, b, x = sistema_float(*exactos)
+        self.assertEqual(A, [[1 / 3, .75], [-2.5, 7.0]])
+        self.assertEqual(b, [1.0, -.5])
+        self.assertEqual(x, [.2, 3.0])
+        self.assertTrue(all(isinstance(v, float) for fila in A for v in fila))
+        self.assertEqual(datos, original)
+        self.assertIsInstance(exactos[0][0][0], F)
+
+    def test_cero_por_defecto_y_limites_uno_y_veinte(self):
+        for n in (1, 20):
+            A = [[int(i == j) for j in range(n)] for i in range(n)]
+            exactos = leer_sistema(A, [1] * n)
+            self.assertEqual(exactos[2], [F(0)] * n)
+            self.assertTrue(all(isinstance(v, F) for fila in exactos[0] for v in fila))
+            self.assertTrue(all(isinstance(v, F) for v in exactos[1] + exactos[2]))
+        for A in ([], [[0] * 21 for _ in range(21)], None, "1"):
+            with self.subTest(A=A), self.assertRaisesRegex(ValueError, "1 a 20.*ajusta"):
+                leer_sistema(A, [])
+
+    def test_matriz_no_cuadrada_y_longitudes_incorrectas(self):
+        for A in ([[1, 2], [3]], [[1, 2], None], [[1, 2, 3], [4, 5, 6]]):
+            with self.subTest(A=A), self.assertRaisesRegex(ValueError, "fila.*cuadrada.*columnas"):
+                leer_sistema(A, [1, 2])
+        for nombre, b, x0 in (("b", [1], None), ("b", None, None),
+                              ("x0", [1, 2], [0]), ("x0", [1, 2], "00")):
+            with self.subTest(nombre=nombre), self.assertRaisesRegex(ValueError,
+                                                                   nombre + ".*2 componentes"):
+                leer_sistema([[1, 0], [0, 1]], b, x0)
+
+    def test_celdas_invalidas_indican_localizacion_y_como_corregir(self):
+        valores = ("1/0", "a", "1/2/3", "", "  ", None, True, float("inf"),
+                   float("nan"), [2])
+        for v in valores:
+            with self.subTest(valor=v):
+                with self.assertRaisesRegex(ValueError, "A, fila 2, columna 1.*Escribe.*1/3"):
+                    leer_sistema([[1, 0], [v, 1]], [1, 2])
+                with self.assertRaisesRegex(ValueError, "b, fila 2, columna 1.*Escribe"):
+                    leer_sistema([[1, 0], [0, 1]], [1, v])
+                with self.assertRaisesRegex(ValueError, "x0, fila 1, columna 1.*Escribe"):
+                    leer_sistema([[1, 0], [0, 1]], [1, 2], [v, 0])
+
+    def test_float_no_acepta_desbordamiento_ni_subdesbordamiento_a_cero(self):
+        for v in (F(10 ** 400), F(1, 10 ** 400)):
+            for nombre, datos in (("A", ([[v]], [0], [0])),
+                                  ("b", ([[1]], [v], [0])),
+                                  ("x0", ([[1]], [0], [v]))):
+                with self.subTest(nombre=nombre, valor=v):
+                    with self.assertRaisesRegex(ValueError, nombre + ", fila 1, columna 1.*magnitud"):
+                        sistema_float(*leer_sistema(*datos))
