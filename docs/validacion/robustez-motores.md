@@ -64,3 +64,58 @@ Todas las respuestas de rechazo son mensajes españoles bajo la clave `error`.
 bytes pico; 1e-5000000 en 0.000057 s/1 126 bytes; 65 dígitos en 0.000041 s/1 031 bytes;
 2/0 devuelve ValueError en 0.000035 s/680 bytes. Un constructor espía demuestra
 que los casos excesivos no llegan a construir Fraction.
+
+## Verificación final y alcance
+
+- `python -m unittest discover tests -v`: **440 pruebas OK**, 16.851 s (base 421).
+- Todos los `tests/*.cjs`, ejecutados individualmente con `node --test`: **59 OK** (base 58).
+- `python -m unittest tests.test_golden_api`: **OK**, 43 respuestas sin cambios de campos existentes.
+- Adaptadores: 7 rutas, 24 casos lineales del corpus, 851 bloques/inline de LaTeX
+  con KaTeX local, `throwOnError: true` y `strict: 'error'`; forma `base.validar`,
+  mismos títulos y cantidad de pasos, matrices/detalles iguales y entradas sin mutar.
+- Las nuevas pruebas se ejecutaron en rojo antes de las correcciones correspondientes.
+- Los resultados internos Fraction conservan exactitud aunque superen los límites
+  de los literales; el formateo evita tanto OverflowError de float como el error de
+  4300 dígitos, sin modificar `sys.set_int_max_str_digits`.
+- Los límites se validan en los puntos de entrada de cada módulo; el Gauss interno
+  compartido admite los sistemas de hasta 20 filas de los iterativos.
+- Autorización del integrador: se ajustaron `test_banco_lineal.py` y `test_lineal_ui.cjs`
+  para verificar x_11/t_11 con el formateador y conservar la cobertura sin resolver
+  un sistema de 11 variables. `test_ecuaciones.py` no necesitó cambios.
+- Sin cambios en UI, métodos numéricos, base/registro de procedimientos ni releases.
+  No se editaron los documentos de estado ajenos al área; corresponde al integrador
+  reconciliar sus resultados. Pendiente: revisión independiente e integración con
+  el servidor de Codex 2, incluidos `tipo=limite`, adjuntar procedimientos y repetir
+  mediciones del tamaño completo de la respuesta integrada.
+
+## Commits entregados
+
+Todos respetan <=100 líneas añadidas+eliminadas, ganchos e identidad configurada;
+sin push, merge ni coautoría. Los dos cherry-picks autorizados se señalan por origen.
+El commit final que cierra este informe se identifica en la entrega de la tarea.
+
+| Hash | Mensaje | + / - |
+|---|---|---:|
+| 3874d70 | feat(robustez): limitar la expansion por cofactores a orden seis (origen 070e5b2) | 1 / 0 |
+| da6fc77 | test(core): cubrir numeros excesivos antes de construir fracciones | 37 / 0 |
+| bcc91c4 | fix(core): validar digitos y exponentes antes de crear fracciones | 25 / 6 |
+| e6260a1 | test(lineal): exigir limites de dimensiones en cada motor | 61 / 0 |
+| 2c7e1a5 | fix(core): validar dimensiones antes de normalizar matrices | 13 / 2 |
+| e3db51f | fix(lineal): acotar vectores combinaciones y eliminacion gaussiana | 6 / 0 |
+| 31795b1 | fix(vectores): aplicar dimensiones centrales y contexto de combinacion | 17 / 12 |
+| f0607d2 | fix(matrices): acotar operaciones inversas y ecuaciones en los motores | 15 / 12 |
+| 2f106f6 | test(determinante): contrastar Bareiss limites y estimaciones grandes | 47 / 0 |
+| 0943fe9 | fix(determinante): comprobar con Bareiss y limitar expansion factorial | 43 / 6 |
+| 05f132c | fix(matrices): acotar identidad y mostrar costes grandes en notacion cientifica | 11 / 3 |
+| b0a3a29 | test(procedimientos): exigir adaptadores puros para todo el corpus lineal | 73 / 0 |
+| cf54d0e | test(latex): renderizar procedimientos lineales con KaTeX estricto | 36 / 1 |
+| 6c717d9 | feat(procedimientos): adaptar operaciones vectoriales y matriciales | 52 / 0 |
+| 37bcaa2 | feat(procedimientos): adaptar sistemas inversas determinantes y eficiencia | 57 / 1 |
+| 14488d3 | fix(robustez): admitir todo el rango de los dobles en el exponente (origen 0f1d59b) | 2 / 2 |
+| 3692ca3 | fix(solver): conservar Gauss compartido sin limites propios de modulo | 6 / 9 |
+| 403a8d5 | test(lineal): verificar subindices largos sin superar limites de entrada | 9 / 4 |
+| 8bd82cd | test(core): cubrir resultados exactos mayores que el rango de float | 14 / 1 |
+| 7f48a4b | fix(core): formatear resultados grandes sin desbordamientos ni limites globales | 29 / 6 |
+| 38febf8 | test(determinante): acotar el desarrollo de celdas grandes antes de crearlo | 6 / 0 |
+| 11ed9eb | fix(determinante): estimar el coste textual antes de expandir celdas grandes | 8 / 1 |
+| e80cab8 | docs(validacion): registrar costes y casos adversos de motores lineales | 66 / 0 |
