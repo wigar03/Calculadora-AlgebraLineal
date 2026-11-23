@@ -65,3 +65,66 @@ Después de tiempo, memoria y salida excesiva, `os:getpid` vuelve a funcionar; t
 proceso anterior está terminado. Errores inesperados devuelven 500 genérico; la traza remota llega al log padre.
 También se prueban límites de todas las rutas, enteros enormes, NaN/UTF-8/anidamiento inválidos, listado 404,
 Host y Origin ajenos, cabeceras y un único `adjuntar(ruta, respuesta, cuerpo)` antes de serializar.
+
+## Validación final y empaquetado
+
+- `python -m unittest discover tests -v`: **435 pruebas OK**, 30.569 s; 14 pruebas nuevas de este trabajo.
+- Cada `tests/*.cjs` con `node --test`: **58 pruebas OK**.
+- `python -m unittest tests.test_golden_api`: **43 respuestas congeladas intactas** (una prueba con subcasos).
+- `git diff a642912 --check`: sin errores. Cada commit respeta el máximo de 100 líneas añadidas + eliminadas.
+- Primero se reprodujeron los fallos HTTP y la ausencia de supervisor; después se implementaron las correcciones.
+  Una comprobación intermedia detectó fracciones no serializables; `8e8e5a3` restauró el formato original.
+
+En Orca Browser se comprobaron los scripts locales, 348 fórmulas KaTeX, Outfit cargada, cero recursos externos
+y cero errores de consola. La navegación y el botón existente de suma funcionaron: (2,-3,4)+(5,1,-2)=(7,-2,2).
+La CSP admite los manejadores y estilos inline que ya utiliza la página, sin autorizar orígenes externos.
+
+PyInstaller 6.22.3 compiló dos veces con `packaging/calculadora.spec`, usando `.venv-release` existente.
+El primer ejecutable pasó `--diagnostico`: salida 0, `ok=true`, 11 módulos, 346 fórmulas, KaTeX/fuentes disponibles,
+cero recursos externos y raíz de Newton 1.5213797068045751. Tras los cambios finales de trazas/cierre/JSON,
+la recompilación fue correcta, pero Windows impidió iniciar el nuevo binario con el mensaje literal:
+
+> An Application Control policy has blocked this file.
+
+El código fuente final sí pasó `desktop.py --diagnostico` mediante `.venv-release`, con los mismos resultados.
+No se cambió ni eludió Application Control. El coordinador aceptó esta entrega y fijó como criterio definitivo
+la CI de Windows: `scripts/test_windows_package.ps1` sobre versión portable, instalada y reinstalada al integrar.
+El diagnóstico definitivo del binario final queda pendiente de esa CI; la ruta POSIX de RLIMIT_AS también
+queda para CI de Linux (este equipo no tiene WSL). No se modifica versión, no se publica ni se fusiona main.
+
+Los JSON y logs locales de comprobación están en `%TEMP%/robustez-servidor-*`; no son artefactos de release.
+La evidencia de commits siguiente incluye las dependencias prestadas, que el integrador ya conoce en main
+o en la rama de motores; evita aplicar dos veces esos cambios al integrar.
+
+## Commits de implementación y pruebas
+
+Líneas = añadidas + eliminadas; los commits de esta evidencia se identifican con `git log` de la rama.
+
+| Hash | Mensaje | Líneas |
+|---|---|---:|
+| 43dff49 | test(servidor): reproducir fallos de aislamiento y entrada HTTP | 85 |
+| 3a4b5ef | feat(ejecucion): definir protocolo acotado y errores controlados | 83 |
+| 696a853 | feat(ejecucion): limitar memoria con Job Object en Windows | 41 |
+| 8ee2ae3 | feat(ejecucion): supervisar procesos spawn persistentes | 59 |
+| 199720e | feat(ejecucion): cancelar reemplazar y acotar tareas aisladas | 49 |
+| 2d8d06c | refactor(servidor): separar calculo y adjuntar procedimiento una vez | 68 |
+| 98239e7 | test(servidor): exigir aislamiento HTTP y cabeceras seguras | 45 |
+| 499878f | fix(servidor): limitar lectura y restringir acceso al origen local | 69 |
+| 8e8e5a3 | fix(ejecucion): conservar fracciones en la salida JSON | 2 |
+| 346ac41 | test(servidor): exigir limites antes de invocar cada motor | 27 |
+| 1c7902e | feat(servidor): validar literales antes de construir fracciones | 45 |
+| ce47f21 | feat(servidor): aplicar limites comunes al inicio de cada ruta | 59 |
+| 0e0143c | test(servidor): comprobar concurrencia durante calculo aislado | 33 |
+| 4cf394e | feat(servidor): aislar calculos y habilitar spawn empaquetado | 19 |
+| c03ea82 | test(servidor): inyectar fallo en frontera del supervisor | 2 |
+| e8542bb | fix(robustez): admitir todo el rango de los dobles en el exponente (0f1d59b) | 4 |
+| a2a72b4 | feat(robustez): limitar la expansion por cofactores a orden seis (070e5b2) | 1 |
+| 4409a90 | fix(servidor): conservar diagnosticos y anticipar coste de cofactores | 21 |
+| 89f0891 | test(ejecucion): exigir cierre activo y registro de fallos remotos | 31 |
+| da81e77 | fix(ejecucion): registrar trazas remotas y sincronizar cierre | 18 |
+| e241efc | fix(ejecucion): retirar cada proceso una sola vez al cerrar | 16 |
+| 11e819b | test(servidor): verificar cancelacion HTTP y procedimiento unico | 29 |
+| ee22335 | test(servidor): cubrir JSON no estandar y anidamiento hostil | 9 |
+| 6ff2552 | fix(servidor): rechazar constantes y JSON demasiado anidado | 9 |
+| ff2d3bc | test(lineal): verificar subindices largos sin superar limites de entrada (403a8d5) | 13 |
+| 166d9e8 | docs(robustez): registrar mediciones y casos adversos del servidor | 67 |
