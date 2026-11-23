@@ -99,7 +99,7 @@ class CriteriosParada(unittest.TestCase):
         self.assertEqual(detectar_parada([fila] * 2, [[0], [1], [0]]), "oscilacion")
         crecimiento = [{"cambio_inf": 2 ** k, "residuo_inf": 3 ** k} for k in range(7)]
         self.assertEqual(detectar_parada(crecimiento, [[k] for k in range(8)]), "divergencia")
-        self.assertEqual(detectar_parada([fila] * 8, [[k] for k in range(9)]), "estancamiento")
+        self.assertIsNone(detectar_parada([fila] * 8, [[k] for k in range(9)]))
         decrece = [{"cambio_inf": 2 ** -k, "residuo_inf": 3 ** -k} for k in range(8)]
         self.assertIsNone(detectar_parada(decrece, [[k] for k in range(9)]))
 
@@ -240,3 +240,14 @@ class ResolucionIterativa(unittest.TestCase):
             self.assertEqual(r["analisis"]["radio_espectral"][metodo], 0)
             for x, exacto in zip(r["solucion"], esperado):
                 self.assertAlmostEqual(x / exacto, 1, places=14)
+
+    def test_meseta_de_residuo_con_progreso_no_es_estancamiento(self):
+        from src.iterativos.resolver import resolver_iterativo
+        A = [[int(i == j) - int(j == i + 1) for j in range(9)] for i in range(9)]
+        for metodo in ("jacobi", "gauss_seidel"):
+            with self.subTest(metodo=metodo):
+                r = resolver_iterativo(A, [0] * 8 + [1], metodo, tolerancia=1e-16)
+                self.assertEqual(r["motivo"], "tolerancia")
+                self.assertTrue(r["convergio"])
+                self.assertEqual(r["solucion"], [1] * 9)
+                self.assertEqual(len(r["iteraciones"]), 10)

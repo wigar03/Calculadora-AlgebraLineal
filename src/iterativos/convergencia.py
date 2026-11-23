@@ -194,7 +194,7 @@ def detectar_parada(historial, vectores):
 
     Divergencia: seis crecimientos consecutivos >5% tanto en cambio como
     en residuo absoluto, y crecimiento total >2. Estancamiento: ocho pasos
-    sin progreso medible. Ciclos: vector repetido (periodos 2..8) exactamente.
+    con cambio nulo y residuo en meseta. Ciclos: vector repetido (periodos 2..8) exactamente.
     """
     ultimo = historial[-1]
     if not all(isfinite(v) for v in vectores[-1]):
@@ -214,7 +214,7 @@ def detectar_parada(historial, vectores):
             return "oscilacion"
     if len(historial) >= 8:
         tramo = historial[-8:]
-        if ultimo["cambio_inf"] == 0 or all(
+        if ultimo["cambio_inf"] == 0 and all(
             abs(t["residuo_inf"] - tramo[0]["residuo_inf"])
             <= 1e-15 * tramo[0]["residuo_inf"] for t in tramo):
             return "estancamiento"
