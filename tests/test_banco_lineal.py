@@ -1,5 +1,8 @@
 """Banco completo por la API de la página, con aritmética independiente exacta."""
 import json
+import ast
+import operator
+import re
 import unittest
 from fractions import Fraction as F
 from pathlib import Path
@@ -19,6 +22,25 @@ def fracciones(matriz):
 def producto(a, b):
     return [[sum((x * y for x, y in zip(fila, col)), F(0))
              for col in zip(*b)] for fila in a]
+
+
+def evaluar_parametrica(texto, parametros):
+    """Evaluador independiente restringido; no ejecuta texto del servidor."""
+    arbol = ast.parse(re.sub(r"(?<=\d)(?=[a-z])", "*", texto), mode="eval")
+    operaciones = {ast.Add: operator.add, ast.Sub: operator.sub,
+                   ast.Mult: operator.mul, ast.Div: operator.truediv}
+
+    def valor(nodo):
+        if isinstance(nodo, ast.Constant) and type(nodo.value) is int:
+            return F(nodo.value)
+        if isinstance(nodo, ast.Name):
+            return parametros[nodo.id]
+        if isinstance(nodo, ast.UnaryOp) and isinstance(nodo.op, (ast.USub, ast.UAdd)):
+            return -valor(nodo.operand) if isinstance(nodo.op, ast.USub) else valor(nodo.operand)
+        if isinstance(nodo, ast.BinOp) and type(nodo.op) in operaciones:
+            return operaciones[type(nodo.op)](valor(nodo.left), valor(nodo.right))
+        raise AssertionError("Expresión paramétrica inesperada: " + texto)
+    return valor(arbol.body)
 
 
 class TestBancoLineal(unittest.TestCase):
@@ -46,6 +68,7 @@ class TestBancoLineal(unittest.TestCase):
                 self.assertEqual(res["rango_A"], ref["rango_A"])
                 self.assertEqual(res["rango_aumentada"], ref["rango_aumentada"])
                 self.assertGreater(len(res["pasos"]), 1)
+                self.assertTrue(res["sustitucion"])
                 if ref["tipo"] == "unica":
                     x = [F(v) for v in res["vector_solucion"]]
                     self.assertEqual(x, [F(v) for v in ref["solucion"]])
@@ -53,6 +76,17 @@ class TestBancoLineal(unittest.TestCase):
                                      [[F(v)] for v in datos["b"]])
                     self.assertEqual(len(res["verificacion"]), len(datos["b"]))
                     self.assertTrue(all("Satisface" in v for v in res["verificacion"]))
+                else:
+                    self.assertEqual(res["parametros"], ["t"])
+                    self.assertIn("x_4 = t", res["descripcion_sistema"])
+                    for t in (F(-3), F(0), F(2, 3)):
+                        x = [evaluar_parametrica(v, {"t": t}) for v in res["vector_solucion"]]
+                        self.assertEqual(producto(fracciones(datos["A"]), [[v] for v in x]),
+                                         [[F(v)] for v in datos["b"]])
+                        self.assertEqual(x, [F(p) + t * F(v) for p, v in
+                                             zip(res["solucion_particular"], res["base_nucleo"][0])])
+                    self.assertEqual(len(res["verificacion"]), len(datos["b"]))
+                    self.assertTrue(all("Satisface" in v and "para todo" in v for v in res["verificacion"]))
 
     def comprobar_matriz(self, clave):
         a, ref = MATRICES[clave], REFERENCIAS["matrices"][clave]
