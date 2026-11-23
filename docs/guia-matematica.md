@@ -149,7 +149,7 @@ El programa analiza exhaustivamente sus propiedades teóricas:
 - **Homogeneidad con escalar**: $`(k \cdot A)^T = k \cdot A^T`$.
 - **Propiedad multiplicativa (orden invertido)**: $`(A \cdot B)^T = B^T \cdot A^T`$.
 - **Simetría y antisimetría**: si $`A`$ es cuadrada ($`m = n`$), se evalúa si es simétrica ($`A^T = A`$) o antisimétrica ($`A^T = -A`$).
-- **Invarianza de la traza**: $`\mathrm{tr}(A^T) = \mathrm{tr}(A) = \sum_{i=1}^n a_{ii}`$.
+- **Invarianza de la traza para matrices cuadradas**: $`\mathrm{tr}(A^T) = \mathrm{tr}(A) = \sum_{i=1}^n a_{ii}`$.
 - **Invertibilidad de la transpuesta (Teorema Unidad 2.2 c)**: $`(A^T)^{-1} = (A^{-1})^T`$.
 
 ### Módulo 4: Inversa de una Matriz $`A^{-1}`$
@@ -457,7 +457,7 @@ A = \begin{pmatrix}1&2&-2\\1&1&1\\2&2&1\end{pmatrix},
 
 Jacobi converge y Gauss-Seidel diverge en este ejemplo.
 
-**Parada.** Cambio $`\|x^{(k+1)} - x^{(k)}\|_\infty`$ y residuo $`\|b - Ax^{(k+1)}\|_\infty`$, ambos relativos. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
+**Parada.** Se calculan el cambio $`\|x^{(k+1)} - x^{(k)}\|_\infty`$ y el residuo $`\|b - Ax^{(k+1)}\|_\infty`$; los criterios comparan sus versiones relativas con la tolerancia. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
 
 La interfaz admite sistemas de orden 2 a 10 y la API hasta 20. El análisis espectral exacto general llega a orden 12;
 los casos triangulares o nilpotentes pueden demostrarse hasta orden 20.
@@ -533,7 +533,7 @@ Para revisar Newton-Raphson, abra el módulo 9, derive y grafique el ejemplo de 
 
 ## 6. Registro de Commits del Desarrollo
 
-El desarrollo del proyecto se estructuró e integró cronológicamente mediante **commits semánticos** siguiendo el estándar *Conventional Commits*:
+Este registro conserva el desarrollo inicial mediante *Conventional Commits*. Las versiones publicadas se describen en el [historial de versiones](../CHANGELOG.md):
 
 1. `46b076b` - `first commit`: Inicialización del repositorio Git.
 2. `caea445` - `chore: inicializar estructura del proyecto y configuración base`: Estructuración de directorios modulares `src/`, `tests/` y archivos de configuración base.
