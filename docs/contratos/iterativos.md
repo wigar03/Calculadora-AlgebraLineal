@@ -13,6 +13,15 @@ Autor: integrador (Claude Business). Cambios al contrato solo mediante el integr
 | `resolver.py` | Codex 2 | `resolver_iterativo(...)` y `comparar_metodos(...)` |
 | `sistema_texto.py` | Antigravity | `leer_ecuaciones(texto) -> (A, b, nombres)`: líneas `10x1 − x2 + 2x3 = 6`, `x₁`, `x_1`, `x1`; solo términos lineales |
 
+Firmas exactas de Codex 1 (índices base 0 en Python y JSON; la vista muestra base 1):
+- `leer_sistema(A, b, x0=None) -> (A, b, x0)` en `Fraction`; `sistema_float(A, b, x0) -> (A, b, x0)` en `float`.
+- `dominancia_diagonal(A) -> {"filas": [{"i", "diagonal", "suma", "cumple", "no_estricta"}], "estricta", "no_estricta"}`.
+- `diagonal_nula(A) -> [i, ...]`.
+- `reordenar(A, b) -> (A, b, {"aplicado", "permutacion", "motivo"})`; `permutacion[k]` = fila original en la posición k.
+- `rangos(A, b) -> {"A", "aumentada", "singular"}` (exacto, Gauss existente).
+- `residuo(A, b, x) -> {"Ax", "residuo", "residuo_inf", "residuo_rel"}` con
+  `residuo_rel = ‖r‖∞ / (‖b‖∞ + ‖A‖∞‖x‖∞)` (si el denominador es 0, `residuo_inf`).
+
 `detalle` es una lista, una entrada por componente: `{"i", "formula_latex", "sustitucion_latex", "valor", "usa_nuevos": [j...]}`.
 La aritmética de las iteraciones es flotante doble; las entradas se leen exactas y se convierten a `float` una vez.
 
