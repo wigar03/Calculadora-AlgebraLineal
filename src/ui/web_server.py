@@ -24,6 +24,8 @@ from contextlib import contextmanager
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 from src.core import limites
+
+DESCARTE_MAX_BYTES = 4 * 1024 * 1024  # cuerpo excesivo que se lee y descarta antes de responder 413
 from src.core.ejecucion import (ErrorEjecucion, Supervisor, clasificar_error,
                                 serializar, supervisor_compartido)
 from src.procedimientos import adjuntar
@@ -292,12 +294,29 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             cuerpo.extend(parte)
         return cuerpo
 
+    def _descartar_cuerpo(self, longitud):
+        # Leer sin guardar un cuerpo excesivo moderado: así el cliente recibe el 413 y no un cierre abrupto
+        # (BrokenPipe/ECONNRESET) mientras todavía envía. Más allá de DESCARTE_MAX_BYTES solo se cierra.
+        self.close_connection = True
+        restante = min(longitud, DESCARTE_MAX_BYTES)
+        plazo = time.monotonic() + limites.LECTURA_SOCKET_S
+        try:
+            while restante > 0 and time.monotonic() < plazo:
+                self.connection.settimeout(max(0.01, plazo - time.monotonic()))
+                parte = self.rfile.read1(min(restante, 65536))
+                if not parte:
+                    break
+                restante -= len(parte)
+        except (OSError, ValueError):
+            pass
+
     def do_POST(self):
         try:
             longitud = int(self.headers.get("Content-Length", "0"))
             if longitud < 0:
                 raise ValueError("La longitud del cuerpo no puede ser negativa.")
             if longitud > limites.CUERPO_MAX_BYTES:
+                self._descartar_cuerpo(longitud)
                 raise ErrorEjecucion("El cuerpo supera el tamaño máximo permitido.", "limite", "cuerpo_grande", 413)
             try:
                 body = json.loads(self._leer_cuerpo(longitud) if longitud else b"{}",
