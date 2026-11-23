@@ -1,9 +1,20 @@
 """Comprobación del renderizador real y del motor empaquetado, sin servicios externos."""
 
 import json
+import re
+from pathlib import Path
 from urllib.request import Request, urlopen
 
 from src.core.version import VERSION
+
+INDICE = Path(__file__).resolve().parent / "web" / "index.html"
+
+
+def modulos_esperados(indice=INDICE):
+    """Una tarjeta de inicio por módulo de la navegación (sin «Inicio»), leída del HTML empaquetado."""
+    html = indice.read_text(encoding="utf-8")
+    pestañas = set(re.findall(r'class="nav-tab[^"]*" data-tab="(tab-[\w-]+)"', html)) - {"tab-inicio"}
+    return len(pestañas)
 
 
 def comprobar_escritorio(ventana, cargada, url, destino):
@@ -21,7 +32,8 @@ def comprobar_escritorio(ventana, cargada, url, destino):
             .map(r => r.name)
         }))()""")
         resultado["interfaz"] = interfaz
-        if (interfaz["modulos"] != 10 or not interfaz["katex"]
+        esperados = modulos_esperados()
+        if (esperados < 11 or interfaz["modulos"] != esperados or not interfaz["katex"]
                 or not interfaz["formulas"] or not interfaz["fuentes"]):
             raise RuntimeError("Interfaz o renderizado matemático incompleto.")
         if interfaz["externos"]:
