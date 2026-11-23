@@ -1,6 +1,8 @@
+# Notas de v1.0.0-rc.2
+
 Segunda candidata de la Calculadora de Álgebra Lineal: resuelve y verifica los 47 ejercicios con enunciado completo del banco de sistemas lineales, matrices y ecuaciones no lineales.
 
-### Novedades
+## Novedades
 
 - **Ecuaciones escritas como en clase**: se aceptan igualdades (`ln(x) + sen(x) = 1.2`), `sen`, `e^x` y `e^(−x)`, `·`, `−` y superíndices `x²`, `x³`, `x⁴`.
 - **Mensajes de error que dicen qué corregir**: `2x + 3 = 7` responde «falta el operador de multiplicación entre 2 y x. Escribe 2*x + 3 = 7». También se señalan paréntesis sin cerrar, operadores dobles, funciones desconocidas (con sugerencia), variables no reconocidas e igualdades mal formadas. Los errores de dominio (ln, raíz, división por cero, polos de tan) se distinguen de los de sintaxis.
@@ -8,17 +10,17 @@ Segunda candidata de la Calculadora de Álgebra Lineal: resuelve y verifica los 
 - **Dominio y polos**: los intervalos que contienen polos o discontinuidades se rechazan antes de iterar.
 - **Sistemas lineales**: se corrigió la «Eliminación Gaussiana + Sustitución Regresiva», que daba soluciones incorrectas. Los sistemas con infinitas soluciones muestran la familia paramétrica exacta y la verifican fila por fila.
 
-### Ejercicios del banco que ahora se resuelven
+## Ejercicios del banco que ahora se resuelven
 
 - Sistemas lineales I-1 a I-19 (incluidos el de cinco incógnitas, los de coeficientes fraccionarios y decimales exactos y el sistema con infinitas soluciones): 19/19.
-- Determinante e inversa II-1 a II-10, con A·A⁻¹ = I: 10/10.
+- Determinante e inversa II-1 a II-10, con $`A\cdot A^{-1} = I`$: 10/10.
 - Ecuaciones no lineales III-1 a III-15 y IV-1, IV-3, IV-4 con los cuatro métodos: 18/18.
 
-### Validación
+## Validación
 
 322 pruebas de Python y 52 de JavaScript. Cada ejercicio se compara con referencias independientes calculadas con SymPy y mpmath, por la API de la página y en el navegador. KaTeX se comprueba en modo estricto sin errores.
 
-### Límites conocidos
+## Límites conocidos
 
 - Los ejercicios IV-2 y IV-5 del banco ampliado no incluyen la igualdad completa en el documento original; no se resuelven hasta conocer el enunciado.
 - La multiplicación debe escribirse con `*` (por ejemplo `4*x`); la calculadora lo indica, pero no lo corrige sola.
