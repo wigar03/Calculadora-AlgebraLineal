@@ -252,6 +252,22 @@ function mostrarToast(mensaje, duracion = 3000) {
   }, duracion);
 }
 
+function mostrarErrorResultado(resultBox, titulo, mensaje) {
+  const card = document.createElement("div");
+  card.className = "latex-equation-card";
+  card.style.borderColor = "rgba(225,29,72,0.4)";
+  const header = document.createElement("div");
+  header.className = "latex-header";
+  header.style.color = "var(--accent-rose)";
+  header.textContent = titulo;
+  const parrafo = document.createElement("p");
+  parrafo.textContent = mensaje == null ? "" : String(mensaje);
+  card.appendChild(header);
+  card.appendChild(parrafo);
+  resultBox.innerHTML = "";
+  resultBox.appendChild(card);
+}
+
 // =============================================================================
 // =============================================================================
 // APARTADO 1: OPERACIONES CON VECTORES EN R^n
@@ -405,12 +421,7 @@ async function calcularOperacionVector(operacion) {
   } catch (err) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
-    resultBox.innerHTML = `
-      <div class="latex-equation-card" style="border-color: rgba(225,29,72,0.4);">
-        <div class="latex-header" style="color:var(--accent-rose);">Error:</div>
-        <p>${err.message}</p>
-      </div>
-    `;
+    mostrarErrorResultado(resultBox, "Error:", err.message);
   }
 }
 
@@ -667,12 +678,7 @@ async function evaluarCombinacionLinealUI() {
   } catch (err) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
-    resultBox.innerHTML = `
-      <div class="latex-equation-card" style="border-color: rgba(225,29,72,0.4);">
-        <div class="latex-header" style="color:var(--accent-rose);">Error:</div>
-        <p>${err.message}</p>
-      </div>
-    `;
+    mostrarErrorResultado(resultBox, "Error:", err.message);
   }
 }
 
@@ -1073,12 +1079,7 @@ async function operarMatrices(operacion) {
   } catch (err) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
-    resultBox.innerHTML = `
-      <div class="latex-equation-card" style="border-color: rgba(225,29,72,0.4);">
-        <div class="latex-header" style="color:var(--accent-rose);">Error Dimensional:</div>
-        <p>${err.message}</p>
-      </div>
-    `;
+    mostrarErrorResultado(resultBox, "Error Dimensional:", err.message);
   }
 }
 
@@ -1404,12 +1405,7 @@ async function calcularInversaUI() {
   } catch (err) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
-    resultBox.innerHTML = `
-      <div class="latex-equation-card" style="border-color: rgba(225,29,72,0.4);">
-        <div class="latex-header" style="color:var(--accent-rose);">Error en Cálculo:</div>
-        <p>${err.message}</p>
-      </div>
-    `;
+    mostrarErrorResultado(resultBox, "Error en Cálculo:", err.message);
   }
 }
 
@@ -1699,12 +1695,7 @@ async function resolverEcuacionMatricialUI() {
   } catch (err) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
-    resultBox.innerHTML = `
-      <div class="latex-equation-card" style="border-color: rgba(225,29,72,0.4);">
-        <div class="latex-header" style="color:var(--accent-rose);">Error al resolver:</div>
-        <p>${err.message}</p>
-      </div>
-    `;
+    mostrarErrorResultado(resultBox, "Error al resolver:", err.message);
   }
 }
 
@@ -2133,11 +2124,6 @@ async function calcularDeterminanteUI() {
   } catch (err) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
-    resultBox.innerHTML = `
-      <div class="latex-equation-card" style="border-color: rgba(225,29,72,0.4);">
-        <div class="latex-header" style="color:var(--accent-rose);">Error al calcular:</div>
-        <p>${err.message}</p>
-      </div>
-    `;
+    mostrarErrorResultado(resultBox, "Error al calcular:", err.message);
   }
 }
