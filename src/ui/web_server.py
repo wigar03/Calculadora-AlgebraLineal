@@ -15,12 +15,17 @@ import os
 import sys
 import json
 import math
+import logging
 import socket
 import threading
 import webbrowser
 from contextlib import contextmanager
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
+from src.core import limites
+from src.core.ejecucion import (ErrorEjecucion, Supervisor, clasificar_error,
+                                serializar, supervisor_compartido)
+from src.procedimientos import adjuntar
 
 from src.core.arithmetic import parse_number, format_number, formatear_vector, formatear_matriz
 from src.vectores.operaciones import (
@@ -60,6 +65,37 @@ def serialize_fraction_or_str(val):
     return str(val)
 
 
+def calcular_respuesta(ruta, cuerpo):
+    """Adaptador importable del motor HTTP; no crea sockets en el trabajador."""
+    resultado = []
+    manejador = object.__new__(AlgebraLinearHandler)
+    manejador._send_json = lambda datos, status=200: resultado.append((datos, status))
+    manejador._despachar(ruta, cuerpo)
+    datos, estado = resultado[0]
+    if "error" in datos:
+        datos = {"tipo": "entrada", "codigo": "ruta_no_encontrada", **datos}
+    else:
+        datos = adjuntar(ruta, datos, cuerpo)
+    return datos, estado
+
+
+class HTTPServer(ThreadingHTTPServer):
+    daemon_threads = True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            self.ejecutor = Supervisor()
+        except Exception:
+            super().server_close()
+            raise
+        self.tiempos_calculo = {}
+
+    def server_close(self):
+        super().server_close()
+        self.ejecutor.cerrar()
+
+
 class AlgebraLinearHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         # Directorio base de archivos estáticos
@@ -87,14 +123,26 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        parsed = urlparse(self.path)
-        content_length = int(self.headers.get("Content-Length", 0))
-        raw_body = self.rfile.read(content_length).decode("utf-8") if content_length > 0 else "{}"
         try:
-            body = json.loads(raw_body)
-        except Exception:
-            body = {}
+            longitud = int(self.headers.get("Content-Length", "0"))
+            if longitud < 0:
+                raise ValueError("La longitud del cuerpo no puede ser negativa.")
+            if longitud > limites.CUERPO_MAX_BYTES:
+                raise ErrorEjecucion("El cuerpo supera el tamaño máximo permitido.", "limite", "cuerpo_grande", 413)
+            try:
+                body = json.loads(self.rfile.read(longitud) if longitud else b"{}")
+            except (ValueError, UnicodeError):
+                raise ErrorEjecucion("El cuerpo de la petición no es JSON válido", "entrada", "json_invalido", 400)
+            if not isinstance(body, dict):
+                raise ValueError("El cuerpo de la petición debe ser un objeto JSON.")
+            datos, estado = calcular_respuesta(urlparse(self.path).path, body)
+            self._send_json(datos, estado)
+        except Exception as exc:
+            error = clasificar_error(exc)
+            self._send_json(error.respuesta(), error.estado)
 
+    def _despachar(self, ruta, body):
+        parsed = urlparse(ruta)
         try:
             if parsed.path == "/api/iterativos/texto":
                 from src.iterativos.sistema_texto import leer_ecuaciones
@@ -165,8 +213,8 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
                 self._handle_regla_falsa_resolver(body)
             else:
                 self._send_json({"error": f"Ruta API no encontrada: {parsed.path}"}, status=404)
-        except Exception as err:
-            self._send_json({"error": str(err)}, status=400)
+        except Exception:
+            raise
 
     # ==============================================================================
     # ==============================================================================
