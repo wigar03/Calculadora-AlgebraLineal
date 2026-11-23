@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 
 from src.ui.web_server import servidor_local
 from tests.validacion.banco_iterativos import CASOS
+from src.procedimientos.base import validar as validar_procedimiento
 
 REF = json.loads((Path(__file__).parent / "validacion" /
                   "referencias_iterativos.json").read_text(encoding="utf-8"))
@@ -39,7 +40,10 @@ class APIIterativos(unittest.TestCase):
             return json.loads(texto)
 
     def comprobar_forma(self, r):
-        self.assertEqual(set(r), CLAVES_R)
+        # Contrato de procedimientos (etapa 3): única clave nueva admitida en el primer nivel.
+        if "procedimiento" in r:
+            validar_procedimiento(r["procedimiento"])
+        self.assertEqual(set(r) - {"procedimiento"}, CLAVES_R)
         self.assertEqual(set(r["analisis"]), CLAVES_ANALISIS)
         self.assertEqual(set(r["verificacion"]),
                          {"Ax", "residuo", "residuo_inf", "residuo_rel", "cumple"})
@@ -61,7 +65,7 @@ class APIIterativos(unittest.TestCase):
 
     def test_comparar_no_confunde_los_esquemas(self):
         r = self.post("comparar", CASOS["jacobi_si_gs_no"])
-        self.assertEqual(set(r), {"jacobi", "gauss_seidel", "resumen"})
+        self.assertEqual(set(r) - {"procedimiento"}, {"jacobi", "gauss_seidel", "resumen"})
         self.comprobar_forma(r["jacobi"])
         self.comprobar_forma(r["gauss_seidel"])
         self.assertTrue(r["jacobi"]["convergio"])
