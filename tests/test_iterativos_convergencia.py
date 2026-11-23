@@ -83,7 +83,7 @@ class AnalisisExacto(unittest.TestCase):
 
 class CriteriosParada(unittest.TestCase):
     def test_cambio_y_residuo_escalado_siempre_obligatorio(self):
-        self.assertEqual(medir_cambio([1, -1], [2, -3]), (2, F(2, 3)))
+        self.assertEqual(medir_cambio([1, -1], [2, -3]), (2, 2 / 3))
         self.assertEqual(medir_cambio([0, 0], [0, 0]), (0, 0))
         for criterio in ("cambio", "residuo", "ambos"):
             self.assertFalse(cumple_tolerancia(0, 1, 1e-6, criterio))
@@ -102,3 +102,75 @@ class CriteriosParada(unittest.TestCase):
         self.assertEqual(detectar_parada([fila] * 8, [[k] for k in range(9)]), "estancamiento")
         decrece = [{"cambio_inf": 2 ** -k, "residuo_inf": 3 ** -k} for k in range(8)]
         self.assertIsNone(detectar_parada(decrece, [[k] for k in range(9)]))
+
+
+class ResolucionIterativa(unittest.TestCase):
+    def resolver(self, nombre, metodo="gauss_seidel", **opciones):
+        from src.iterativos.resolver import resolver_iterativo
+        return resolver_iterativo(**CASOS[nombre], metodo=metodo, **opciones)
+
+    def test_convergentes_solucion_y_residuo_independiente(self):
+        nombres = ("principal", "principal_x0_unos", "practica", "dd_2x2",
+                   "decimales_3x3", "fracciones_3x3", "tridiagonal_5x5", "dd_10x10")
+        for nombre in nombres:
+            for metodo in ("jacobi", "gauss_seidel"):
+                with self.subTest(caso=nombre, metodo=metodo):
+                    r = self.resolver(nombre, metodo, tolerancia=1e-12, max_iteraciones=1000)
+                    self.assertTrue(r["convergio"], r["mensaje"])
+                    self.assertEqual(r["motivo"], "tolerancia")
+                    self.assertEqual(r["convergencia"], "demostrada")
+                    self.assertTrue(r["verificacion"]["cumple"])
+                    self.assertLessEqual(r["verificacion"]["residuo_rel"], 1e-12)
+                    for x, esperado in zip(r["solucion"], REF[nombre]["solucion"]):
+                        self.assertAlmostEqual(x, float(F(esperado)), delta=1e-10)
+                    A, b = matriz(nombre), list(map(F, CASOS[nombre]["b"]))
+                    residual = [b[i] - sum(a * F(x) for a, x in zip(fila, r["solucion"]))
+                                for i, fila in enumerate(A)]
+                    escala = max(map(abs, b)) + max(sum(map(abs, f)) for f in A) * max(
+                        abs(F(x)) for x in r["solucion"])
+                    self.assertLessEqual(float(max(map(abs, residual)) / escala), 1.01e-12)
+                    for fila in r["iteraciones"]:
+                        self.assertEqual("detalle" in fila, fila["k"] <= 3)
+
+    def test_divergencia_y_contraejemplo(self):
+        for nombre, metodo in (("diverge_ambos", "jacobi"),
+                               ("diverge_ambos", "gauss_seidel"),
+                               ("jacobi_si_gs_no", "gauss_seidel")):
+            r = self.resolver(nombre, metodo)
+            self.assertFalse(r["convergio"])
+            self.assertEqual(r["motivo"], "divergencia")
+            self.assertEqual(r["convergencia"], "no_asegurada")
+        j = self.resolver("jacobi_si_gs_no", "jacobi", tolerancia=1e-12)
+        self.assertTrue(j["convergio"])
+        self.assertEqual(j["convergencia"], "demostrada")
+        self.assertEqual(j["solucion"], [1, 1, 1])
+
+    def test_spd_oscilacion_y_hilbert_lento(self):
+        j = self.resolver("spd_no_dominante", "jacobi")
+        self.assertEqual(j["motivo"], "oscilacion")
+        self.assertEqual(j["convergencia"], "no_asegurada")
+        gs = self.resolver("spd_no_dominante", tolerancia=1e-12)
+        self.assertTrue(gs["convergio"])
+        self.assertEqual(gs["convergencia"], "demostrada")
+        h = self.resolver("hilbert_4x4", tolerancia=1e-12)
+        self.assertFalse(h["convergio"])
+        self.assertEqual(h["motivo"], "max_iteraciones")
+        self.assertEqual(h["convergencia"], "demostrada")
+
+    def test_se_rechazan_antes_de_iterar(self):
+        for nombre, motivo in (("singular_infinitas", "singular"),
+                               ("singular_incompatible", "incompatible"),
+                               ("diagonal_nula_reordenable", "diagonal_nula")):
+            r = self.resolver(nombre)
+            self.assertFalse(r["convergio"])
+            self.assertEqual(r["motivo"], motivo)
+            self.assertEqual(r["iteraciones"], [])
+
+    def test_reordenamiento_informado_y_solucion(self):
+        for nombre in ("reordenable", "diagonal_nula_reordenable"):
+            r = self.resolver(nombre, reordenar=True, tolerancia=1e-12)
+            self.assertTrue(r["convergio"])
+            self.assertTrue(r["analisis"]["reordenamiento"]["aplicado"])
+            self.assertEqual(r["analisis"]["reordenamiento"]["permutacion"], [1, 0, 2])
+            for x in r["solucion"]:
+                self.assertAlmostEqual(x, 1, delta=1e-10)
