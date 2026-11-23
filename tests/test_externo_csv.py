@@ -2,6 +2,7 @@
 
 SOFFICE y SSCONVERT permiten ejecutables portables, sin instalaciones del sistema.
 P2_EXPORTAR_JS selecciona una biblioteca candidata sin modificar src/ ni los golden.
+El texto de títulos/cabeceras racionales se compara exactamente por defecto, sin omisiones de casos conocidos.
 """
 import csv
 import contextlib
@@ -35,7 +36,7 @@ def racional(texto):
 
 
 def entero_largo(texto):
-    return bool(re.fullmatch(r"[+-]?[0-9]{16,}", texto))
+    return bool(re.fullmatch(r"[+-]?[0-9]+", texto)) and len(texto.lstrip("+-").lstrip("0")) > 15
 
 
 def coincide15(actual, original):
@@ -118,7 +119,9 @@ def adversarios():
     return [{"modulo": "adversarios", "tablas": [
         {"titulo": textos[0], "columnas": ["caso", "texto", "control"],
          "filas": [[i, s, "fin"] for i, s in enumerate(textos)]},
-        {"titulo": textos[1], "columnas": textos, "filas": [["fin"] * len(textos)]}]},
+        {"titulo": textos[1], "columnas": textos, "filas": [["fin"] * len(textos)]},
+        {"titulo": "1/2", "columnas": ["1/2", "-17/19", "0003/0007", "9007199254740993123456789"],
+         "filas": [["control"] * 4]}]},
         {"modulo": "precision", "tablas": [{"columnas": ["caso", "valor", "control"],
          "filas": [[i, v, "fin"] for i, v in enumerate([
              "1/2", "-17/19", "0003/0007", "0/5", 1.25, -12.75, 1.5e-7,
@@ -144,7 +147,7 @@ def columna(numero):
     return nombre
 
 
-def problemas_libro(celdas, procedimiento, texto_racional_exacto=False):
+def problemas_libro(celdas, procedimiento, texto_racional_exacto=True):
     esperadas = {f"{columna(j)}{i}": (valor, texto) for i, fila in enumerate(filas_fuente(procedimiento), 1)
                  for j, (valor, texto) in enumerate(fila, 1)}
     errores = []
@@ -153,7 +156,7 @@ def problemas_libro(celdas, procedimiento, texto_racional_exacto=False):
         original, solo_texto = esperadas.get(direccion, (None, True))
         fuente = "" if original is None else str(original)
         fraccion = not solo_texto and racional(fuente)
-        exacto = fraccion or (not solo_texto and entero_largo(fuente))
+        exacto = fraccion or (isinstance(original, str) and entero_largo(fuente))
         lugar = f"{direccion}: {fuente!r} -> {(tipo, actual, formula)!r}"
         if formula is not None and not ((exacto or racional(fuente)) and formula == f'"{fuente}"'):
             errores.append("Fórmula no autorizada " + lugar)
@@ -303,19 +306,8 @@ class TestCSVExterno(unittest.TestCase):
                     with self.subTest(motor=motor, modulo=p["modulo"], caso=ruta.stem, etapa=etapa.name):
                         libro = etapa / (ruta.stem + (".xlsx" if motor == "calc" else ".ods"))
                         self.assertTrue(libro.is_file(), f"{ejecutable} no produjo {libro}")
-                        errores = problemas_libro(leer_xlsx(libro) if motor == "calc" else leer_ods(libro), p,
-                                                 os.environ.get("CSV_TEXTO_RACIONAL_EXACTO") == "1")
+                        errores = problemas_libro(leer_xlsx(libro) if motor == "calc" else leer_ods(libro), p)
                         resultados.append({"caso": ruta.stem, "etapa": etapa.name, "errores": errores})
-                        if errores and not os.environ.get("P2_EXPORTAR_JS") and not os.environ.get("CSV_EXIGIR_PENDIENTES"):
-                            pendientes = {
-                                "Fórmula no autorizada": ["1/0", "1/000", "\n=1+2", " =1+2", "\u00a0=1+2"],
-                                "Texto alterado o interpretado": ["\n=1+2", " =1+2", "\u00a0=1+2", "1/2\n", "1/2"],
-                                "Fracción/entero exacto alterado o convertido en fecha": ["9007199254740993123456789"],
-                            }
-                            conocidos = all(any(e.startswith(clase + " ") and f": {valor!r} -> " in e
-                                for clase, valores in pendientes.items() for valor in valores) for e in errores)
-                            if conocidos:
-                                self.skipTest("Pendiente corrección Antigravity: " + "; ".join(errores))
                         self.assertEqual(errores, [], f"{len(errores)} incumplimientos; " + "; ".join(errores[:12]))
             if evidencia:
                 (base / "informe.json").write_text(json.dumps(resultados, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -330,9 +322,9 @@ class TestCSVExterno(unittest.TestCase):
 class TestOraculoLibroCSV(unittest.TestCase):
     def test_texto_racional_detecta_apostrofo_visible(self):
         p = {"tablas": [{"columnas": ["1/2"], "filas": []}]}
-        self.assertEqual(problemas_libro({"A1": ("s", "1/2", None)}, p, True), [])
-        self.assertEqual(problemas_libro({"A1": ("str", "1/2", '"1/2"')}, p, True), [])
-        errores = problemas_libro({"A1": ("s", "'1/2", None)}, p, True)
+        self.assertEqual(problemas_libro({"A1": ("s", "1/2", None)}, p), [])
+        self.assertEqual(problemas_libro({"A1": ("str", "1/2", '"1/2"')}, p), [])
+        errores = problemas_libro({"A1": ("s", "'1/2", None)}, p)
         self.assertTrue(any("apóstrofo visible" in e for e in errores), errores)
         p["tablas"][0]["columnas"] = ["1/0"]
         self.assertTrue(any("Fórmula no autorizada" in e for e in problemas_libro(
