@@ -70,7 +70,7 @@ from fractions import Fraction
 from decimal import Decimal
 from math import lcm
 from src.core.limites import (DETERMINANTE_MAX, COFACTORES_MAX, EFICIENCIA_N_MAX,
-                             DIGITOS_MAX, LimiteExcedido, exigir_dimension)
+                             DIGITOS_MAX, RESPUESTA_MAX_BYTES, LimiteExcedido, exigir_dimension)
 from typing import List, Tuple, Dict, Any, Optional, Union
 
 from src.core.arithmetic import (
@@ -341,6 +341,13 @@ def calcular_determinante_cofactores(matriz_in: Any) -> ResultadoDeterminante:
             f"El cálculo del determinante exige una matriz estrictamente cuadrada. "
             f"Dimensiones recibidas: {n} filas x {len(matriz[0])} columnas."
         )
+    if n > 5:
+        # Cota conservadora por operación: texto fijo y expresiones de hasta n factores.
+        # Se reserva 1/4 del límite central de respuesta para el desarrollo completo.
+        ancho = max(len(format_number(x)) for fila in matriz for x in fila)
+        coste = AnalisisEficiencia(n).ops_cofactores * (DIGITOS_MAX + 8 * n * ancho)
+        if coste > RESPUESTA_MAX_BYTES // 4:
+            raise LimiteExcedido("El desarrollo por cofactores excede el presupuesto de salida estimado. Usa descomposición LU.")
 
     res = ResultadoDeterminante()
     res.metodo = "cofactores"
