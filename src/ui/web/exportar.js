@@ -20,7 +20,8 @@
   function formatearCeldaCSV(valor, decimal) {
     if (valor === null || valor === undefined) return "";
     if (typeof valor === "number") {
-      return Number.isFinite(valor) ? formatearNumeroCSV(String(Object.is(valor, -0) ? 0 : valor), decimal) : "";
+      if (!Number.isFinite(valor)) throw new RangeError(`Valor numérico no finito no exportable en CSV: ${valor}`);
+      return Object.is(valor, -0) ? "-0" : formatearNumeroCSV(String(valor), decimal);
     }
     const txt = String(valor);
     if (NUMERO_VALIDO.test(txt)) return formatearNumeroCSV(txt, decimal);
@@ -40,13 +41,18 @@
     return texto;
   }
 
+  function filaCSV(celdas, separador) {
+    if (celdas.length === 1 && celdas[0] === "") return '""';
+    return celdas.join(separador);
+  }
+
   function lineasTablaCSV(t, separador, decimal) {
     const columnas = Array.isArray(t && t.columnas) ? t.columnas : [];
     const filas = Array.isArray(t && t.filas) ? t.filas : [];
     if (!columnas.length && !filas.length) return [];
     const lineas = [];
-    if (columnas.length) lineas.push(columnas.map(c => escaparCampoCSV(protegerTextoCSV(c), separador)).join(separador));
-    for (const fila of filas) lineas.push(fila.map(v => escaparCampoCSV(formatearCeldaCSV(v, decimal), separador)).join(separador));
+    if (columnas.length) lineas.push(filaCSV(columnas.map(c => escaparCampoCSV(protegerTextoCSV(c), separador)), separador));
+    for (const fila of filas) lineas.push(filaCSV(fila.map(v => escaparCampoCSV(formatearCeldaCSV(v, decimal), separador)), separador));
     return lineas;
   }
 
@@ -125,10 +131,20 @@
     "∉": "$\\notin$", "∈": "$\\in$", "³": "$^{3}$", "²": "$^{2}$", "¹": "$^{1}$", "⁰": "$^{0}$", "ℝ": "$\\mathbb{R}$", "‖": "$\\|$",
   };
 
+  const COMANDOS_MAT = new Set(["det", "mid", "varepsilon", "Delta", "infty", "text", "left", "right", "frac", "cdot", "times", "vec", "operatorname", "mathbb", "rho", "sum", "|", ";", ",", "%", " "]);
+
+  function esMathSeguro(s) {
+    if (!s || s !== s.trim() || /[^\x20-\x7EáéíóúÁÉÍÓÚñÑüÜ]/.test(s) || /[=@;!"\t\r\n]/.test(s)) return false;
+    if (/[áéíóúÁÉÍÓÚñÑüÜ]/.test(s) && !/^\\text\{[^\\{}]+\}$/.test(s)) return false;
+    const cmds = [...s.matchAll(/\\([a-zA-Z]+|[^a-zA-Z])/g)];
+    if (cmds.some(m => !COMANDOS_MAT.has(m[1]))) return false;
+    return cmds.length > 0 || /^[a-zA-Z0-9()'|,.\s\[\]^_{}+-]+$/.test(s);
+  }
+
   function escaparTextoLatex(texto) {
     return String(texto ?? "").replace(/\\/g, "\\textbackslash{}").replace(/([{}&$%#_])/g, "\\$1")
       .replace(/\^/g, "\\^{}").replace(/~/g, "\\~{}")
-      .replace(/[←→−—–…✓✗≈≤≥≠·×∞ρεΔ∉∈³²¹⁰ℝ‖]/g, ch => SIMBOLOS_UNICODE[ch] || ch).replace(/\r?\n/g, " ");
+      .replace(/[←→−—–…✓✗≈≤≥≠·×∞ρεΔ∉∈³²¹⁰ℝ‖]/g, ch => SIMBOLOS_UNICODE[ch] || ch).replace(/[\r\n\t]+/g, " ");
   }
 
   function textoMixtoALatex(texto) {
@@ -153,7 +169,7 @@
   function cabeceraALatex(col) {
     const s = String(col ?? "");
     if (s.includes("$")) return textoMixtoALatex(s);
-    return (/[\\_^]/.test(s) || /^[a-zA-Z0-9()'|,.\s+-]+$/.test(s)) ? `$${s}$` : escaparTextoLatex(s);
+    return esMathSeguro(s) ? `$${s}$` : escaparTextoLatex(s);
   }
 
   function celdaLatex(valor) {
@@ -171,14 +187,13 @@
     const usarLong = Boolean(opciones.longtable) || filas.length > umbral;
     const cabecera = cols.length ? `${cols.map(cabeceraALatex).join(" & ")} \\\\` : "";
     if (usarLong) {
-      const nCols = Math.max(1, cols.length);
-      const out = [`\\begin{longtable}{${spec}}`];
-      if (t && t.titulo) out.push(`\\caption{${textoMixtoALatex(t.titulo)}} \\\\`);
-      out.push("\\hline");
+      const out = [];
+      if (t && t.titulo) out.push(`\\paragraph*{${textoMixtoALatex(t.titulo)}}`);
+      out.push(`\\begin{longtable}{${spec}}`, "\\hline");
       if (cabecera) out.push(cabecera, "\\hline");
-      out.push("\\endfirsthead", `\\multicolumn{${nCols}}{c}{\\tablename\\ \\thetable\\ -- continuación} \\\\`, "\\hline");
+      out.push("\\endfirsthead", "\\hline");
       if (cabecera) out.push(cabecera, "\\hline");
-      out.push("\\endhead", "\\hline", `\\multicolumn{${nCols}}{r}{Continúa en la página siguiente} \\\\`, "\\endfoot", "\\hline", "\\endlastfoot");
+      out.push("\\endhead", "\\hline", "\\endfoot", "\\hline", "\\endlastfoot");
       for (const fila of filas) out.push(`${fila.map(celdaLatex).join(" & ")} \\\\`);
       out.push("\\end{longtable}");
       return out.join("\n");
@@ -194,8 +209,8 @@
 
   function bloqueEcuacion(it) {
     const et = String(it.etiqueta ?? "");
-    const izq = /[\\_^]/.test(et) || /^[a-zA-Z0-9()'|,\s\[\]]+$/.test(et) ? et : `\\text{${escaparTextoLatex(et)}}`;
-    return `\\[\n${izq} = ${it.latex}\n\\]`;
+    if (esMathSeguro(et)) return `\\[\n${et} = ${it.latex}\n\\]`;
+    return `\\noindent\\textbf{${escaparTextoLatex(et)}}:\n\\[\n${it.latex}\n\\]`;
   }
 
   function procedimientoALatex(p) {
