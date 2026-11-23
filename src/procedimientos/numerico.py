@@ -98,3 +98,80 @@ def adaptar_derivadas(res, _cuerpo):
                     detalles=[f"Sintaxis editable: {res['derivada']}"])],
         resultado=[{"etiqueta": "f'(x)", "latex": dl}],
     )
+
+
+MOTIVOS_RF = {**MOTIVOS_BISECCION,
+              "tolerancia": r"Se alcanzó la tolerancia: $\varepsilon_a \le \varepsilon_s$.",
+              "raiz_evaluada": r"$f(x_r)$ se evaluó como cero con la precisión de punto flotante utilizada.",
+              "sin_progreso": r"La precisión de punto flotante impide que $x_r$ siga avanzando."}
+
+MOTIVOS_ABIERTO = {
+    **MOTIVOS_BISECCION, "raiz_en_x0": r"$f(x_0)=0$: el punto elegido ya es una raíz.",
+    "raiz_inicial": "Uno de los valores iniciales ya es una raíz.",
+    "raiz_evaluada": r"$f(x_n)$ se evaluó como cero con la precisión de punto flotante utilizada.",
+    "derivada_nula": r"$f'(x_n)=0$: la tangente es horizontal.",
+    "derivada_no_definida": "La derivada no se puede evaluar en este punto.",
+    "denominador_nulo": "Las dos evaluaciones son iguales: el denominador es cero.",
+    "fuera_de_dominio": "Una aproximación queda fuera del dominio real de la función.",
+    "divergencia": "La siguiente aproximación no es finita.", "ciclo": "Las aproximaciones forman un ciclo.",
+    "sin_progreso": "La precisión de punto flotante impide seguir avanzando.",
+}
+
+
+def _verif_abiertos(res):
+    verif = []
+    cumple, cercana = res.get("cumple") or {}, res.get("cumple_cercana") or {}
+    for k, sym in (("absoluto", "E_a"), ("relativo", r"\varepsilon_r"), ("residuo", "|f(x_n)|")):
+        simb = "✓" if cumple.get(k) else ("≈" if cercana.get(k) else "✗")
+        sel = " (seleccionado)" if res.get("criterio") == k else ""
+        verif.append(f"{simb} ${sym} < \\varepsilon${sel}.")
+    info = res.get("tolerancia_usada") or {}
+    if info:
+        eps = f"$\\varepsilon={_num(info.get('digitada'))}$"
+        val = (f"valor final ${_num(info.get('valor_final'))}$"
+               if info.get("valor_final") is not None else "criterio no definido")
+        if info.get("usada") == "digitada":
+            verif.append(f"Se usó la tolerancia digitada {eps}: {val}.")
+        elif info.get("usada") == "cercana":
+            verif.append(f"Se usó tolerancia cercana a {eps} (límite ${_num(info.get('limite'))}$): {val}.")
+        else:
+            verif.append(f"No se alcanzó {eps} (límite ${_num(info.get('limite'))}$): {val}.")
+    verif.append(f"Verificación: $f({_num(res['raiz'])}) = {_num(res['f_raiz'])}$.")
+    if (res.get("verificacion") or {}).get("nota"):
+        verif.append(res["verificacion"]["nota"])
+    return verif
+
+
+@registrar("/api/regla-falsa/resolver")
+def adaptar_regla_falsa(res, _cuerpo):
+    xl0, xu0 = res["intervalo_inicial"]
+    xlf, xuf = res["intervalo_final"]
+    verif = [f"Verificación: $f({_num(res['raiz'])}) = {_num(res['f_raiz'])}$. "
+             f"Intervalo final: $[{_num(xlf)},\\; {_num(xuf)}]$."]
+    if (res.get("verificacion") or {}).get("nota"):
+        verif.append(res["verificacion"]["nota"])
+    filas = [[p["numero"], p["xl"], p["xu"], p["f_xl"], p["f_xu"], p["xr"], p["f_xr"],
+              p["error_relativo"], p["decision"]] for p in res.get("pasos", ())]
+    avisos = []
+    if res.get("estancamiento"):
+        fijo = "x_l" if res["estancamiento"]["extremo"] == "xl" else "x_u"
+        avisos.append(f"Estancamiento: ${fijo}$ permaneció fijo durante {res['estancamiento']['iteraciones']} iteraciones.")
+    if not res.get("convergio"):
+        avisos.append("Tolerancia no alcanzada.")
+    return procedimiento(
+        "regla_falsa", "Método de regla falsa",
+        entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
+                 {"etiqueta": "[x_l, x_u]", "latex": f"[{_num(xl0)},\\; {_num(xu0)}]"},
+                 {"etiqueta": r"\varepsilon_s", "latex": f"{_num(res['tolerancia'])}\\,\\%"}],
+        pasos=[paso("Fórmula de la regla falsa", MOTIVOS_RF.get(res["motivo"], res["motivo"]),
+                    latex=[r"x_r = x_u - \frac{f(x_u)(x_l - x_u)}{f(x_l) - f(x_u)}"])],
+        resultado=[{"etiqueta": "x_r", "latex": _num(res["raiz"])},
+                   {"etiqueta": "|f(x_r)|", "latex": _num(res["residuo"])},
+                   {"etiqueta": r"\varepsilon_a\;(\%)", "latex": _num(res["error_relativo"])},
+                   {"etiqueta": r"\text{Iteraciones}", "latex": str(res["iteraciones"])}],
+        verificacion=verif,
+        tablas=[tabla("Iteraciones de regla falsa",
+                      ["i", "x_l", "x_u", "f(x_l)", "f(x_u)", "x_r", "f(x_r)",
+                       r"\varepsilon_a\;(\%)", r"\text{Acción}"], filas)],
+        avisos=avisos,
+    )
