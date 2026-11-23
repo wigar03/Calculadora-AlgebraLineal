@@ -312,7 +312,7 @@ Seleccione uno de los siguientes criterios; el proceso también termina si $f(c)
 
 La diferencia absoluta de la tabla mide el cambio entre dos aproximaciones, no el error verdadero respecto de una raíz desconocida. El resultado incluye la sustitución en la función original, el intervalo final y la cota obtenida a partir de sus extremos. La gráfica interactiva permite realizar zoom in, zoom out, enfocar la raíz aproximada, restablecer la vista completa al 100% y desplazarse (pan) mediante controles en pantalla, rueda del ratón o arrastre táctil; toma muestras orientativas para el intervalo visualizado y no demuestra continuidad ni permite descartar singularidades entre muestras.
 
-**Entradas admitidas:** use `x` como variable, multiplicación explícita (`2*x`), operadores `+`, `-`, `*`, `/`, potencias con `^` o `**`, paréntesis, constantes `pi` y `e`, y funciones `sin`, `cos`, `tan`, `exp`, `ln` (natural), `log` (base 10), `sqrt` y `abs`. Los ángulos están en radianes. Los extremos y la tolerancia aceptan decimales con punto, fracciones como `1/2` y notación científica como `1e-4`.
+**Entradas admitidas:** use `x` como variable, multiplicación explícita (`2*x`), operadores `+`, `-`, `*`, `/`, potencias con `^` o `**`, paréntesis, constantes `pi` y `e`, y funciones `sin` (también `sen`), `cos`, `tan`, `exp`, `ln` (natural), `log` (base 10), `sqrt` y `abs`. También se admiten igualdades como `ln(x) + sen(x) = 1.2`. Los ángulos están en radianes. Los extremos y la tolerancia aceptan decimales con punto, fracciones como `1/2` y notación científica como `1e-4`.
 
 **Límites y diagnósticos:** tolerancia finita mayor que cero, máximo entero de 1 a 1000 iteraciones, función de hasta 500 caracteres y 120 nodos de expresión, y exponentes de magnitud máxima 1000. Se rechazan sintaxis no permitida, entradas no finitas, intervalos sin cambio de signo y errores de dominio detectados durante la evaluación. Alcanzar el máximo de iteraciones o agotar la precisión se informa sin declarar que se alcanzó la tolerancia. Las evaluaciones usan punto flotante: un cero calculado puede deberse al redondeo o al subdesbordamiento, y la cota del intervalo no incluye los errores de evaluación de la función. Solo se redondea la presentación; el cursor sobre las cifras permite consultar el valor completo.
 
@@ -348,8 +348,8 @@ Se consultaron los materiales locales de `Docs`, especialmente la hoja `Bisecci�
 Abra la pestaña **Método de Regla Falsa**. El módulo guía un flujo de cuatro pasos y cada uno se habilita al completar el anterior:
 
 1. **Función y gráfica.** Se escribe $f(x)$ y una región de interés $[a,b]$; la calculadora dibuja la función en el plano cartesiano (zoom, desplazamiento y lectura de coordenadas).
-2. **Continuidad e intervalos.** El sistema muestrea la región y clasifica cada indicio: tramos fuera del dominio, puntos indefinidos, saltos y asíntotas verticales. Con ese análisis propone intervalos $[x_l, x_u]$ que encierran una sola raíz y evitan las discontinuidades. El intervalo también puede escribirse a mano o marcarse arrastrando sobre la gráfica.
-3. **Validación.** El intervalo se envía a la calculadora, que comprueba la condición obligatoria $f(x_l)\cdot f(x_u) < 0$ (Teorema del Valor Intermedio) y la continuidad dentro del intervalo. Un cambio de signo causado por una asíntota se rechaza.
+2. **Continuidad e intervalos.** El sistema muestrea la región y clasifica cada indicio: tramos fuera del dominio, puntos indefinidos, saltos y asíntotas verticales. Con ese análisis propone intervalos candidatos $[x_l, x_u]$ con cambio de signo y sin discontinuidades detectadas; el muestreo no demuestra unicidad de la raíz. El intervalo también puede escribirse a mano o marcarse arrastrando sobre la gráfica.
+3. **Validación.** La calculadora comprueba $f(x_l)\cdot f(x_u) < 0$ y busca discontinuidades dentro del intervalo. El Teorema del Valor Intermedio requiere continuidad, que el muestreo no demuestra. Un cambio de signo causado por una asíntota detectada se rechaza.
 4. **Regla falsa.** Con el intervalo validado se itera
 
 $$x_r = x_u - \frac{f(x_u)\,(x_l - x_u)}{f(x_l) - f(x_u)}$$
@@ -503,11 +503,11 @@ Programa Vectores/
 ## 5. Instrucciones de Instalación y Uso
 
 ### Prerrequisitos
-- Python 3.8 o superior instalado en el sistema (compatible con `python` o `py`).
+- Python 3.12, la versión utilizada en la batería de pruebas del proyecto (comandos `python` o `py`).
 - **Sin necesidad de instalar paquetes externos vía `pip`**: el programa funciona 100% con la biblioteca estándar (`fractions`, `http.server`, etc.).
 
 ### 1. Ejecutar la Aplicación Web Interactiva
-Inicia la aplicación web SPA con tema claro por defecto (y selector a modo oscuro), tarjetas limpias, selectores simétricos y los 10 módulos integrados (Vectores, Combinación Lineal, Matrices, Inversa, Ax = b, Determinante, Bisección, Regla Falsa, Newton-Raphson y Secante):
+Inicia la aplicación web con los 11 módulos descritos en esta guía, incluidos Jacobi y Gauss-Seidel:
 ```bash
 python main.py
 ```
@@ -520,15 +520,15 @@ python main.py --no-browser     # Iniciar servidor sin abrir navegador automáti
 ```
 
 ### 2. Ejecutar las Pruebas Unitarias Automatizadas
-El proyecto incluye **163 pruebas de Python** que validan los algoritmos, las conversiones a LaTeX y sus respuestas HTTP, incluido el motor de derivadas y la secante:
+Las pruebas de Python validan algoritmos, conversiones a LaTeX, respuestas HTTP y documentación pública:
 ```bash
 python -m unittest discover tests -v
 ```
 
-Las 30 pruebas de las utilidades de la interfaz en JavaScript (bisección, teclado matemático, regla falsa, Newton-Raphson y secante) usan el runner estándar de Node.js (18 o superior), sin instalar paquetes. Node.js es opcional para ejecutar estas pruebas y no se necesita para usar la calculadora:
+Las pruebas de JavaScript usan el ejecutor estándar de Node.js, sin instalar paquetes. La CI utiliza Node.js 22; no se necesita Node.js para usar la calculadora. Para ejecutar todas las pruebas de interfaz desde Bash:
 
 ```bash
-node --test tests/test_biseccion_ui.cjs tests/test_formula_keyboard.cjs tests/test_regla_falsa_ui.cjs tests/test_newton_raphson_ui.cjs tests/test_secante_ui.cjs
+for f in tests/*.cjs; do node --test "$f"; done
 ```
 
 Para una revisión manual, seleccione **Método de Bisección** en la barra lateral, cargue el ejemplo de referencia y compruebe las 15 iteraciones. Pruebe después una función sin cambio de signo (`x^2+1`), un máximo de una iteración con `cos(x)-x`, una raíz en un extremo (`x` en `[0,1]`) y el botón **Limpiar**. Escriba `sqrt(x)+1/(x-1)` para revisar la vista matemática y abra **Ver detalle** en una iteración. Reduzca el ancho de la ventana para comprobar el menú desplegable y las tarjetas. La sección hereda el tema claro u oscuro de la calculadora.
