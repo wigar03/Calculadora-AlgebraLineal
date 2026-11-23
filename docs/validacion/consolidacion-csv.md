@@ -99,14 +99,24 @@ con `CSV_EXIGIR_PENDIENTES=1`, esos ocho casos son fallos reproducibles. No se a
 Ausencias forzadas: `REQUIERE_EXTERNOS=0` → dos omisiones, salida 0;
 `REQUIERE_EXTERNOS=1` → dos fallos, salida 1. Golden: sin modificación; las 43 consultas congeladas pasan.
 
-Node, todos los `tests/*.cjs`: 75 pruebas, 74 pasan y una falla al arrancar Edge (salida 0 antes de CDP).
-El subconjunto `tests/test_*.cjs` es 67/68 y las siete pruebas auxiliares pasan.
-Es el problema de auto de elevación ya corregido por el integrador en `main` `4f9eb9b`;
-no está relacionado con CSV y esta rama aún no incorpora ese cambio ajeno.
+Node final, todos los `tests/*.cjs`: **75/75 pasan**, sin omisiones; subconjunto `tests/test_*.cjs`: **68/68**.
+El navegador real ejecuta sus comprobaciones. La primera ejecución tenía un fallo de arranque de Edge
+(salida 0 antes de CDP); el integrador autorizó incorporar su corrección `4f9eb9b` como `1064b20`.
+También omitirá este duplicado al integrar; no se modificó su implementación.
 
-Por encargo adicional del integrador se añadió la regla del verificador Markdown: dentro de `$…$`, `$`backticks`$`,
-`$$…$$` y bloques `math`, detectar `<` seguido de letra o `>` precedido de letra/`}` sin espacio.
+Por encargo adicional se añadió la regla Markdown: dentro de fórmulas en línea (incluido el formato GitHub con
+backticks), `$$…$$` y bloques `math`, detectar `<` seguido de letra o `>` precedido de letra/`}` sin espacio.
 La regresión usa los sumatorios antiguos de Gauss-Seidel, comprueba `\lt`/`\gt`, líneas y código literal.
 `tests.test_markdown`: diez pruebas OK. Verificador público: 11 documentos públicos, 31 internos, cero problemas.
 Se incorporó exclusivamente la corrección documental aprobada `0b04d8e` como `edae11b`;
 el integrador omitirá ese duplicado al integrar. El exportador y sus referencias permanecen intactos.
+
+## Commits de entrega
+
+Todos tienen como máximo 100 líneas añadidas/eliminadas, conservan la identidad configurada y carecen de coautoría.
+
+- Pruebas CSV: `6b9fadb`, `84e42e6`, `503faf4`, `b6f7d02`, `0183fb8`, `8d1a181`, `f4a7373`, `d750dce`.
+- Regla y regresión Markdown: `f7854c8`.
+- Evidencia: `edb7e00`, `06066ab`, más el commit final de esta ampliación.
+- Duplicados autorizados que omitir al integrar: `edae11b` (original `0b04d8e`) y `1064b20` (original `4f9eb9b`).
+- Pendiente: revalidar estrictamente el commit de Antigravity mediante `P2_EXPORTAR_JS` y retirar las ocho marcas.
