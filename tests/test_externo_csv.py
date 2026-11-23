@@ -144,7 +144,7 @@ def columna(numero):
     return nombre
 
 
-def problemas_libro(celdas, procedimiento):
+def problemas_libro(celdas, procedimiento, texto_racional_exacto=False):
     esperadas = {f"{columna(j)}{i}": (valor, texto) for i, fila in enumerate(filas_fuente(procedimiento), 1)
                  for j, (valor, texto) in enumerate(fila, 1)}
     errores = []
@@ -168,6 +168,8 @@ def problemas_libro(celdas, procedimiento):
             if tipo != "n" or not igual:
                 errores.append("Pérdida numérica " + lugar)
         elif fuente:
+            if texto_racional_exacto and solo_texto and racional(fuente) and actual != fuente:
+                errores.append("Texto racional alterado (apóstrofo visible o contenido cambiado) " + lugar)
             if tipo not in ("s", "str", "inlineStr") or texto_importado(actual) != texto_importado(fuente):
                 errores.append("Texto alterado o interpretado " + lugar)
         elif actual or formula:
@@ -301,7 +303,8 @@ class TestCSVExterno(unittest.TestCase):
                     with self.subTest(motor=motor, modulo=p["modulo"], caso=ruta.stem, etapa=etapa.name):
                         libro = etapa / (ruta.stem + (".xlsx" if motor == "calc" else ".ods"))
                         self.assertTrue(libro.is_file(), f"{ejecutable} no produjo {libro}")
-                        errores = problemas_libro(leer_xlsx(libro) if motor == "calc" else leer_ods(libro), p)
+                        errores = problemas_libro(leer_xlsx(libro) if motor == "calc" else leer_ods(libro), p,
+                                                 os.environ.get("CSV_TEXTO_RACIONAL_EXACTO") == "1")
                         resultados.append({"caso": ruta.stem, "etapa": etapa.name, "errores": errores})
                         if errores and not os.environ.get("P2_EXPORTAR_JS") and not os.environ.get("CSV_EXIGIR_PENDIENTES"):
                             pendientes = {
@@ -325,6 +328,12 @@ class TestCSVExterno(unittest.TestCase):
 
 
 class TestOraculoLibroCSV(unittest.TestCase):
+    def test_texto_racional_detecta_apostrofo_visible(self):
+        p = {"tablas": [{"columnas": ["1/2"], "filas": []}]}
+        self.assertEqual(problemas_libro({"A1": ("s", "1/2", None)}, p, True), [])
+        errores = problemas_libro({"A1": ("s", "'1/2", None)}, p, True)
+        self.assertTrue(any("apóstrofo visible" in e for e in errores), errores)
+
     def test_acepta_fraccion_textual_y_decimal_exactos(self):
         p = {"tablas": [{"columnas": ["q", "x", "texto"], "filas": [["-1/2", 1.25, "=1+2"]]}]}
         celdas = {"A1": ("s", "q", None), "B1": ("s", "x", None), "C1": ("s", "texto", None),
