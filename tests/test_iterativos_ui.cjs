@@ -41,7 +41,7 @@ function respuestaSimulada(n, metodo = 'gauss_seidel') {
       diagonal_nula: [], dominancia: { filas, estricta: true },
       reordenamiento: { aplicado: false, permutacion: null, motivo: 'No requerido' },
       rango: { A: n, aumentada: n }, singular: false,
-      radio_espectral: { jacobi: 0.426437, gauss_seidel: 0.089823, metodo_calculo: 'polinomio característico' },
+      radio_espectral: { jacobi: 0.4264366108423416, gauss_seidel: 0.0898230583880432, metodo_calculo: 'polinomio característico' },
       garantia: 'demostrada', razones: ['Dominancia diagonal estricta por filas.']
     },
     convergencia: 'demostrada'
@@ -189,5 +189,25 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   assert.equal(el('it-plot-vars').children[0].tag, 'svg');
   assert.equal(el('it-plot-conv').children[0].tag, 'svg');
   assert.ok(latexs.length > 30);
+  const textosLatex = latexs.map(([tex]) => tex);
+  assert.ok(textosLatex.some(t => t.includes('0.4264366108') && t.includes('0.08982305839')));
+  assert.ok(textosLatex.some(t => t.includes('-0.6666666667')));
+  assert.ok(textosLatex.some(t => t.includes('2.5 \\times 10^{-8}')));
   for (const [tex, disp] of latexs) renderEstricto(tex, Boolean(disp));
+});
+
+test('precisión: tabla, radios espectrales y vector solución usan 10 cifras significativas y notación científica', () => {
+  assert.equal(it.numeroLatex(1.1430555555555556), '1.143055556');
+  assert.equal(it.numeroLatex(0.4264366108423416), '0.4264366108');
+  assert.equal(it.numeroLatex(-1.2345678912e-9), '-1.234567891 \\times 10^{-9}');
+  const r = respuestaSimulada(2, 'jacobi');
+  r.solucion = [1.1430555555555556, -2.34567890123e-8];
+  r.iteraciones[0].x = [1.1430555555555556, 0.0898230583880432];
+  const latexs = it.generarLatexRespuesta(r);
+  assert.ok(latexs.some(t => t.includes('\\rho(T_J) = 0.4264366108')));
+  assert.ok(latexs.some(t => t.includes('\\rho(T_{GS}) = 0.08982305839')));
+  assert.ok(latexs.some(t => t.includes('1.143055556') && t.includes('-2.345678901 \\times 10^{-8}')));
+  assert.ok(latexs.includes('1.143055556'));
+  assert.ok(latexs.includes('0.08982305839'));
+  for (const tex of latexs) renderEstricto(tex, true);
 });

@@ -31,7 +31,7 @@
     return raw.replace(/^([a-zA-Z]+)(\d+)$/, "$1_{$2}");
   }
 
-  function numeroLatex(valor, cifras = 8) {
+  function numeroLatex(valor, cifras = 10) {
     if (valor === null || valor === undefined || valor === "") return String.raw`\text{—}`;
     if (typeof valor === "string") {
       const s = valor.trim();
@@ -46,7 +46,7 @@
     return G.numeroLatex(valor, cifras);
   }
 
-  function vectorLatex(vec, cifras = 8, forzarFila = false) {
+  function vectorLatex(vec, cifras = 10, forzarFila = false) {
     if (!Array.isArray(vec) || !vec.length) return "(0)";
     const items = vec.map(v => numeroLatex(v, cifras));
     if (forzarFila || vec.length > 4) return `\\left(${items.join(",\\; ")}\\right)^T`;
@@ -74,9 +74,9 @@
   function verificacionLatex(verif, b) {
     if (!verif) return [];
     const out = [];
-    if (Array.isArray(verif.Ax)) out.push(`Ax \\approx ${vectorLatex(verif.Ax, 6)}`);
-    if (Array.isArray(b)) out.push(`b = ${vectorLatex(b, 6)}`);
-    if (Array.isArray(verif.residuo)) out.push(`r = b - Ax \\approx ${vectorLatex(verif.residuo, 6)}`);
+    if (Array.isArray(verif.Ax)) out.push(`Ax \\approx ${vectorLatex(verif.Ax, 10)}`);
+    if (Array.isArray(b)) out.push(`b = ${vectorLatex(b, 10)}`);
+    if (Array.isArray(verif.residuo)) out.push(`r = b - Ax \\approx ${vectorLatex(verif.residuo, 10)}`);
     out.push(String.raw`\|r\|_\infty = ${numeroLatex(verif.residuo_inf)}`);
     out.push(String.raw`\frac{\|r\|_\infty}{\|b\|_\infty+\|A\|_\infty\|x\|_\infty} = ${numeroLatex(verif.residuo_rel)}`);
     return out;
@@ -98,22 +98,22 @@
       }
       if (a.rango) lista.push(`\\operatorname{rg}(A)=${a.rango.A},\\quad \\operatorname{rg}([A\\mid b])=${a.rango.aumentada}`);
       if (a.radio_espectral) {
-        lista.push(`\\rho(T_J) = ${numeroLatex(a.radio_espectral.jacobi, 6)}`);
-        lista.push(`\\rho(T_{GS}) = ${numeroLatex(a.radio_espectral.gauss_seidel, 6)}`);
+        lista.push(`\\rho(T_J) = ${numeroLatex(a.radio_espectral.jacobi, 10)}`);
+        lista.push(`\\rho(T_{GS}) = ${numeroLatex(a.radio_espectral.gauss_seidel, 10)}`);
       }
     }
-    if (Array.isArray(r.solucion)) lista.push(`x \\approx ${vectorLatex(r.solucion, 8)}`);
+    if (Array.isArray(r.solucion)) lista.push(`x \\approx ${vectorLatex(r.solucion, 10)}`);
     if (r.verificacion) lista.push(...verificacionLatex(r.verificacion, r.b));
     if (Array.isArray(r.iteraciones)) {
       r.iteraciones.forEach(p => {
         lista.push(normasLatex(p));
-        if (Array.isArray(p.x)) p.x.forEach(v => lista.push(numeroLatex(v, 6)));
+        if (Array.isArray(p.x)) p.x.forEach(v => lista.push(numeroLatex(v, 10)));
         if (Array.isArray(p.detalle)) {
           p.detalle.forEach((d, idx) => {
             if (d.formula_latex) lista.push(d.formula_latex);
             if (d.sustitucion_latex) lista.push(d.sustitucion_latex);
             const vName = nombreVarLatex(nombres[idx], idx);
-            lista.push(`${vName}^{(${p.k})} \\approx ${numeroLatex(d.valor, 8)}`);
+            lista.push(`${vName}^{(${p.k})} \\approx ${numeroLatex(d.valor, 10)}`);
           });
         }
       });
@@ -283,7 +283,7 @@
       }
       if (a.radio_espectral) {
         const re = a.radio_espectral;
-        box.append(math(`\\rho(T_J) = ${numeroLatex(re.jacobi, 6)}\\qquad \\rho(T_{GS}) = ${numeroLatex(re.gauss_seidel, 6)}`));
+        box.append(math(`\\rho(T_J) = ${numeroLatex(re.jacobi, 10)}\\qquad \\rho(T_{GS}) = ${numeroLatex(re.gauss_seidel, 10)}`));
         if (re.metodo_calculo) box.append(node("p", `Cálculo espectral: ${re.metodo_calculo}. Criterio necesario y suficiente: ρ(T) < 1.`, "bis-help"));
       }
       if (a.dominancia && Array.isArray(a.dominancia.filas)) {
@@ -310,7 +310,7 @@
       destino.append(node("p", textoMotivo));
       if (r.mensaje && r.mensaje !== textoMotivo) destino.append(node("p", r.mensaje, "bis-help"));
       const kFin = r.iteraciones && r.iteraciones.length ? r.iteraciones[r.iteraciones.length - 1].k : 0;
-      if (Array.isArray(r.solucion)) destino.append(math(`x^{(${kFin})} \\approx ${vectorLatex(r.solucion, 8)}`));
+      if (Array.isArray(r.solucion)) destino.append(math(`x^{(${kFin})} \\approx ${vectorLatex(r.solucion, 10)}`));
       if (r.iteraciones && r.iteraciones.length) destino.append(math(normasLatex(r.iteraciones[r.iteraciones.length - 1])));
       if (r.verificacion) {
         destino.append(node("p", `Verificación por sustitución (${r.verificacion.cumple ? "cumple tolerancia" : "no cumple tolerancia"}):`, "bis-help"));
@@ -338,7 +338,7 @@
             const eq = node("div", "", "it-step-eq");
             if (d.formula_latex) eq.append(math(d.formula_latex));
             if (d.sustitucion_latex) eq.append(math(d.sustitucion_latex));
-            else eq.append(math(`${nombreVarLatex(nombres[idx], idx)}^{(${p.k})} \\approx ${numeroLatex(d.valor, 8)}`));
+            else eq.append(math(`${nombreVarLatex(nombres[idx], idx)}^{(${p.k})} \\approx ${numeroLatex(d.valor, 10)}`));
             if (Array.isArray(d.usa_nuevos) && d.usa_nuevos.length) {
               const usados = d.usa_nuevos.map(j => `$${nombreVarLatex(nombres[baseUno ? j - 1 : j], baseUno ? j - 1 : j)}^{(${p.k})}$`).join(", ");
               eq.append(mix(`Usa valores recién actualizados: ${usados}.`));
@@ -372,7 +372,7 @@
           vals.forEach((v, i) => {
             const td = node("td", "", "bis-cell"); td.title = String(v ?? "No definido");
             const lbl = node("span", "", "bis-cell-label"); lbl.append(math(headers[i], false));
-            td.append(lbl, math(i === 0 ? String(v) : numeroLatex(v, 6), false));
+            td.append(lbl, math(i === 0 ? String(v) : numeroLatex(v, 10), false));
             tr.append(td);
           });
           tbody.append(tr);
