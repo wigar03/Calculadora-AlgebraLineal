@@ -18,8 +18,8 @@ def validar_condicion(condicion):
         raise ValueError("La condición debe ser real, positiva o positiva_no_nula.")
 
 
-def raiz_admisible(x, condicion):
-    return condicion == "real" or x > 0
+def raiz_admisible(x, condicion, radio=0):
+    return condicion == "real" or x-radio > 0
 
 
 def verificar_raiz(f, x, tolerancia):

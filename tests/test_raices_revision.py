@@ -127,3 +127,17 @@ class TestRevisionRaices(unittest.TestCase):
             if funcion.startswith("1+"):
                 self.assertTrue(r["advertencias"])
             self.assertTrue(all(isinstance(a, str) for a in r["advertencias"]), r["advertencias"])
+
+    def test_1_metodos_cerrados_tampoco_aceptan_cero_aproximado(self):
+        for metodo in ("biseccion", "regla-falsa"):
+            for a, b in ((-.2, .1), (-.1, .2)):
+                with self.subTest(metodo=metodo, a=a):
+                    estado, r = self.resolver(metodo, funcion="x^2-5*sin(x)", condicion="positiva_no_nula",
+                                              a=a, b=b, xl=a, xu=b)
+                    self.assertEqual(estado, 200)
+                    self.assertFalse(r["convergio"])
+
+    def test_5_residuo_escalado_no_oculta_estancamiento_de_regla_falsa(self):
+        estado, r = self.resolver("regla-falsa", funcion="1e-20*(exp(30*(x-1))-2)", xl=1, xu=2)
+        self.assertEqual(estado, 200)
+        self.assertFalse(r["convergio"])

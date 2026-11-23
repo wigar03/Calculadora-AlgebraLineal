@@ -11,6 +11,7 @@ from ..regla_falsa.dominio import (
     ExpresionNumerica as Expresion, validar_continuidad, validar_condicion,
     raiz_admisible, verificar_raiz,
 )
+from ..regla_falsa.certificacion import certificar_raiz
 
 
 CRITERIOS = {"intervalo", "relativo", "residuo"}
@@ -45,8 +46,13 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
     pasos = []
 
     def resultado(c, fc, motivo, convergio, cota):
-        if convergio and not raiz_admisible(c, condicion):
+        cert = None
+        if convergio and not raiz_admisible(c, condicion, cota):
             motivo, convergio = "raiz_no_admisible", False
+        elif convergio:
+            cert = certificar_raiz(f, c, tolerancia, criterio, condicion)
+            if not cert["certificada"]:
+                motivo, convergio = "no_certificada", False
         return {
             "funcion": f.texto, "intervalo_inicial": inicial,
             "intervalo_final": [a, b], "raiz": c, "f_raiz": fc,
@@ -55,6 +61,7 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
             "convergio": convergio, "motivo": motivo,
             "iteraciones": len(pasos), "pasos": pasos,
             "condicion": condicion, "verificacion": verificar_raiz(f, c, tolerancia),
+            "certificacion": cert,
         }
 
     if fa == 0 or fb == 0:

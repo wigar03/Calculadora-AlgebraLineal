@@ -11,6 +11,8 @@ from .intervalos import dominio_continuo
 
 def certificar_raiz(f, x, tolerancia, criterio, condicion):
     radio = tolerancia if criterio == "absoluto" else tolerancia*max(1., abs(x))
+    if criterio == "relativo_porcentual":
+        radio /= 100
     a, b = x-radio, x+radio
     cert = {"certificada": False, "intervalo": None, "radio": radio if math.isfinite(radio) else None,
             "f_extremos": None, "tipo": "cambio_de_signo"}

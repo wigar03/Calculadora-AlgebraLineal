@@ -13,6 +13,7 @@ from .dominio import (
     raiz_admisible, verificar_raiz,
 )
 from .continuidad import analizar_continuidad
+from .certificacion import certificar_raiz
 
 # Iteraciones consecutivas con el mismo extremo fijo a partir de las cuales se avisa.
 UMBRAL_ESTANCAMIENTO = 10
@@ -113,8 +114,13 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
     racha = {"extremo": None, "actual": 0, "mayor": 0, "extremo_mayor": None}
 
     def resultado(xr, f_xr, motivo, convergio, error):
+        cert = None
         if convergio and not raiz_admisible(xr, condicion):
             motivo, convergio = "raiz_no_admisible", False
+        elif convergio:
+            cert = certificar_raiz(f, xr, tolerancia, "relativo_porcentual", condicion)
+            if not cert["certificada"]:
+                motivo, convergio = "no_certificada", False
         estancamiento = None
         if racha["mayor"] >= UMBRAL_ESTANCAMIENTO:
             estancamiento = {"extremo": racha["extremo_mayor"], "iteraciones": racha["mayor"]}
@@ -125,6 +131,7 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
             "error_absoluto": pasos[-1]["error_absoluto"] if pasos else None,
             "criterio": "relativo_porcentual", "condicion": condicion,
             "verificacion": verificar_raiz(f, xr, tolerancia),
+            "certificacion": cert,
             "escala_residuo": escala_residuo, "residuo_escalado": abs(f_xr)/escala_residuo,
             "tolerancia": tolerancia, "convergio": convergio, "motivo": motivo,
             "estancamiento": estancamiento,
