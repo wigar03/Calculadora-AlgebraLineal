@@ -23,6 +23,33 @@ def post(url, cuerpo=b"{}", ruta="/api/vectores/operar", **cabeceras):
 
 
 class TestRobustezServidor(unittest.TestCase):
+    def test_limites_previos_sin_ejecutar_motor(self):
+        casos = [
+            ("/api/vectores/operar", {"u": [1] * (limites.VECTOR_MAX + 1)}),
+            ("/api/vectores/combinacion", {"vectores": [[1]] * (limites.COMBINACION_K_MAX + 1)}),
+            ("/api/vectores/combinacion", {"b": [1] * (limites.COMBINACION_N_MAX + 1)}),
+            ("/api/matrices/operar", {"A": [[1] * (limites.MATRIZ_OPERAR_MAX + 1)]}),
+            ("/api/matrices/inversa", {"A": [[1]] * (limites.INVERSA_MAX + 1)}),
+            ("/api/ecuaciones/resolver", {"A": [[1]] * (limites.SISTEMA_MAX + 1)}),
+            ("/api/matrices/determinante", {"A": [[1]] * (limites.DETERMINANTE_MAX + 1)}),
+            ("/api/matrices/eficiencia-determinante", {"n": limites.EFICIENCIA_N_MAX + 1}),
+            ("/api/iterativos/resolver", {"A": [[1]] * (limites.ITERATIVOS_MAX + 1)}),
+            ("/api/iterativos/comparar", {"max_iteraciones": limites.ITERATIVOS_ITER_MAX + 1}),
+            ("/api/biseccion/resolver", {"max_iteraciones": limites.RAICES_ITER_MAX + 1}),
+            ("/api/secante/resolver", {"funcion": "x" * (limites.FUNCION_MAX_CARACTERES + 1)}),
+            ("/api/biseccion/muestrear", {"cantidad": limites.PUNTOS_GRAFICA_MAX + 1}),
+            ("/api/vectores/operar", {"u": ["1e5000000"]}),
+            ("/api/vectores/operar", {"u": ["9" * (limites.DIGITOS_MAX + 1)]}),
+        ]
+        with servidor_local() as url:
+            with mock.patch("src.ui.web_server.calcular_respuesta") as motor:
+                for ruta, cuerpo in casos:
+                    with self.subTest(ruta=ruta, cuerpo=cuerpo):
+                        estado, datos, _ = post(url, json.dumps(cuerpo).encode(), ruta)
+                        self.assertEqual(estado, 400)
+                        self.assertEqual(datos["tipo"], "limite")
+                motor.assert_not_called()
+
     def test_json_invalido_y_cuerpo_no_objeto(self):
         with servidor_local() as url:
             for cuerpo in (b"{no json", b"[1,2]"):
