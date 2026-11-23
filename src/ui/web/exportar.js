@@ -122,21 +122,25 @@
     "←": "$\\leftarrow$", "→": "$\\rightarrow$", "−": "-", "—": "---", "–": "--", "…": "\\ldots{}",
     "✓": "$\\checkmark$", "✗": "$\\times$", "≈": "$\\approx$", "≤": "$\\le$", "≥": "$\\ge$",
     "≠": "$\\ne$", "·": "$\\cdot$", "×": "$\\times$", "∞": "$\\infty$", "ρ": "$\\rho$", "ε": "$\\varepsilon$", "Δ": "$\\Delta$",
+    "∉": "$\\notin$", "∈": "$\\in$", "³": "$^{3}$", "²": "$^{2}$", "¹": "$^{1}$", "⁰": "$^{0}$", "ℝ": "$\\mathbb{R}$", "‖": "$\\|$",
   };
 
   function escaparTextoLatex(texto) {
     return String(texto ?? "").replace(/\\/g, "\\textbackslash{}").replace(/([{}&$%#_])/g, "\\$1")
       .replace(/\^/g, "\\^{}").replace(/~/g, "\\~{}")
-      .replace(/[←→−—–…✓✗≈≤≥≠·×∞ρεΔ]/g, ch => SIMBOLOS_UNICODE[ch] || ch).replace(/\r?\n/g, " ");
+      .replace(/[←→−—–…✓✗≈≤≥≠·×∞ρεΔ∉∈³²¹⁰ℝ‖]/g, ch => SIMBOLOS_UNICODE[ch] || ch).replace(/\r?\n/g, " ");
   }
 
   function textoMixtoALatex(texto) {
-    return String(texto ?? "").split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g).map(parte =>
-      ((parte.startsWith("$$") && parte.endsWith("$$") && parte.length >= 4) ||
-       (parte.startsWith("$") && parte.endsWith("$") && parte.length >= 2))
-        ? parte.replace(/—/g, "---").replace(/−/g, "-")
-        : escaparTextoLatex(parte)
-    ).join("");
+    return String(texto ?? "").split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g).map(parte => {
+      if (parte.startsWith("$$") && parte.endsWith("$$") && parte.length >= 4) {
+        return `\\[\n${parte.slice(2, -2).trim().replace(/—/g, "---").replace(/−/g, "-")}\n\\]`;
+      }
+      if (parte.startsWith("$") && parte.endsWith("$") && parte.length >= 2) {
+        return parte.replace(/—/g, "---").replace(/−/g, "-");
+      }
+      return escaparTextoLatex(parte);
+    }).join("");
   }
 
   function numeroALatex(valor) {
@@ -159,13 +163,30 @@
     return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(s.trim()) ? numeroALatex(s) : textoMixtoALatex(s);
   }
 
-  function tablaALatex(t) {
+  function tablaALatex(t, opciones = {}) {
     const cols = Array.isArray(t && t.columnas) ? t.columnas : [];
     const filas = Array.isArray(t && t.filas) ? t.filas : [];
+    const spec = cols.length ? cols.map(() => "c").join(" ") : "c";
+    const umbral = opciones.umbralLongtable ?? UMBRAL_LONGTABLE;
+    const usarLong = Boolean(opciones.longtable) || filas.length > umbral;
+    const cabecera = cols.length ? `${cols.map(cabeceraALatex).join(" & ")} \\\\` : "";
+    if (usarLong) {
+      const nCols = Math.max(1, cols.length);
+      const out = [`\\begin{longtable}{${spec}}`];
+      if (t && t.titulo) out.push(`\\caption{${textoMixtoALatex(t.titulo)}} \\\\`);
+      out.push("\\hline");
+      if (cabecera) out.push(cabecera, "\\hline");
+      out.push("\\endfirsthead", `\\multicolumn{${nCols}}{c}{\\tablename\\ \\thetable\\ -- continuación} \\\\`, "\\hline");
+      if (cabecera) out.push(cabecera, "\\hline");
+      out.push("\\endhead", "\\hline", `\\multicolumn{${nCols}}{r}{Continúa en la página siguiente} \\\\`, "\\endfoot", "\\hline", "\\endlastfoot");
+      for (const fila of filas) out.push(`${fila.map(celdaLatex).join(" & ")} \\\\`);
+      out.push("\\end{longtable}");
+      return out.join("\n");
+    }
     const out = ["\\begin{table}[htbp]", "\\centering"];
     if (t && t.titulo) out.push(`\\caption{${textoMixtoALatex(t.titulo)}}`);
-    out.push(`\\begin{tabular}{${cols.length ? cols.map(() => "c").join(" ") : "c"}}`, "\\hline");
-    if (cols.length) out.push(`${cols.map(cabeceraALatex).join(" & ")} \\\\`, "\\hline");
+    out.push(`\\begin{tabular}{${spec}}`, "\\hline");
+    if (cabecera) out.push(cabecera, "\\hline");
     for (const fila of filas) out.push(`${fila.map(celdaLatex).join(" & ")} \\\\`);
     out.push("\\hline", "\\end{tabular}", "\\end{table}");
     return out.join("\n");
@@ -179,7 +200,7 @@
 
   function procedimientoALatex(p) {
     const out = ["\\documentclass[11pt,a4paper]{article}", "\\usepackage[utf8]{inputenc}",
-      "\\usepackage[T1]{fontenc}", "\\usepackage{amsmath,amssymb}", "\\begin{document}"];
+      "\\usepackage[T1]{fontenc}", "\\usepackage[spanish]{babel}", "\\usepackage{amsmath,amssymb}", "\\usepackage{longtable}", "\\begin{document}"];
     if (p && p.titulo) out.push(`\\section*{${textoMixtoALatex(p.titulo)}}`);
     if (Array.isArray(p && p.entrada) && p.entrada.length) out.push("\\subsection*{Datos de entrada}", ...p.entrada.map(bloqueEcuacion));
     if (Array.isArray(p && p.pasos) && p.pasos.length) {
