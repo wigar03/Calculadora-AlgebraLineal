@@ -161,14 +161,16 @@ class Supervisor:
         return proceso, padre
 
     def _retirar(self, proceso, conexion):
-        if proceso.is_alive():
-            proceso.terminate()
-        proceso.join(timeout=1)
-        if proceso.is_alive():
-            proceso.kill()
-            proceso.join()
-        conexion.close()
         with self._candado:
+            if proceso not in self._activos:
+                return
+            if proceso.is_alive():
+                proceso.terminate()
+            proceso.join(timeout=1)
+            if proceso.is_alive():
+                proceso.kill()
+                proceso.join()
+            conexion.close()
             self._activos.pop(proceso, None)
 
     def cerrar(self):
