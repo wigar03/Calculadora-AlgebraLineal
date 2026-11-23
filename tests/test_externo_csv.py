@@ -33,6 +33,16 @@ def racional(texto):
     return bool(RACIONAL.fullmatch(texto)) and int(texto.split("/")[1]) != 0
 
 
+def entero_largo(texto):
+    return bool(re.fullmatch(r"[+-]?[0-9]{16,}", texto))
+
+
+def cifras15(texto):
+    """Alcance acordado: 15 cifras significativas; Calc/Excel no preservan más."""
+    numero = Decimal(str(texto))
+    return numero.quantize(Decimal(1).scaleb(numero.adjusted() - 14)) if numero else Decimal(0)
+
+
 def ejecutar(args):
     p = subprocess.run([str(a) for a in args], cwd=ROOT, capture_output=True,
                        encoding="utf-8", errors="replace", timeout=120)
@@ -133,16 +143,16 @@ def problemas_libro(celdas, procedimiento):
         original, solo_texto = esperadas.get(direccion, (None, True))
         fuente = "" if original is None else str(original)
         fraccion = not solo_texto and racional(fuente)
+        exacto = fraccion or (not solo_texto and entero_largo(fuente))
         lugar = f"{direccion}: {fuente!r} -> {(tipo, actual, formula)!r}"
-        if formula is not None and not (fraccion and formula == f'"{fuente}"'):
+        if formula is not None and not (exacto and formula == f'"{fuente}"'):
             errores.append("Fórmula no autorizada " + lugar)
-        if fraccion:
+        if exacto:
             if tipo not in ("s", "str", "inlineStr") or actual != fuente:
-                errores.append("Fracción alterada o convertida en fecha " + lugar)
+                errores.append("Fracción/entero exacto alterado o convertido en fecha " + lugar)
         elif not solo_texto and NUMERO.fullmatch(fuente):
             try:
-                igual = (float(actual).hex() == original.hex() if isinstance(original, float)
-                         else Decimal(actual) == Decimal(fuente))
+                igual = cifras15(actual) == cifras15(fuente)
             except (ValueError, ArithmeticError):
                 igual = False
             if tipo != "n" or not igual:
@@ -217,7 +227,8 @@ class TestCSVExterno(unittest.TestCase):
                 destino.mkdir(exist_ok=True)
             if motor == "calc":
                 comun = [ejecutable, "-env:UserInstallation=" + (base / "perfil").as_uri(), "--headless"]
-                filtro = "--infilter=Text - txt - csv (StarCalc):59,34,76,1,,3082,false,true,false,false,false,0,true"
+                especiales = "true" if os.environ.get("CSV_CALC_ESPECIALES") == "1" else "false"
+                filtro = f"--infilter=Text - txt - csv (StarCalc):59,34,76,1,,3082,false,{especiales},false,false,false,0,true"
                 ejecutar([*comun, filtro, "--convert-to", "xlsx", "--outdir", destinos[0], *[r for _, r in entradas]])
                 ejecutar([*comun, "--convert-to", "ods", "--outdir", destinos[1], *destinos[0].glob("*.xlsx")])
                 ejecutar([*comun, "--convert-to", "xlsx", "--outdir", destinos[2], *destinos[1].glob("*.ods")])
@@ -259,5 +270,5 @@ class TestOraculoLibroCSV(unittest.TestCase):
         p = {"tablas": [{"columnas": [], "filas": [["1/2", 1.2345678901234567, "=1+2"]]}]}
         errores = problemas_libro({"A1": ("n", "46054", None), "B1": ("n", "1.23457", None),
                                   "C1": ("str", "=1+2", "HYPERLINK(\"#local\",\"x\")")}, p)
-        for mensaje in ("Fracción alterada", "Pérdida numérica", "Fórmula no autorizada"):
+        for mensaje in ("Fracción/entero exacto alterado", "Pérdida numérica", "Fórmula no autorizada"):
             self.assertTrue(any(mensaje in e for e in errores), errores)
