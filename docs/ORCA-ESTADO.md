@@ -1,31 +1,27 @@
 # Estado operativo de Orca
 
-Última actualización: 2026-11-23 (integrador: Claude Business, Opus 5.5).
+Última actualización: 2026-11-23, etapa 2 (integrador: Claude Business, Opus 5.5).
 
 ## Resumen para el propietario
-- **47/47 ejercicios definidos VALIDADOS** (I 19, II 10, III 15, IV 3), por API, página y referencias independientes.
-- **2 incompletos en la fuente** (IV-2, IV-5): esperan tu respuesta (INC-001).
-- Release **v1.0.0-rc.2** preparada (ver `docs/RELEASES.md`). Batería: 322 Python OK y 52 Node OK.
-- Incidencias abiertas: solo INC-001 (fuente). INC-002…INC-011 cerradas.
+- **Módulo 11 (Jacobi y Gauss-Seidel) integrado y validado** por API, navegador y referencias exactas.
+  Release `v1.0.0-rc.3`: ver `docs/RELEASES.md`.
+- **Auditoría y roadmap**: `docs/auditoria/01..04`. Las 5 prioridades recomendadas y la siguiente etapa están en
+  `04-arquitectura-y-roadmap.md`. **Esperan tu decisión.**
+- Batería: 417 pruebas Python y 58 Node OK. Pendiente tuyo desde la etapa 1: INC-001 (IV-2 e IV-5).
 
 ## Agentes (Run `run_e96b75f55a83`)
 | Agente | Cuenta / modelo | Rama | Entregado e integrado | Estado |
 |---|---|---|---|---|
-| Codex 1 | Codex «Personal (Plus)» · gpt-6.1-sol xhigh | `orca/lineal` | Partes I y II, revisión cruzada numérica, INC-008 | terminado |
-| Codex 2 | Codex «Team» (sistema) · gpt-6.1-sol xhigh | `orca/numerico` | Partes III y IV, revisión cruzada lineal, INC-010 | terminado |
-| Antigravity | Antigravity · gemini-4-neon-high | `orca/expresiones` | analizador, diagnósticos, KaTeX, INC-009, INC-011 | terminado |
-| Claude Business | Claude Business (sistema) · Opus 5.5 | `main` | referencias, aceptación, integración, documentación, release | activo |
+| Codex 1 | Codex «Personal (Plus)» · gpt-6.1-sol xhigh | `orca/jacobi` | entrada, matriz, Jacobi; batería adversaria; revisión del texto; R1-R3 | terminado |
+| Codex 2 | Codex «Team» (sistema) · gpt-6.1-sol xhigh | `orca/gauss-seidel` | Gauss-Seidel, convergencia exacta, resolvedor, API; revisión de Codex 1; INC-015, INC-017, INC-018 | terminado |
+| Antigravity | Antigravity · gemini-4-neon-high | `orca/iterativos-ui` | texto, vista, KaTeX, gráficas, 10 cifras, motivos, robustez del texto | terminado |
+| Claude Business | Claude Business (sistema) · Opus 5.5 + subagente Sonnet 5.5 (inventario) | `main` | contrato, referencias, aceptación, integración, `?v=`, auditoría, release | activo |
 
-Claude Pro individual: **no usado** (la cuenta personal gestionada no está seleccionada: `activeAccountId: null`).
-Integración: `cherry-pick` de cada commit de 100 líneas o menos sobre `main` y batería completa después de cada entrega.
-Revisión cruzada: Codex 1 revisó la rama numérica (7 hallazgos) y Codex 2 la lineal (2 hallazgos de LaTeX).
+Claude Pro individual: **no usado** (cuenta personal no seleccionada). Cuentas de Codex verificadas antes de cada inicio.
 
-## Pruebas (`main`)
-- Línea base (7a241ad): 169 Python OK y 5 archivos Node OK.
-- Final: 322 Python OK y 52 Node OK en 9 archivos.
-- Aceptación independiente: `tests/test_validacion_ejercicios.py` (189 llamadas HTTP contra SymPy/mpmath).
-- Navegador (`main` final): 18 ecuaciones del documento, Secante, Newton, sistemas I-11, I-12, I-14, mensaje
-  `no_certificada`; 0 errores KaTeX; consola sin errores salvo `favicon.ico` 404 (preexistente).
-
-## Pendiente del propietario
-- INC-001: igualdad completa de IV-2 `√(2x³/(x−3))` y de IV-5 `√((x+4)/(x−1))`.
+## Pruebas de la etapa
+- Referencias: `tests/validacion/referencias_iterativos.json` (17 casos, Fraction y SymPy; radio por polinomio exacto).
+- Aceptación del integrador: `tests/test_validacion_iterativos.py` (HTTP) y `tests/test_recursos_version.py`.
+- Navegador sobre `main` final: diapositiva 28 escrita como texto 16/16 iteraciones y 4/4 de la solución; tabla del
+  propietario 15/15; ρ exactos; Gauss-Seidel divergente en el contraejemplo; 0 errores KaTeX; regresión de Bisección
+  y Ecuaciones correcta.
