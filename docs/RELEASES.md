@@ -4,6 +4,7 @@
 |---|---|---|---|
 | v1.0.0-rc.1 | 2026-11-14 | prerelease publicada (anterior a esta orquestación) | línea base |
 | v1.0.0-rc.2 | 2026-11-23 | prerelease publicada (CI 45209275071 en verde) | 47/47 ejercicios definidos validados; ver abajo |
+| v1.0.0-rc.3 | 2026-11-23 | prerelease | módulo 11 Jacobi y Gauss-Seidel validado; ver abajo |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -25,3 +26,13 @@
 - **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.2 (prerelease).
   CI del tag (45209275071) y de `main` (45209275117) en verde: pruebas, compilación, portable y ciclo de instalación.
   Archivos de la CI, con sumas SHA-256 verificadas: setup.exe, portable.zip y SHA256SUMS.txt.
+
+## v1.0.0-rc.3 — módulo 11
+- **Motivo:** módulo completo integrado y verificado (motor, convergencia exacta, API, vista, texto), sin regresiones.
+- **Número:** sigue siendo prerelease (`rc.3`): ejecutables sin firma y sin declaración de estabilidad.
+- **Evidencia:** 417 pruebas Python y 58 Node OK en `main`; aceptación independiente `tests/test_validacion_iterativos.py`
+  contra iteraciones exactas y radios espectrales (SymPy); batería adversaria (28 sistemas) y dos revisiones cruzadas,
+  con 7 hallazgos corregidos (INC-015 a INC-018 y robustez del texto); navegador: diapositivas 9 y 28 escritas como
+  texto (16/16 iteraciones, 15/15 de la tabla del propietario, ρ exactos), Gauss-Seidel divergente en el contraejemplo,
+  0 errores KaTeX, consola sin errores salvo `favicon.ico`; `index.html` sin el módulo 11 idéntico al de rc.2.
+- **Notas:** `docs/notas-v1.0.0-rc.3.md`.
