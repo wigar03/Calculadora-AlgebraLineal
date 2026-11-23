@@ -44,6 +44,7 @@ resolución computacional mediante el motor de eliminación de renglones.
 """
 
 from fractions import Fraction
+from src.core.limites import COMBINACION_N_MAX, COMBINACION_K_MAX, exigir_dimension
 from typing import Any, List, Dict, Optional, Union
 
 from src.core.arithmetic import (
@@ -113,8 +114,9 @@ def evaluar_combinacion_lineal(
         raise ValueError("El conjunto de vectores debe contener al menos un vector (k >= 1).")
         
     # Validar y normalizar vectores
-    vectores: List[List[Fraction]] = [validar_vector_numerico(v) for v in vectores_conjunto_in]
-    b = validar_vector_numerico(vector_objetivo_in)
+    exigir_dimension("El número de vectores", len(vectores_conjunto_in), COMBINACION_K_MAX)
+    vectores: List[List[Fraction]] = [validar_vector_numerico(v, maximo=COMBINACION_N_MAX) for v in vectores_conjunto_in]
+    b = validar_vector_numerico(vector_objetivo_in, maximo=COMBINACION_N_MAX)
     
     k = len(vectores)
     n = len(vectores[0])
@@ -156,7 +158,8 @@ def evaluar_combinacion_lineal(
     gauss_res = solve_gaussian_elimination(
         matriz_aumentada,
         variable_names=nombres_escalares,
-        use_gauss_jordan=True
+        use_gauss_jordan=True,
+        es_combinacion=True
     )
     
     resultado.pasos_reduccion = gauss_res.steps

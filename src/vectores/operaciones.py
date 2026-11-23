@@ -24,6 +24,7 @@ sin NumPy ni SciPy, con aritmética exacta mediante fractions.Fraction.
 """
 
 from fractions import Fraction
+from src.core.limites import VECTOR_MAX, COMBINACION_N_MAX, COMBINACION_K_MAX, exigir_dimension
 from typing import Any, List, Union
 
 from src.core.arithmetic import (
@@ -92,8 +93,8 @@ def suma_vectores(u_in: Any, v_in: Any) -> List[Fraction]:
     Retorna:
         Vector resultante en R^n como lista de Fraction.
     """
-    u = validar_vector_numerico(u_in)
-    v = validar_vector_numerico(v_in)
+    u = validar_vector_numerico(u_in, maximo=VECTOR_MAX)
+    v = validar_vector_numerico(v_in, maximo=VECTOR_MAX)
     dim = validar_igualdad_dimension(u, v, operacion="Suma de Vectores")
     
     resultado: List[Fraction] = []
@@ -122,8 +123,8 @@ def resta_vectores(u_in: Any, v_in: Any) -> List[Fraction]:
     Retorna:
         Vector diferencia en R^n como lista de Fraction.
     """
-    u = validar_vector_numerico(u_in)
-    v = validar_vector_numerico(v_in)
+    u = validar_vector_numerico(u_in, maximo=VECTOR_MAX)
+    v = validar_vector_numerico(v_in, maximo=VECTOR_MAX)
     dim = validar_igualdad_dimension(u, v, operacion="Resta de Vectores")
     
     resultado: List[Fraction] = []
@@ -154,7 +155,7 @@ def multiplicar_escalar_vector(c_in: Any, v_in: Any) -> List[Fraction]:
         Vector resultante en R^n como lista de Fraction.
     """
     c = parse_number(c_in)
-    v = validar_vector_numerico(v_in)
+    v = validar_vector_numerico(v_in, maximo=VECTOR_MAX)
     
     resultado: List[Fraction] = []
     # Bucle estándar para distribuir el escalar c sobre cada elemento v_i
@@ -176,8 +177,8 @@ def producto_punto(u_in: Any, v_in: Any) -> Fraction:
     Retorna:
         Escalar en Q como Fraction.
     """
-    u = validar_vector_numerico(u_in)
-    v = validar_vector_numerico(v_in)
+    u = validar_vector_numerico(u_in, maximo=VECTOR_MAX)
+    v = validar_vector_numerico(v_in, maximo=VECTOR_MAX)
     dim = validar_igualdad_dimension(u, v, operacion="Producto Punto")
     
     acumulador = Fraction(0, 1)
@@ -192,7 +193,7 @@ def norma_cuadrada(v_in: Any) -> Fraction:
     Calcula la norma euclídea al cuadrado: ||v||^2 = v · v = SUMATORIA (v_i^2).
     Permite evaluar magnitudes de forma exacta en el cuerpo racional sin pérdida por raíz flotante.
     """
-    v = validar_vector_numerico(v_in)
+    v = validar_vector_numerico(v_in, maximo=VECTOR_MAX)
     return producto_punto(v, v)
 
 
@@ -213,8 +214,9 @@ def combinacion_lineal_directa(coeficientes_in: List[Any], lista_vectores_in: Li
     if len(lista_vectores_in) == 0:
         raise ValueError("La lista de vectores para la combinación no puede estar vacía.")
         
+    exigir_dimension("El número de vectores", len(lista_vectores_in), COMBINACION_K_MAX)
     c_list = [parse_number(c) for c in coeficientes_in]
-    v_list = [validar_vector_numerico(v) for v in lista_vectores_in]
+    v_list = [validar_vector_numerico(v, maximo=COMBINACION_N_MAX) for v in lista_vectores_in]
     
     # Validar que todos los vectores tengan la misma dimensión n
     dim = len(v_list[0])
