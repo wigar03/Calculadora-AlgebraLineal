@@ -195,6 +195,65 @@ class TestBancoRaices(unittest.TestCase):
                 self.assertFalse(res["convergio"])
                 self.assertEqual(res["motivo"], "raiz_no_admisible")
 
+    def test_derivada_nula_ciclo_y_salida_de_dominio(self):
+        casos = [("x^2+1", 0, "derivada_nula"), ("sqrt(x)-1", 0, "derivada_no_definida"),
+                 ("x^3-2*x+2", 0, "ciclo"), (ECUACIONES["III-4"]["funcion"], .01, "fuera_de_dominio")]
+        for funcion, x0, motivo in casos:
+            with self.subTest(funcion=funcion):
+                estado, res = self.enviar("newton", dict(funcion=funcion, x0=x0))
+                self.assertEqual(estado, 200)
+                self.assertFalse(res["convergio"])
+                self.assertEqual(res["motivo"], motivo)
+        for funcion, x0, x1, motivo in (("x^2+1", -1, 1, "denominador_nulo"),
+                                       ("ln(x)+10", 1, 2, "fuera_de_dominio")):
+            estado, res = self.enviar("secante", dict(funcion=funcion, x0=x0, x1=x1))
+            self.assertEqual(estado, 200)
+            self.assertFalse(res["convergio"])
+            self.assertEqual(res["motivo"], motivo)
+
+    def test_paso_diminuto_sin_raiz_no_declara_convergencia(self):
+        for metodo, datos in (("newton", dict(funcion="exp(1e8*x)+1", x0=0)),
+                               ("secante", dict(funcion="atan(1e12*x)+2", x0=0, x1=1e-12)),
+                               ("regla_falsa", dict(funcion="exp(30*(x-1))-2", xl=1, xu=2))):
+            with self.subTest(metodo=metodo):
+                estado, res = self.enviar(metodo, dict(datos, tolerancia=1e-6, max_iteraciones=100))
+                self.assertEqual(estado, 200)
+                self.assertFalse(res["convergio"], res)
+                self.assertGreater(res["residuo"], .4)
+
+    def test_regla_falsa_no_acepta_error_cero_por_redondeo(self):
+        estado, res = self.enviar("regla_falsa", dict(funcion="x^2-2", xl=1, xu=2,
+                                 tolerancia=1e-100, max_iteraciones=200))
+        self.assertEqual(estado, 200)
+        self.assertFalse(res["convergio"])
+        self.assertIn(res["motivo"], ("precision_agotada", "sin_progreso"))
+
+    def test_residuo_y_cota_son_magnitudes_distintas(self):
+        _, res = self.resolver("III-1", "biseccion")
+        self.assertTrue(res["convergio"])
+        self.assertLessEqual(res["cota_error"], 5e-7)
+        self.assertGreater(res["residuo"], 1e-6)
+        self.assertFalse(res["verificacion"]["cumple_residuo"])
+
+    def test_ln_cerca_del_limite_del_dominio(self):
+        for ejercicio in ("III-4", "III-11"):
+            for metodo in ("biseccion", "regla_falsa"):
+                with self.subTest(ejercicio=ejercicio, metodo=metodo):
+                    datos, res = self.resolver(ejercicio, metodo, (1e-6, 2, 2))
+                    self.comprobar_resultado(ejercicio, metodo, datos, res)
+
+    def test_incompletos_solo_evaluan_el_dominio_del_radical(self):
+        casos = {"IV-2": ("sqrt(2*x^3/(x-3))", -1, 4),
+                 "IV-5": (INCOMPLETOS["IV-5"]["expresion"], -5, 2)}
+        for ejercicio, (funcion, a, b) in casos.items():
+            with self.subTest(ejercicio=ejercicio):
+                estado, res = self.enviar("regla_falsa", dict(funcion=funcion, a=a, b=b,
+                                                           cantidad=11), "graficar")
+                self.assertEqual(estado, 200)
+                self.assertNotIn("raiz", res)
+                self.assertTrue(any(p["y"] is None for p in res["grafica"]))
+                self.assertTrue(any(p["y"] is not None for p in res["grafica"]))
+
 
 def _prueba_banco(ejercicio, metodo):
     def prueba(self):

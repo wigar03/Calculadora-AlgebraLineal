@@ -95,6 +95,7 @@ def _pico_singular(f, izq, der):
     signo (1/x², ln|x|) |f| sigue creciendo o deja de poder evaluarse.
     """
     alturas = []
+    borde = max(abs(f(izq)), abs(f(der)))
     for _ in range(2):
         for _ in range(18):
             m1, m2 = izq + (der - izq) / 3, der - (der - izq) / 3
@@ -106,7 +107,8 @@ def _pico_singular(f, izq, der):
             else:
                 der = m2
         alturas.append(max(abs(y1), abs(y2)))
-    return izq + (der - izq) / 2 if alturas[1] > 1.01 * alturas[0] else None
+    # Acercarse a un extremo definido y muy alto (ln cerca de cero) no es un polo.
+    return izq + (der - izq) / 2 if alturas[1] > 1.01 * max(alturas[0], borde) else None
 
 
 def _explorar(f, a, b, muestras):

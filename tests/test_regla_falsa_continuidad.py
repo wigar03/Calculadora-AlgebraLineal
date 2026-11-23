@@ -68,6 +68,11 @@ class TestContinuidad(unittest.TestCase):
         self.assertTrue(analizar_continuidad("1/x", .5, 2)["continua"])
         self.assertTrue(analizar_continuidad("tan(x)", -1, 1)["continua"])
 
+    def test_extremos_definidos_cerca_del_borde_no_son_asintotas(self):
+        for funcion in ("ln(x)+sin(x)-1.2", "ln(x)", "1/x"):
+            with self.subTest(funcion=funcion):
+                self.assertTrue(analizar_continuidad(funcion, 1e-6, 2)["continua"])
+
     def test_entradas_invalidas(self):
         for a, b in [(1, 1), (2, 1), ("nan", 1), (0, "inf"), (None, 1)]:
             with self.subTest(a=a, b=b), self.assertRaises(ValueError):
