@@ -610,7 +610,7 @@
           const datos = await respuesta.json();
           if (actual !== previewVersion) return;
           if (!respuesta.ok || datos.error) {
-            previewEstado.textContent = "Complete la expresión para actualizar la vista matemática.";
+            previewEstado.textContent = datos.error || "Complete la expresión para actualizar la vista matemática.";
             return;
           }
           renderLatexElement(preview, `f(x) = ${datos.latex}`, true);

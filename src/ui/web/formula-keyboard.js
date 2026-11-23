@@ -6,7 +6,7 @@ function prepararInsercionFormula(expression, start, end, value, kind) {
   const right = expression.slice(end).trimStart();
   const atomBefore = /(?:\d|\)|\bx|\bpi|\be)$/.test(left);
   const variableBefore = /(?:\)|\bx|\bpi|\be)$/.test(left);
-  const variableAfter = /^(?:x\b|pi\b|e\b|(?:asin|acos|atan|sin|cos|tan|sqrt|abs|ln|log|exp)\s*\(|\()/.test(right);
+  const variableAfter = /^(?:x\b|pi\b|e\b|(?:asin|acos|atan|sin|sen|cos|tan|sqrt|abs|ln|log|exp)\s*\(|\()/.test(right);
   const atomAfter = variableAfter || /^(?:\d|\.\d)/.test(right);
   const scientificNumber = kind === "digit" && /[\d.]$/.test(expression.slice(0, start)) && /^[eE][+-]?\d/.test(expression.slice(end));
   let text = value, cursor;

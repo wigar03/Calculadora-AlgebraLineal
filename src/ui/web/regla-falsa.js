@@ -586,7 +586,9 @@
           previewEstado.textContent = "Vista de la función escrita. Presione «Graficar función» para estudiarla en la región.";
         } catch (error) {
           if (actual !== previewVersion || error.name === "AbortError") return;
-          previewEstado.textContent = "Complete la expresión para actualizar la vista matemática.";
+          previewEstado.textContent = !(error instanceof TypeError) && error.message
+            ? error.message
+            : "Complete la expresión para actualizar la vista matemática.";
         }
       }, 200);
     }
