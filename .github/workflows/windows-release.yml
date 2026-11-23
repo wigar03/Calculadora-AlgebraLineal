@@ -55,6 +55,8 @@ jobs:
             texlive-latex-extra texlive-lang-spanish libreoffice-calc-nogui gnumeric
       - name: Exportaciones con herramientas reales
         run: python -m unittest discover tests -p "test_externo_*.py" -v
+      - name: Compilación del corpus y del adversario Unicode
+        run: python -m unittest tests.test_exportacion_modulos -v
 
   windows:
     runs-on: windows-2022
