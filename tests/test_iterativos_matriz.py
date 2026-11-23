@@ -185,3 +185,29 @@ class TestMatrizIterativos(unittest.TestCase):
         r = residuo([[1e308, 1e308], [1e308, -1e308]], [1e307, 0.0], [.1, .1])
         self.assertAlmostEqual(r["residuo_rel"], 1 / 3, places=15)
         self.assertTrue(math.isfinite(r["residuo_inf"]))
+
+    def test_residuo_relativo_no_se_reconstruye_de_productos_subdesbordados(self):
+        minimo = float.fromhex("0x0.0000000000001p-1022")
+        casos = [([[1e-200]], [0.0], [1e-200]), ([[minimo]], [0.0], [.5]),
+                 ([[1e-200, 5e-201], [5e-201, 1e-200]], [minimo] * 2,
+                  [minimo / 1e-200] * 2),
+                 ([[1e-200, 0.0], [0.0, 0.0]], [minimo, 0.0], [0.0, 1e-124])]
+        for A, b, x in casos:
+            # Referencia racional de los mismos datos binarios, no de su texto decimal.
+            exacta_A = [[F(v) for v in fila] for fila in A]
+            exacta_b, exacta_x = list(map(F, b)), list(map(F, x))
+            r = [bi - sum(a * v for a, v in zip(fila, exacta_x))
+                 for fila, bi in zip(exacta_A, exacta_b)]
+            escala = (max(map(abs, exacta_b)) +
+                      max(sum(map(abs, fila)) for fila in exacta_A) * max(map(abs, exacta_x)))
+            esperado = float(max(map(abs, r)) / escala)
+            with self.subTest(A=A, b=b, x=x):
+                self.assertAlmostEqual(residuo(A, b, x)["residuo_rel"], esperado, places=15)
+        self.assertEqual(residuo([[1e-200]], [0.0], [1e-200])["residuo_rel"], 1.0)
+
+    def test_residuo_relativo_subnormal_invariante_de_escala(self):
+        for escala in (1.0, 1e-200):
+            A = [[2 * escala, escala], [escala, 2 * escala]]
+            with self.subTest(escala=escala):
+                self.assertAlmostEqual(residuo(A, [0.0, 0.0], [1e-200, -1e-200])
+                                       ["residuo_rel"], 1 / 3, places=15)

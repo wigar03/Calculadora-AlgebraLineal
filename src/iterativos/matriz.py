@@ -2,6 +2,7 @@
 
 from fractions import Fraction
 from math import inf, isfinite
+from sys import float_info
 
 from src.solver.gauss_solver import solve_gaussian_elimination
 from .entrada import leer_sistema
@@ -125,6 +126,18 @@ def rangos(A, b):
             "singular": resultado.rank_A < len(A)}
 
 
+def _residuo_relativo_exacto(A, b, x):
+    """Cociente racional de los datos binarios, sin redondear productos ni escala."""
+    exacta_A = [[Fraction(v) for v in fila] for fila in A]
+    exacta_b, exacta_x = list(map(Fraction, b)), list(map(Fraction, x))
+    r = [bi - sum(a * v for a, v in zip(fila, exacta_x))
+         for fila, bi in zip(exacta_A, exacta_b)]
+    norma = max(map(abs, r))
+    escala = (max(map(abs, exacta_b)) +
+              max(sum(map(abs, fila)) for fila in exacta_A) * max(map(abs, exacta_x)))
+    return float(norma / escala) if escala else float(norma)
+
+
 def residuo(A, b, x):
     """Calcula b − Ax y su norma relativa con la norma matricial infinito por filas.
 
@@ -138,13 +151,15 @@ def residuo(A, b, x):
         return {"Ax": Ax, "residuo": r, "residuo_inf": inf, "residuo_rel": inf}
     norma_A = max(sum(abs(v) for v in fila) for fila in A)
     norma_b, norma_x = max(abs(v) for v in b), max(abs(v) for v in x)
-    denominador = norma_b + norma_A * norma_x
-    if not isfinite(denominador):
-        # La escala puede desbordarse aunque Ax y r sean finitos: no informar
-        # falsamente residuo relativo cero por dividir entre infinito.
-        norma_exacta = max(sum(Fraction(abs(v)) for v in fila) for fila in A)
-        escala = Fraction(norma_b) + norma_exacta * Fraction(norma_x)
-        relativo = float(Fraction(norma) / escala) if escala else norma
-    else:
-        relativo = norma / denominador if denominador else norma
+    producto_normas = norma_A * norma_x
+    denominador = norma_b + producto_normas
+    riesgo = (norma < float_info.min or not isfinite(denominador) or
+              (norma_A != 0 and norma_x != 0 and producto_normas < float_info.min))
+    if not riesgo:
+        riesgo = any(a != 0 and v != 0 and abs(a * v) < float_info.min
+                     for fila in A for a, v in zip(fila, x))
+    # Un absoluto redondeado a cero no permite reconstruir la razón: recalcular
+    # también el numerador, no solo la escala. La vía ordinaria sigue en doble.
+    relativo = (_residuo_relativo_exacto(A, b, x) if riesgo else
+                norma / denominador if denominador else norma)
     return {"Ax": Ax, "residuo": r, "residuo_inf": norma, "residuo_rel": relativo}
