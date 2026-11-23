@@ -425,6 +425,105 @@
       host.append(s);
     }
 
+    function renderGraficas() {
+      if (!ultimo) return;
+      const entradas = ultimo.comparacion
+        ? [{ etiqueta: "Jacobi", datos: ultimo.jacobi, color: "#426c89", esTexto: true }, { etiqueta: "Gauss-Seidel", datos: ultimo.gauss_seidel, color: "#8d342e", guion: "6 3", esTexto: true }]
+        : [{ etiqueta: ultimo.datos.metodo === "gauss_seidel" ? "Gauss-Seidel" : "Jacobi", datos: ultimo.datos, color: "#426c89", esTexto: true }];
+      const hayIter = entradas.some(x => x.datos && Array.isArray(x.datos.iteraciones) && x.datos.iteraciones.length);
+      el("charts-card").hidden = !hayIter;
+      if (!hayIter) return;
+      el("evo-method").hidden = !ultimo.comparacion;
+      const fuenteEvo = ultimo.comparacion ? (metodoEvo === "gauss_seidel" ? ultimo.gauss_seidel : ultimo.jacobi) : ultimo.datos;
+      dibujarSvg(el("plot-vars"), el("legend-vars"), construirSerieEvolucion(fuenteEvo), {
+        etiquetaX: "Iteración k", etiquetaY: "x_i^(k)", ariaLabel: "Evolución de las incógnitas por iteración"
+      });
+      const tol = Number(el("tolerance").value);
+      const conv = construirSerieConvergencia(entradas, metricaConv, Number.isFinite(tol) ? tol : null);
+      conv.series.forEach(s => { s.esTexto = true; });
+      dibujarSvg(el("plot-conv"), el("legend-conv"), conv, {
+        etiquetaX: "Iteración k", etiquetaY: metricaConv === "cambio" ? "log10(||Δx||∞)" : "log10(||r||∞)",
+        lineaRef: conv.logTol, ariaLabel: "Comparación de convergencia en escala logarítmica"
+      });
+      el("conv-note").textContent = conv.omitidosCero ? `Se omitieron ${conv.omitidosCero} punto(s) con valor exacto 0 (log10 indefinido).` : "";
+    }
+
+    function mostrarResultado(payload, esComparacion) {
+      el("result").replaceChildren();
+      if (esComparacion) {
+        ultimo = { comparacion: true, jacobi: payload.jacobi, gauss_seidel: payload.gauss_seidel };
+        const base = payload.jacobi || payload.gauss_seidel;
+        renderAnalisis(base && base.analisis, base && base.nombres);
+        const grid = node("div", "", "it-compare-grid");
+        const colJ = node("div", "", "it-compare-col"), colG = node("div", "", "it-compare-col");
+        if (payload.jacobi) renderBloqueResultado(payload.jacobi, colJ, "Jacobi");
+        if (payload.gauss_seidel) renderBloqueResultado(payload.gauss_seidel, colG, "Gauss-Seidel");
+        grid.append(colJ, colG); el("result").append(grid);
+        if (payload.resumen) {
+          const txt = typeof payload.resumen === "string" ? payload.resumen : (payload.resumen.mensaje || payload.resumen.texto || JSON.stringify(payload.resumen));
+          el("result").append(node("p", txt, "bis-help"));
+        }
+        el("result-card").hidden = false;
+        const pares = [{ titulo: "Jacobi", datos: payload.jacobi }, { titulo: "Gauss-Seidel", datos: payload.gauss_seidel }];
+        renderPasosDetalle(pares); renderTabla(pares); renderGraficas();
+      } else {
+        ultimo = { comparacion: false, datos: payload };
+        renderAnalisis(payload.analisis, payload.nombres);
+        renderBloqueResultado(payload, el("result"), payload.metodo === "gauss_seidel" ? "Gauss-Seidel" : "Jacobi");
+        el("result-card").hidden = false;
+        const uno = [{ titulo: payload.metodo === "gauss_seidel" ? "Gauss-Seidel" : "Jacobi", datos: payload }];
+        renderPasosDetalle(uno); renderTabla(uno); renderGraficas();
+      }
+    }
+
+    async function ejecutar(btn, fn) {
+      if (btn) btn.disabled = true;
+      error("");
+      try { await fn(); } catch (e) { if (e.name !== "AbortError") error(e.message); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    const cuerpoBase = () => ({
+      ...leerSistemaUI(), tolerancia: el("tolerance").value.trim(), max_iteraciones: el("max-iter").value,
+      criterio: document.querySelector('[name="it-criterion"]:checked').value, reordenar: el("reordenar").checked
+    });
+
+    el("solve-form").addEventListener("submit", ev => {
+      ev.preventDefault(); limpiarResultados();
+      const metodo = document.querySelector('[name="it-method"]:checked').value;
+      ejecutar(ev.currentTarget.querySelector('[type="submit"]'), async () => {
+        const d = metodo === "comparar" ? await request("comparar", cuerpoBase()) : await request("resolver", { ...cuerpoBase(), metodo });
+        if (d) mostrarResultado(d, metodo === "comparar");
+      });
+    });
+
+    el("analizar").addEventListener("click", ev => {
+      limpiarResultados();
+      ejecutar(ev.currentTarget, async () => { const d = await request("analizar", cuerpoBase()); if (d) renderAnalisis(d.analisis || d, d.nombres); });
+    });
+
+    el("cargar-texto").addEventListener("click", ev => {
+      el("texto-status").textContent = "";
+      ejecutar(ev.currentTarget, async () => {
+        const d = await request("texto", { texto: el("texto").value }); if (!d) return;
+        const n = Array.isArray(d.A) ? d.A.length : 0;
+        if (n < 2 || n > 10) throw Error(`El sistema tiene dimensión ${n}; la interfaz admite entre 2 y 10 ecuaciones.`);
+        renderGrid(n, d.A, d.b, Array(n).fill("0"));
+        el("texto-status").textContent = `Sistema ${n}×${n} cargado en la rejilla. Revise los coeficientes antes de iterar.`;
+      });
+    });
+
+    el("conv-metric").addEventListener("change", ev => { metricaConv = ev.target.value; renderGraficas(); });
+    el("evo-method").addEventListener("change", ev => { metodoEvo = ev.target.value; renderGraficas(); });
+    document.querySelectorAll("[data-it-example]").forEach(btn => btn.addEventListener("click", () => {
+      const ej = EJEMPLOS[btn.dataset.itExample]; if (!ej) return;
+      error(""); limpiarResultados(); renderGrid(ej.A.length, ej.A, ej.b, Array(ej.A.length).fill("0")); el("hint").textContent = ej.nota;
+    }));
+    el("clear").addEventListener("click", () => {
+      error(""); limpiarResultados(); el("texto").value = ""; el("texto-status").textContent = ""; el("hint").textContent = "";
+      renderGrid(dimN, Array.from({ length: dimN }, () => Array(dimN).fill("0")), Array(dimN).fill("0"), Array(dimN).fill("0"));
+    });
+
     el("dim-dec").addEventListener("click", () => renderGrid(dimN - 1));
     el("dim-inc").addEventListener("click", () => renderGrid(dimN + 1));
     el("dim-n").addEventListener("change", () => renderGrid(el("dim-n").value));
