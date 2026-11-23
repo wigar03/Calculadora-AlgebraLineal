@@ -1,5 +1,22 @@
 # Historial de versiones
 
+## 1.0.0-rc.2
+
+Segunda candidata: resuelve y verifica los 47 ejercicios con enunciado completo del banco de ejercicios.
+
+### Incluido
+
+- Ecuaciones con la notación habitual: igualdades, `sen`, `e^x`, `·`, `−` y superíndices.
+- Diagnósticos específicos de sintaxis y de dominio que indican qué corregir y cómo.
+- Certificación de raíces por cambio de signo en los cuatro métodos; sin convergencias engañosas.
+- Rechazo de intervalos con polos o discontinuidades antes de iterar.
+- Corrección de Gauss con sustitución regresiva y solución paramétrica verificada de sistemas SCI.
+
+### Límites
+
+- IV-2 e IV-5 del banco ampliado no tienen la igualdad completa en la fuente.
+- La multiplicación se escribe con `*`; los ejecutables siguen sin firma digital.
+
 ## 1.0.0-rc.1
 
 Primera candidata pública de la Calculadora de Álgebra Lineal.
