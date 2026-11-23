@@ -47,7 +47,7 @@ test('tablaACSV cumple contrato: BOM, ;, decimal ,, CRLF, científica, fraccione
     filas: [
       [1, 1.275449275970459, '5/2', '  esp  ', '=SUM(A1:A2)'],
       [2, 1.5e-7, '-181/60', 'a; "b"\nc', '+cmd|calc'],
-      [3, -42, '1/2+A1', '-A1', '@SUM(1,2)'],
+      [3, -0.0, '1/2+A1', '-A1', '@SUM(1,2)'],
       [4, null, '\t=1', '\r=2', '-12.75'],
     ],
   });
@@ -56,8 +56,12 @@ test('tablaACSV cumple contrato: BOM, ;, decimal ,, CRLF, científica, fraccione
   assert.equal(l[0], "k;x;frac;nota;'=col");
   assert.equal(l[1], '1;1,275449275970459;"=""5/2""";"  esp  ";\'=SUM(A1:A2)');
   assert.equal(l[2], '2;1,5E-07;"=""-181/60""";"a; ""b""\nc";\'+cmd|calc');
-  assert.equal(l[3], "3;-42;1/2+A1;'-A1;'@SUM(1,2)");
+  assert.equal(l[3], "3;-0;1/2+A1;'-A1;'@SUM(1,2)");
   assert.equal(l[4], '4;;\'\t=1;"\'\r=2";-12,75');
+  assert.throws(() => tablaACSV({ columnas: ['x'], filas: [[NaN]] }), /finito/i);
+  assert.throws(() => tablaACSV({ columnas: ['x'], filas: [[Infinity]] }), /finito/i);
+  const colaNula = tablaACSV({ columnas: ['x'], filas: [[1], [null]] });
+  assert.equal(colaNula, '\uFEFFx\r\n1\r\n""');
   const multi = tablasACSV([{ titulo: 'T1', columnas: ['k', 'v'], filas: [[1, 0.5]] }, { titulo: 'T2', columnas: ['k', 'v'], filas: [[1, 1e-8]] }]);
   assert.ok(multi.startsWith('\uFEFF') && !multi.slice(1).includes('\uFEFF') && multi.includes('T1\r\nk;v\r\n1;0,5\r\n\r\nT2\r\nk;v\r\n1;1E-08'));
 });
@@ -69,6 +73,9 @@ test('tablaALatex usa tabular en tablas cortas y longtable en largas', () => {
   assert.doesNotMatch(tex, /(?<!\\)←/);
   const larga = tablaALatex({ titulo: 'Larga', columnas: ['k', 'x_k'], filas: Array.from({ length: 45 }, (_, i) => [i + 1, i / 10]) });
   assert.ok(larga.includes('\\begin{longtable}') && larga.includes('\\endfirsthead') && !larga.includes('\\begin{table}'));
+  assert.equal((larga.match(/^.*\\\\\s*$/gm) || []).length, 47);
+  const adv = procedimientoALatex({ version: 1, modulo: 'adv', titulo: 'T', entrada: [{ etiqueta: '\\input{ajeno}', latex: 'x^2+1' }, { etiqueta: 'Unicode: ñ á Ω 你好', latex: '2' }], pasos: [], resultado: [], verificacion: [], tablas: [{ titulo: 'T', columnas: ['\\input{ajeno}'], filas: [['\\input{ajeno}']] }], avisos: [] });
+  assert.ok(!adv.includes('\\input{ajeno}') && adv.includes('x^2+1'));
 });
 
 test('procedimientoALatex genera documento compilable con babel spanish, longtable y KaTeX estricto en los 33 golden', () => {
