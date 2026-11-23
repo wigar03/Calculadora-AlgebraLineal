@@ -18,6 +18,12 @@ ENLACE = re.compile(
     r'!?\[([^]\n]*)\](?:\((<[^>]+>|(?:\\.|[^()\s]|\([^()]*\))+)'
     r'(?:\s+["\'][^\n]*?["\'])?\)|\[([^]\n]*)\])?'
 )
+HTML_EN_MATEMATICAS = re.compile(r"<[^\W\d_]|(?<=[^\W\d_])>|(?<=})>")
+
+
+def revisar_comparaciones(formula, inicio):
+    return [(inicio + m.start(), "comparación interpretable como HTML: use \\lt o \\gt, o espacios")
+            for m in HTML_EN_MATEMATICAS.finditer(formula)]
 
 
 def archivos_publicos(raiz=RAIZ):
@@ -35,6 +41,7 @@ def ocultar(texto):
 def separar(texto):
     """Oculta código y matemáticas; conserva una vista con títulos y enlaces."""
     partes, errores, cerca, inicio = [], [], None, 0
+    bloque_math, posicion = False, 0
     for linea in texto.splitlines(keepends=True):
         marca = CERCA.match(linea)
         if cerca:
@@ -43,11 +50,15 @@ def separar(texto):
             partes.append(ocultar(linea))
             if cierre:
                 cerca = None
+            elif bloque_math:
+                errores.extend(revisar_comparaciones(linea, posicion))
         elif marca:
             cerca, inicio = marca[1], sum(map(len, partes))
+            bloque_math = marca[2].strip() == "math"
             partes.append(ocultar(linea))
         else:
             partes.append(linea)
+        posicion += len(linea)
     if cerca:
         errores.append((inicio, "bloque sin cerrar"))
     vista = CODIGO.sub(lambda m: ocultar(m[0]), "".join(partes))
@@ -68,6 +79,9 @@ def separar(texto):
                 break
             fin += len(marca)
         hasta = fin + len(marca)
+        if fin > i:
+            # La vista oculta backticks; el original conserva también $`…`$.
+            errores.extend(revisar_comparaciones(texto[i:hasta], i))
         caracteres[i:hasta] = ocultar(vista[i:hasta])
         i = hasta
     return "".join(caracteres), errores

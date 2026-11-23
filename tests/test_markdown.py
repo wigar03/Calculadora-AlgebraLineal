@@ -74,6 +74,18 @@ class TestMarkdown(unittest.TestCase):
         self.assertEqual(self.revisar(
             "# A\n## B\n## B\n[x](#b-1)\n## C\n### D\n"), "")
 
+    def test_comparaciones_math_no_se_interpretan_como_html(self):
+        antiguo = r"\sum_{j<i} a_{ij} x_j^{(k+1)} - \sum_{j>i} a_{ij} x_j^{(k)}"
+        for envolver in (lambda s: "$" + s + "$", lambda s: "$`" + s + "`$",
+                         lambda s: "```math\n" + s + "\n```", lambda s: "$$\n" + s + "\n$$"):
+            with self.subTest(formato=envolver(antiguo)):
+                self.assertEqual(self.revisar("# A\n" + envolver(antiguo)).count("interpretable como HTML"), 2)
+                seguro = antiguo.replace("<", r"\lt ").replace(">", r"\gt ")
+                self.assertEqual(self.revisar("# A\n" + envolver(seguro)), "")
+        self.assertIn("README.md:3:", self.revisar("# A\n```math\nx_{i}>0\n```"))
+        self.assertEqual(self.revisar("# A\n$x < y$ y $x > 0$.\n`x<y`\n```text\nx<y\n```"), "")
+        self.assertIn("interpretable como HTML", self.revisar("# A\n$α>β$"))
+
     def test_referencia_sin_definir(self):
         self.assertIn("referencia sin definir", self.revisar("# A\n[guía][ausente]\n"))
         self.assertIn("enlace inexistente", self.revisar("# A\n[r]: ausente.md\n"))
