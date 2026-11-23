@@ -1,6 +1,7 @@
 """Entradas hostiles a través del mismo HTTP que usa la página."""
 import json
 import socket
+import threading
 import time
 import unittest
 from unittest import mock
@@ -10,6 +11,13 @@ from urllib.request import Request, urlopen
 
 from src.ui.web_server import servidor_local
 from src.core import limites
+from src.core.ejecucion import Supervisor
+
+
+def respuesta_lenta(ruta, cuerpo):
+    time.sleep(1)
+    from src.ui.web_server import calcular_respuesta
+    return calcular_respuesta(ruta, cuerpo)
 
 
 def post(url, cuerpo=b"{}", ruta="/api/vectores/operar", **cabeceras):
@@ -23,6 +31,31 @@ def post(url, cuerpo=b"{}", ruta="/api/vectores/operar", **cabeceras):
 
 
 class TestRobustezServidor(unittest.TestCase):
+    def test_calculo_aislado_no_retrasa_peticion_trivial(self):
+        with Supervisor() as supervisor:
+            ejecutar = supervisor.ejecutar
+            inicio_calculo = threading.Event()
+
+            def lento(referencia, *args, **kwargs):
+                inicio_calculo.set()
+                return ejecutar("tests.test_robustez_servidor:respuesta_lenta", *args, **kwargs)
+
+            with mock.patch("src.ui.web_server.Supervisor", return_value=supervisor), \
+                    mock.patch.object(supervisor, "ejecutar", side_effect=lento), servidor_local() as url:
+                resultados = []
+                hilo = threading.Thread(target=lambda: resultados.append(post(
+                    url, b'{"operacion":"suma","u":[1],"v":[2]}')))
+                hilo.start()
+                try:
+                    self.assertTrue(inicio_calculo.wait(2), "El cálculo no se envió al supervisor")
+                    inicio = time.perf_counter()
+                    self.assertEqual(post(url, b'{"funcion":"x"}', "/api/biseccion/preview")[0], 200)
+                    self.assertLess(time.perf_counter() - inicio, 0.5)
+                    self.assertTrue(hilo.is_alive())
+                finally:
+                    hilo.join(5)
+                self.assertEqual(resultados[0][0], 200)
+
     def test_limites_previos_sin_ejecutar_motor(self):
         casos = [
             ("/api/vectores/operar", {"u": [1] * (limites.VECTOR_MAX + 1)}),
