@@ -38,8 +38,9 @@ function exportar(p) {
   const inicio = performance.now();
   const latex = api.procedimientoALatex(p);
   const csv = (p.tablas || []).map(t => api.tablaACSV(t, { separador: ';', decimal: ',' }));
+  const tablas_latex = (p.tablas || []).map(t => api.tablaALatex(t));
   const ms = performance.now() - inicio, despues = process.memoryUsage();
-  return { latex, csv, mutado: JSON.stringify(antes) !== JSON.stringify(p),
+  return { latex, csv, tablas_latex, mutado: JSON.stringify(antes) !== JSON.stringify(p),
     metricas: { ms, heap_delta: despues.heapUsed - memoria.heapUsed,
       rss: despues.rss, max_rss_kib: process.resourceUsage().maxRSS,
       bytes: Buffer.byteLength(latex) + csv.reduce((n, s) => n + Buffer.byteLength(s), 0) },

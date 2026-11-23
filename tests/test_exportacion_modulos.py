@@ -212,3 +212,54 @@ class TestExportacionModulos(unittest.TestCase):
                 self.assertGreater(validacion["fragmentos"], 0)
                 for latex in fragmentos_fuente(caso["procedimiento"]):
                     self.assertIn(latex, salida["latex"], f"Fragmento original alterado: {latex}")
+
+    def test_latex_documento_completo_y_tablas_paginadas(self):
+        for caso, salida in zip(self.casos, self.salidas):
+            with self.subTest(caso=caso["id"]):
+                doc = salida["latex"]
+                self.assertRegex(doc, r"\\documentclass(?:\[[^]]*\])?\{article\}")
+                for paquete in ("amsmath", "amssymb"):
+                    self.assertRegex(doc, r"\\usepackage\{[^}]*" + paquete + r"[^}]*\}")
+                self.assertIn(r"\usepackage[utf8]{inputenc}", doc)
+                self.assertIn(r"\usepackage[spanish]{babel}", doc)
+                for seccion, campo in (("Datos de entrada", "entrada"), ("Procedimiento", "pasos"),
+                                       ("Resultado", "resultado"), ("Verificación", "verificacion")):
+                    if caso["procedimiento"][campo]:
+                        self.assertIn(seccion, doc)
+                for tabla, tex in zip(caso["procedimiento"]["tablas"], salida["tablas_latex"]):
+                    self.assertIn(tex, doc, "El documento omitió una tabla exportada")
+                    filas = re.findall(r"(?m)^.*\\\\\s*$", tex)
+                    cabeceras = 2 if r"\endfirsthead" in tex else 1
+                    self.assertEqual(len(filas), len(tabla["filas"]) + cabeceras,
+                                     "LaTeX truncado o con filas duplicadas")
+                    if len(tabla["filas"]) >= limites.RAICES_ITER_MAX:
+                        self.assertIn(r"\begin{longtable}", tex, "Tabla larga no paginable")
+                        self.assertIn(r"\endhead", tex, "Falta encabezado repetido")
+
+    def test_tablas_10000_tiempo_y_memoria(self):
+        for caso, salida in zip(self.casos, self.salidas):
+            if caso["id"] not in {x[0] for x in entradas_largas()}:
+                continue
+            with self.subTest(caso=caso["id"]):
+                m = salida["metricas"]
+                self.assertLess(m["ms"], limites.TIEMPO_CALCULO_S * 1000, m)
+                self.assertLess(m["rss"], limites.MEMORIA_CALCULO_MB * 1024**2, m)
+
+    def test_compilacion_real_si_hay_motor_instalado(self):
+        motor = next((shutil.which(n) for n in ("pdflatex", "lualatex", "xelatex", "tectonic", "latex")
+                      if shutil.which(n)), None)
+        if motor is None:
+            self.skipTest("No hay motor LaTeX instalado; KaTeX estricto sí se ejecuta")
+        with tempfile.TemporaryDirectory(prefix="p2-latex-") as temporal:
+            carpeta = Path(temporal)
+            for i, (caso, salida) in enumerate(zip(self.casos, self.salidas)):
+                with self.subTest(caso=caso["id"], motor=motor):
+                    tex = carpeta / f"caso_{i}.tex"
+                    tex.write_text(salida["latex"], encoding="utf-8")
+                    args = (["--only-cached", "--outdir", temporal, str(tex)] if "tectonic" in motor
+                            else ["-no-shell-escape", "-halt-on-error", "-interaction=nonstopmode",
+                                  "-output-directory", temporal, str(tex)])
+                    p = subprocess.run([motor, *args], cwd=carpeta, capture_output=True,
+                                       timeout=limites.TIEMPO_CALCULO_S * 6)
+                    self.assertEqual(p.returncode, 0, p.stdout.decode(errors="replace")[-4000:])
+                    self.assertTrue(tex.with_suffix(".pdf").exists() or tex.with_suffix(".dvi").exists())
