@@ -1360,15 +1360,6 @@ async function calcularInversaUI() {
         renderMixedLatex(row, v);
         verifContainer.appendChild(row);
       });
-      verifContainer.appendChild(v2Title);
-
-      (data.verificacion_Ainv_por_A || []).forEach(v => {
-        const row = document.createElement("div");
-        row.style.margin = "0.25rem 0";
-        row.style.lineHeight = "1.6";
-        renderMixedLatex(row, v);
-        verifContainer.appendChild(row);
-      });
 
       resultBox.appendChild(verifContainer);
     }
@@ -1433,6 +1424,12 @@ async function calcularInversaUI() {
 // =============================================================================
 let eqM = 3;
 let eqN = 3;
+
+function vectorSolucionLinealToLatex(valores) {
+  // Una componente paramétrica puede contener varias fracciones: 5/2 - 3/2t.
+  return vectorToLatexCol(valores.map(v => String(v).replace(
+    /(-?\d+)\/(\d+)/g, (_, num, den) => formatLatexFrac(`${num}/${den}`))));
+}
 
 function inicializarModuloEcuaciones() {
   renderizarEcuacionMatricial();
@@ -1601,7 +1598,7 @@ async function resolverEcuacionMatricialUI() {
         latexSol = `\\vec{x}^* = ${vectorToLatexCol(data.vector_solucion)}`;
       }
     } else if (data.tipo_sistema === "SCI") {
-      latexSol = `\\vec{x} = ${vectorToLatexCol(data.vector_solucion)} \\quad (\\text{Infinitas soluciones})`;
+      latexSol = `\\vec{x} = ${vectorSolucionLinealToLatex(data.vector_solucion)} \\quad ${data.parametros.join(", ")} \\in \\mathbb{R}`;
     } else {
       latexSol = `\\text{No existe } \\vec{x} \\in \\mathbb{R}^${eqN} \\text{ tal que } A\\vec{x} = \\vec{b}`;
     }
@@ -1653,7 +1650,19 @@ async function resolverEcuacionMatricialUI() {
         renderMixedLatex(d, p.description);
         stepItem.appendChild(t);
         stepItem.appendChild(d);
+        if (p.matrix && p.matrix.length) {
+          const matBox = document.createElement("div");
+          matBox.className = "latex-display-box";
+          renderLatexElement(matBox, augmentedMatrixToLatex(p.matrix, eqN));
+          stepItem.appendChild(matBox);
+        }
         stepsWrapper.appendChild(stepItem);
+      });
+      (data.sustitucion || []).forEach(paso => {
+        const item = document.createElement("div");
+        item.className = "step-item";
+        renderMixedLatex(item, paso);
+        stepsWrapper.appendChild(item);
       });
       resultBox.appendChild(stepsWrapper);
     }

@@ -393,6 +393,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
                 "title": p.title,
                 "description": p.description,
                 "operation_code": p.operation_code,
+                "matrix": p.matrix_state,
             })
 
         data = {
@@ -404,6 +405,10 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             "solucion_dict": {k: serialize_fraction_or_str(v) for k, v in res.solucion_dict.items()},
             "pasos": pasos_serializables,
             "verificacion": res.verificacion_residual,
+            "sustitucion": res.pasos_sustitucion,
+            "parametros": res.parametros,
+            "solucion_particular": res.solucion_particular,
+            "base_nucleo": res.base_nucleo,
         }
         self._send_json(data)
 
