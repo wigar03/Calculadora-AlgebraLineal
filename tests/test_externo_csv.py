@@ -87,3 +87,68 @@ def leer_xlsx(ruta):
                 valor = texto_xml(c.find("m:is", NS))
             celdas[c.attrib["r"]] = (tipo, valor, c.findtext("m:f", None, NS))
         return celdas
+
+
+def adversarios():
+    textos = ["=cmd|'/c calc'!A1", '=HYPERLINK("#local";"x")', "=1+2", "+1+2", "-1+2", "@SUM(1)",
+              "\t=1+2", "\r=1+2", "\n=1+2", " =1+2", "\ufeff=1+2", "\u00a0=1+2", "\v=1+2",
+              'comillas "dobles"; fin', "línea 1\nlínea 2", "Unicode: ñ á Ω 你好", "1/2x", '1/2"&1',
+              "-1/2;=1+2", "1/2\n", "1/0", "1/000", "  bordes  "]
+    return [{"modulo": "adversarios", "tablas": [
+        {"titulo": textos[0], "columnas": ["caso", "texto", "control"],
+         "filas": [[i, s, "fin"] for i, s in enumerate(textos)]},
+        {"titulo": textos[1], "columnas": textos, "filas": [["fin"] * len(textos)]}]},
+        {"modulo": "precision", "tablas": [{"columnas": ["caso", "valor", "control"],
+         "filas": [[i, v, "fin"] for i, v in enumerate([
+             "1/2", "-17/19", "0003/0007", "0/5", 1.25, -12.75, 1.5e-7,
+             1.2345678901234567, 1e-300, -0.0, "9007199254740993123456789",
+             "0.12345678901234567890123456789"])]}]}]
+
+
+def filas_fuente(p):
+    for i, tabla in enumerate(p["tablas"]):
+        if i:
+            yield []
+        if len(p["tablas"]) > 1 and tabla.get("titulo"):
+            yield [(tabla["titulo"], True)]
+        yield [(s, True) for s in tabla["columnas"]]
+        yield from ([(s, False) for s in fila] for fila in tabla["filas"])
+
+
+def columna(numero):
+    nombre = ""
+    while numero:
+        numero, resto = divmod(numero - 1, 26)
+        nombre = chr(65 + resto) + nombre
+    return nombre
+
+
+def problemas_libro(celdas, procedimiento):
+    esperadas = {f"{columna(j)}{i}": (valor, texto) for i, fila in enumerate(filas_fuente(procedimiento), 1)
+                 for j, (valor, texto) in enumerate(fila, 1)}
+    errores = []
+    for direccion in celdas.keys() | esperadas.keys():
+        tipo, actual, formula = celdas.get(direccion, ("s", "", None))
+        original, solo_texto = esperadas.get(direccion, (None, True))
+        fuente = "" if original is None else str(original)
+        fraccion = not solo_texto and racional(fuente)
+        lugar = f"{direccion}: {fuente!r} -> {(tipo, actual, formula)!r}"
+        if formula is not None and not (fraccion and formula == f'"{fuente}"'):
+            errores.append("Fórmula no autorizada " + lugar)
+        if fraccion:
+            if tipo not in ("s", "str", "inlineStr") or actual != fuente:
+                errores.append("Fracción alterada o convertida en fecha " + lugar)
+        elif not solo_texto and NUMERO.fullmatch(fuente):
+            try:
+                igual = (float(actual).hex() == original.hex() if isinstance(original, float)
+                         else Decimal(actual) == Decimal(fuente))
+            except (ValueError, ArithmeticError):
+                igual = False
+            if tipo != "n" or not igual:
+                errores.append("Pérdida numérica " + lugar)
+        elif fuente:
+            if tipo not in ("s", "str", "inlineStr") or actual not in (fuente, "'" + fuente):
+                errores.append("Texto alterado o interpretado " + lugar)
+        elif actual or formula:
+            errores.append("Celda adicional " + lugar)
+    return sorted(errores)
