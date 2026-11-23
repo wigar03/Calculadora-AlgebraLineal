@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from src.ui.web_server import servidor_local
+from src.ui.web_server import calcular_respuesta, servidor_local
 from src.core import limites
 from src.core.ejecucion import Supervisor
 
@@ -31,6 +31,33 @@ def post(url, cuerpo=b"{}", ruta="/api/vectores/operar", **cabeceras):
 
 
 class TestRobustezServidor(unittest.TestCase):
+    def test_tiempo_http_503_y_calculo_siguiente(self):
+        with Supervisor(trabajadores=1) as supervisor:
+            anterior = supervisor.procesos[0]
+            ejecutar = supervisor.ejecutar
+
+            def lento(referencia, *args, **kwargs):
+                return ejecutar("tests.test_robustez_servidor:respuesta_lenta", *args, tiempo=0.1)
+
+            with mock.patch("src.ui.web_server.Supervisor", return_value=supervisor), servidor_local() as url:
+                with mock.patch.object(supervisor, "ejecutar", side_effect=lento):
+                    estado, datos, _ = post(url, b'{"operacion":"suma","u":[1],"v":[2]}')
+                self.assertEqual(estado, 503)
+                self.assertEqual(datos["tipo"], "tiempo")
+                self.assertFalse(anterior.is_alive())
+                self.assertEqual(post(url, b'{"operacion":"suma","u":[1],"v":[2]}')[0], 200)
+
+    def test_procedimiento_se_adjunta_una_vez_antes_de_serializar(self):
+        cuerpo = {"operacion": "suma", "u": [1], "v": [2]}
+        with mock.patch("src.ui.web_server.adjuntar", side_effect=lambda ruta, datos, entrada:
+                        {**datos, "procedimiento": {"version": 1}}) as adjuntar:
+            datos, estado = calcular_respuesta("/api/vectores/operar", cuerpo)
+        self.assertEqual(estado, 200)
+        self.assertEqual(datos["procedimiento"], {"version": 1})
+        self.assertEqual(adjuntar.call_count, 1)
+        self.assertEqual(adjuntar.call_args.args[0], "/api/vectores/operar")
+        self.assertEqual(adjuntar.call_args.args[2], cuerpo)
+
     def test_calculo_aislado_no_retrasa_peticion_trivial(self):
         with Supervisor() as supervisor:
             ejecutar = supervisor.ejecutar
