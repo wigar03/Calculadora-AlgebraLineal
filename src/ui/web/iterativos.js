@@ -260,6 +260,95 @@
       } finally { if (requests.get(route) === ctrl) requests.delete(route); }
     }
 
+    function renderAnalisis(a, nombres) {
+      const box = el("analysis"); box.replaceChildren();
+      if (!a) return;
+      const g = GARANTIAS[a.garantia] || GARANTIAS.no_asegurada;
+      box.append(node("span", g.texto, `it-badge ${g.clase}`));
+      if (Array.isArray(a.razones) && a.razones.length) {
+        const ul = node("ul", "", "rf-list"); a.razones.forEach(t => ul.append(node("li", t))); box.append(ul);
+      }
+      if (a.rango) box.append(math(`\\operatorname{rg}(A)=${a.rango.A},\\quad \\operatorname{rg}([A\\mid b])=${a.rango.aumentada}`));
+      if (a.singular) box.append(node("p", "La matriz A es singular (rango deficiente).", "bis-help"));
+      if (Array.isArray(a.diagonal_nula)) {
+        box.append(node("p", a.diagonal_nula.length ? `Diagonal nula en fila(s): ${a.diagonal_nula.map(i => i + 1).join(", ")}.` : "Sin ceros en la diagonal principal.", "bis-help"));
+      }
+      if (a.reordenamiento) {
+        const ro = a.reordenamiento;
+        const perm = Array.isArray(ro.permutacion) ? (ro.permutacion.includes(0) ? ro.permutacion.map(i => i + 1) : ro.permutacion).join(", ") : "";
+        box.append(node("p", ro.aplicado ? `Reordenamiento aplicado (permutación de filas [${perm}]): ${ro.motivo || ""}` : `Reordenamiento: no aplicado${ro.motivo ? ` (${ro.motivo})` : ""}.`, "bis-help"));
+      }
+      if (a.radio_espectral) {
+        const re = a.radio_espectral;
+        box.append(math(`\\rho(T_J) = ${numeroLatex(re.jacobi, 6)}\\qquad \\rho(T_{GS}) = ${numeroLatex(re.gauss_seidel, 6)}`));
+        if (re.metodo_calculo) box.append(node("p", `Cálculo espectral: ${re.metodo_calculo}. Criterio necesario y suficiente: ρ(T) < 1.`, "bis-help"));
+      }
+      if (a.dominancia && Array.isArray(a.dominancia.filas)) {
+        box.append(node("p", a.dominancia.estricta ? "Dominancia diagonal estricta por filas: sí (garantía suficiente para ambos métodos)." : "Dominancia diagonal estricta por filas: no (condición suficiente, no necesaria).", "bis-help"));
+        const ul = node("ul", "", "it-dom-list");
+        a.dominancia.filas.forEach((f, idx) => {
+          const row = (typeof f.i === "number" ? f.i : idx) + 1;
+          const li = node("li");
+          li.append(node("span", f.cumple ? "✓" : "✗"), math(`|a_{${row},${row}}| = ${numeroLatex(f.diagonal)} ${f.cumple ? ">" : "\\le"} \\sum_{j\\ne ${row}} |a_{${row},j}| = ${numeroLatex(f.suma)}`, false));
+          ul.append(li);
+        });
+        box.append(ul);
+      }
+      el("analysis-card").hidden = false;
+    }
+
+    function renderBloqueResultado(r, destino, titulo) {
+      if (titulo) destino.append(node("h4", titulo));
+      const conv = GARANTIAS[r.convergencia] || GARANTIAS.no_asegurada;
+      const head = node("div", "", "it-actions-row");
+      head.append(node("span", r.convergio ? "Convergió" : "Sin convergencia", `it-badge ${r.convergio ? "it-badge-ok" : "it-badge-warn"}`), node("span", conv.texto, `it-badge ${conv.clase}`));
+      destino.append(head);
+      const textoMotivo = MOTIVOS[r.motivo] || r.mensaje || "Proceso finalizado.";
+      destino.append(node("p", textoMotivo));
+      if (r.mensaje && r.mensaje !== textoMotivo) destino.append(node("p", r.mensaje, "bis-help"));
+      if (Array.isArray(r.solucion)) destino.append(math(`x^{(${r.iteraciones ? r.iteraciones.length : 0})} \\approx ${vectorLatex(r.solucion, 8)}`));
+      if (r.iteraciones && r.iteraciones.length) destino.append(math(normasLatex(r.iteraciones[r.iteraciones.length - 1])));
+      if (r.verificacion) {
+        destino.append(node("p", `Verificación por sustitución (${r.verificacion.cumple ? "cumple tolerancia" : "no cumple tolerancia"}):`, "bis-help"));
+        verificacionLatex(r.verificacion, r.b).forEach(l => destino.append(math(l)));
+      }
+    }
+
+    function renderPasosDetalle(entradas) {
+      const box = el("steps"); box.replaceChildren();
+      let hay = false;
+      entradas.forEach(({ titulo, datos }) => {
+        if (!datos || !Array.isArray(datos.iteraciones)) return;
+        const conDetalle = datos.iteraciones.filter(p => Array.isArray(p.detalle) && p.detalle.length);
+        if (!conDetalle.length) return;
+        hay = true;
+        const sec = node("div", "", "it-subtable");
+        if (entradas.length > 1) sec.append(node("h4", titulo));
+        sec.append(math(formulaMetodoLatex(datos.metodo)));
+        const nombres = Array.isArray(datos.nombres) ? datos.nombres : Array.from({ length: datos.n || 0 }, (_, i) => `x_${i + 1}`);
+        conDetalle.forEach((p, pi) => {
+          const det = node("details", "", "it-step-block"); if (pi === 0) det.open = true;
+          det.append(node("summary", `Iteración k = ${p.k}`));
+          const baseUno = p.detalle[0] && p.detalle[0].i === 1 && !p.detalle.some(d => d.i === 0);
+          p.detalle.forEach((d, idx) => {
+            const eq = node("div", "", "it-step-eq");
+            if (d.formula_latex) eq.append(math(d.formula_latex));
+            if (d.sustitucion_latex) eq.append(math(d.sustitucion_latex));
+            else eq.append(math(`${nombreVarLatex(nombres[idx], idx)}^{(${p.k})} \\approx ${numeroLatex(d.valor, 8)}`));
+            if (Array.isArray(d.usa_nuevos) && d.usa_nuevos.length) {
+              const usados = d.usa_nuevos.map(j => `$${nombreVarLatex(nombres[baseUno ? j - 1 : j], baseUno ? j - 1 : j)}^{(${p.k})}$`).join(", ");
+              eq.append(mix(`Usa valores recién actualizados: ${usados}.`));
+            }
+            det.append(eq);
+          });
+          det.append(math(normasLatex(p)));
+          sec.append(det);
+        });
+        box.append(sec);
+      });
+      el("steps-card").hidden = !hay;
+    }
+
     el("dim-dec").addEventListener("click", () => renderGrid(dimN - 1));
     el("dim-inc").addEventListener("click", () => renderGrid(dimN + 1));
     el("dim-n").addEventListener("change", () => renderGrid(el("dim-n").value));
