@@ -5,7 +5,7 @@ import random
 from fractions import Fraction
 from unittest.mock import patch
 
-from src.core.arithmetic import parse_number
+from src.core.arithmetic import parse_number, format_number, format_latex_number
 from src.core.limites import DIGITOS_MAX, EXPONENTE_MAX, LimiteExcedido
 from src.core import limites as lim
 from src.vectores import operaciones as vec
@@ -96,6 +96,19 @@ class TestNumerosAcotados(unittest.TestCase):
     def test_denominador_cero_es_valueerror_en_espanol(self):
         with self.assertRaisesRegex(ValueError, "denominador.*cero"):
             parse_number("2/0")
+
+    def test_resultados_derivados_grandes_siguen_siendo_exactos(self):
+        potencia = lim.EXPONENTE_MAX * lim.DETERMINANTE_MAX
+        entero = Fraction(10 ** potencia)
+        texto = "1" + "0" * potencia
+        self.assertEqual(format_number(entero), texto)
+        self.assertEqual(format_latex_number(entero), texto)
+        self.assertEqual(format_latex_number(-1 / entero), r"-\frac{1}{" + texto + "}")
+        self.assertEqual(format_number(entero, as_decimal=True), f"1.0000e+{potencia}")
+        self.assertEqual(format_number(1 / entero, as_decimal=True), f"1.0000e-{potencia}")
+        for metodo in ("lu", "cofactores"):
+            a = [[f"1e{lim.EXPONENTE_MAX}", 0], [0, f"1e{lim.EXPONENTE_MAX}"]]
+            self.assertEqual(calcular_determinante(a, metodo).determinante, Fraction(10 ** (2 * lim.EXPONENTE_MAX)))
 
 
 class TestDeterminanteRobusto(unittest.TestCase):
