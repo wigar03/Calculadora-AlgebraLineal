@@ -25,6 +25,12 @@ class TestDerivada(unittest.TestCase):
             with self.subTest(f=f), self.assertRaises(ValueError):
                 derivada_simbolica(f)(0)
 
+    def test_derivada_conserva_dominio_antes_de_simplificar(self):
+        for f, x in (("tan(x)", math.pi/2), ("0*ln(x)", -1),
+                     ("(1/x)^0", 0), ("2*x/tan(x)", math.pi)):
+            with self.subTest(f=f, x=x), self.assertRaises(ValueError):
+                derivada_simbolica(f)(x)
+
     def test_reglas_compuestas_con_diferencias_finitas(self):
         rng = random.Random(418)
         for _ in range(150):

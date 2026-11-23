@@ -8,6 +8,15 @@ import ast
 import math
 
 from ..biseccion.expresiones import Expresion
+from ..regla_falsa.dominio import ExpresionNumerica
+
+
+class Derivada(ExpresionNumerica):
+    """Una simplificación de f' nunca amplía el dominio de la función original."""
+
+    def __call__(self, x):
+        self.fuente(x)
+        return super().__call__(x)
 
 
 def constante(n):
@@ -98,9 +107,11 @@ def derivada_simbolica(funcion):
         raise ValueError("La derivada es demasiado compleja. Simplifique la función.")
     # Árbol generado exclusivamente desde nodos ya validados. No se vuelve a
     # aplicar el límite de 500 caracteres de la entrada a la fórmula generada.
-    d = Expresion.__new__(Expresion)
+    d = Derivada.__new__(Derivada)
     d.arbol = arbol
     d.texto = ast.unparse(arbol).replace("**", "^")
+    d.fuente = ExpresionNumerica.__new__(ExpresionNumerica)
+    d.fuente.arbol, d.fuente.texto = f.arbol, f.texto
     return d
 
 
