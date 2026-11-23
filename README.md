@@ -28,6 +28,7 @@ comentarios antes de declarar la primera versión estable.
 | Bisección y regla falsa | Intervalos, validaciones, errores e historial de iteraciones. |
 | Newton-Raphson | Derivada simbólica, punto inicial manual, tangentes y criterios de parada. |
 | Secante | Dos puntos manuales, rectas secantes e historial de aproximaciones. |
+| Jacobi y Gauss-Seidel | Sistemas por matriz o por texto (`10x1 − x2 = 6`), análisis de convergencia (dominancia, radio espectral exacto), iteraciones paso a paso, residuo y comparación de ambos métodos. |
 
 Los módulos de álgebra lineal trabajan con fracciones exactas sobre entradas
 racionales. Los métodos numéricos trabajan en punto flotante y muestran errores
@@ -76,7 +77,7 @@ publicar únicamente los archivos estáticos no ejecuta los cálculos.
 
 ```bash
 python -m unittest discover tests -v
-node --test tests/test_biseccion_ui.cjs tests/test_formula_keyboard.cjs tests/test_regla_falsa_ui.cjs tests/test_newton_raphson_ui.cjs tests/test_secante_ui.cjs
+for f in tests/*.cjs; do node --test "$f"; done
 ```
 
 Node.js se utiliza únicamente para las pruebas de JavaScript.
@@ -85,7 +86,7 @@ Para abrir o compilar la aplicación de escritorio, consulta
 
 ## Alcance de esta candidata
 
-- Diez módulos, tema claro/oscuro y navegación adaptable al tamaño de pantalla.
+- Once módulos, tema claro/oscuro y navegación adaptable al tamaño de pantalla.
 - Escritorio Windows y navegador local con el mismo motor de cálculo.
 - Recursos matemáticos incluidos para uso sin conexión.
 - No incluye todavía historial persistente de cálculos, exportación de informes,
