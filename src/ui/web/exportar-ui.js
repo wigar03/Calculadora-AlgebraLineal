@@ -12,9 +12,9 @@
 .exp-heading > div:first-child { flex: 1 1 auto; min-width: 0; }
 .exp-heading > .notebook-chapter, .exp-heading > .bis-chapter { flex: 0 0 auto; }
 .exp-control { position: relative; display: inline-flex; align-items: center; gap: .5rem; flex: 0 0 auto; margin-top: .25rem; }
-.exp-trigger { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .8rem; min-height: 36px; white-space: nowrap; }
+.exp-trigger { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .8rem; min-height: 36px; white-space: nowrap; transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
 .exp-trigger:disabled { opacity: .45; cursor: not-allowed !important; }
-.exp-chevron { width: .9rem; height: .9rem; transition: transform .15s ease; }
+.exp-chevron { width: .9rem; height: .9rem; }
 .exp-trigger[aria-expanded="true"] .exp-chevron { transform: rotate(180deg); }
 .exp-status { font-size: .78rem; font-weight: 500; color: var(--accent-emerald, #39705a); white-space: nowrap; }
 .exp-status:empty { display: none; }

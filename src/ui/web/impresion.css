@@ -60,6 +60,8 @@ body {
   overflow: visible !important;
 }
 input, select, textarea { border: 1px solid #bbb !important; background: #fff !important; color: #111 !important; box-shadow: none !important; }
+.stepper-box, .mini-stepper { border: 0 !important; background: transparent !important; width: auto !important; }
+.stepper-box input, .mini-stepper input { width: 3.5rem !important; text-align: center !important; }
 
 /* Tablas: encabezado repetido en cada página y filas indivisibles. */
 .biseccion-pane table, table { display: table !important; width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; font-size: 8.5pt !important; }
