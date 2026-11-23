@@ -236,8 +236,8 @@ Este módulo implementa el cálculo exacto del determinante $|A|$ o $\det(A)$ pa
 #### 1. Definición Formal y Significado Geométrico
 El determinante es un escalar único asociado a una matriz cuadrada que cuantifica el factor de dilatación o contracción del hipervolumen $n$-dimensional generado por los vectores fila o columna.
 - Para $n = 1$: $\det([a]) = a$.
-- Para $n = 2$: el valor absoluto $|\det(A)|$ representa el área orientada del paralelogramo en $\mathbb{R}^2$.
-- Para $n = 3$: $|\det(A)|$ representa el volumen orientado del paralelepípedo en $\mathbb{R}^3$.
+- Para $n = 2$: el valor absoluto $|\det(A)|$ representa el área del paralelogramo en $\mathbb{R}^2$; el signo de $\det(A)$ indica la orientación.
+- Para $n = 3$: $|\det(A)|$ representa el volumen del paralelepípedo en $\mathbb{R}^3$; el signo indica la orientación.
 - Invertibilidad: $\det(A) \neq 0 \iff$ la matriz $A$ es no singular (invertible, rango completo $\mathrm{rg}(A) = n$). Si $\det(A) = 0$, la matriz es singular (filas linealmente dependientes, sin matriz inversa).
 
 #### 2. Método de Expansión por Cofactores (Teorema de Laplace)
@@ -250,15 +250,11 @@ $$
 Donde $C_{ij} = (-1)^{i+j} \det(M_{ij})$ es el cofactor del elemento $a_{ij}$, y $M_{ij}$ es la submatriz menor de orden $(n-1) \times (n-1)$ obtenida suprimiendo la fila $i$ y la columna $j$.
 
 - **Estrategia Óptima**: El algoritmo inspecciona sistemáticamente filas y columnas para seleccionar aquella con mayor cantidad de ceros, anulando términos y reduciendo la recursión.
-- **Complejidad Computacional**: $\mathcal{O}(n!)$ operaciones factoriales.
-  - Para $n = 2$: 2 multiplicaciones ($ad - bc$).
-  - Para $n = 3$: 6 multiplicaciones y sumas (regla de Sarrus).
-  - Para $n = 4$: 24 evaluaciones de submatrices $3 \times 3$ ($\approx 40$ operaciones).
-  - Para $n = 5$: 120 evaluaciones de submatrices ($\approx 205$ operaciones).
-  - Para $n = 8$: 40,320 evaluaciones.
+- **Complejidad computacional**: $\mathcal{O}(n!)$ en el caso general. Al expandir una fila de una matriz de orden $n$ aparecen $n$ menores inmediatos de orden $n-1$, que se resuelven recursivamente. No debe confundirse ese número con los $n!$ términos de la fórmula de Leibniz.
+- **Límite de la calculadora**: cofactores hasta orden 6, sujeto al presupuesto de salida; para órdenes mayores se utiliza LU.
 
 #### 3. Método de Descomposición LU con Pivoteo Parcial ($PA = LU$)
-Mediante eliminación gaussiana por renglones con pivoteo parcial (para máxima estabilidad exacta):
+Mediante eliminación gaussiana por renglones con pivoteo parcial y aritmética fraccionaria exacta:
 
 $$
 P \cdot A = L \cdot U
@@ -281,18 +277,14 @@ $$
 
 Si en alguna columna no existe ningún pivote no nulo disponible, la matriz tiene rango deficiente ($\mathrm{rg}(A) < n$) y se concluye inmediatamente que $\det(A) = 0$.
 
-- **Complejidad Computacional**: $\mathcal{O}(n^3)$ operaciones polinomiales ($\approx \frac{2}{3}n^3$ flops).
-  - Para $n = 2$: $\approx 2$ operaciones.
-  - Para $n = 3$: $\approx 14$ operaciones.
-  - Para $n = 4$: $\approx 36$ operaciones.
-  - Para $n = 5$: $\approx 75$ operaciones.
-  - Para $n = 8$: $\approx 320$ operaciones.
+- **Complejidad computacional**: $\mathcal{O}(n^3)$ operaciones aritméticas; el término dominante del conteo habitual es $\frac{2}{3}n^3$. El coste de cada operación con fracciones depende también del tamaño de sus enteros.
+- **Límite de la calculadora**: determinantes hasta orden 8; comprobación independiente mediante Bareiss.
 
 #### 4. Análisis Comparativo de Eficiencia Previo a la Selección
 Cumpliendo la especificación requerida, la aplicación evalúa e informa **antes de que el usuario elija el método** cuál es el más eficiente según la dimensión $n$ actual:
-- **Para $n \le 2$**: Ambos métodos presentan un costo computacional mínimo e idéntico. Cofactores ofrece la fórmula analítica directa inmediata ($ad - bc$).
+- **Para $n \le 2$**: ambos métodos tienen un coste mínimo. Cofactores ofrece la fórmula directa ($ad - bc$ para orden 2).
 - **Para $n = 3$**: Ambos métodos son rápidos y exactos. Cofactores es didáctico (desarrollo por Sarrus / Laplace) mientras que LU presenta una leve ventaja en operaciones elementales.
-- **Para $n \ge 4$**: **La Descomposición LU es drásticamente más eficiente.** La complejidad polinomial $\mathcal{O}(n^3)$ supera exponencialmente a la complejidad factorial $\mathcal{O}(n!)$. Para $n = 5$, Cofactores requiere $\approx 120$ evaluaciones frente a solo $\approx 75$ operaciones elementales en LU; para $n = 8$, Cofactores exigiría más de 40,000 llamadas recursivas frente a solo 320 operaciones en LU.
+- **Para $n \ge 4$**: se recomienda LU. Su coste cúbico crece más lentamente que el coste factorial de la expansión general por cofactores. La cantidad real de ceros puede reducir el trabajo de esa expansión; las estimaciones no son mediciones de tiempo.
 
 ---
 
