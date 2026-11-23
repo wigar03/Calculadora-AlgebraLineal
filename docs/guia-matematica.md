@@ -1,31 +1,22 @@
 # Calculadora de Álgebra Lineal: Vectores, Matrices y Ecuaciones Matriciales
 
-```text
-================================================================================
-                    UNIVERSIDAD AMERICANA (UAM)
-               Facultad de Ingeniería y Arquitectura (FIA)
-                    Álgebra Lineal (MTM0120)
-                  Primer Corte Evaluativo (30 Puntos)
-================================================================================
-  Docente:     Carlos Iván Argüello
-  Grupo:       Grupo 10
-  Modalidad:   Grupal con defensa/exposición individual
-  Proyecto:    PROGRAMA VECTORES: Operaciones Algebraicas en R^n,
-               Combinación Lineal y Ecuaciones Matriciales
-================================================================================
-  Integrantes:
-    • William Antonio García García
-    • Caleb Jordan Tardencilla Alvarado
-    • Rafael Hernández Sánchez
-    • Andrés Sebastián González Maradiaga
-================================================================================
-```
+Universidad Americana (UAM), Facultad de Ingeniería y Arquitectura (FIA).
+Álgebra Lineal (MTM0120), Primer Corte Evaluativo (30 Puntos).
+
+- Docente: Carlos Iván Argüello.
+- Grupo: Grupo 10.
+- Modalidad: Grupal con defensa/exposición individual.
+- Proyecto: PROGRAMA VECTORES: Operaciones Algebraicas en $\mathbb{R}^n$,
+  Combinación Lineal y Ecuaciones Matriciales.
+- Integrantes: William Antonio García García, Caleb Jordan Tardencilla Alvarado,
+  Rafael Hernández Sánchez y Andrés Sebastián González Maradiaga.
 
 ---
 
 ## 1. Descripción de la Actividad y Objetivos
 
-El presente proyecto integrador implementa un sistema computacional integral para la resolución y análisis algebraico de:
+El proyecto permite resolver y analizar los siguientes problemas:
+
 1. **Operaciones vectoriales en $\mathbb{R}^n$** de dimensión arbitraria desconocida a priori.
 2. **Evaluación de combinación lineal** para determinar rigurosamente si un vector $b$ pertenece al subespacio generado por un conjunto de vectores $\{v_1, v_2, \dots, v_k\}$.
 3. **Operaciones matriciales fundamentales**: adición, sustracción, producto por escalar, multiplicación de matrices $A_{m \times n} \cdot B_{n \times p}$ y transpuesta $A^T$ con análisis de simetría y propiedades.
@@ -49,7 +40,7 @@ El presente proyecto integrador implementa un sistema computacional integral par
 > - **Aritmética Exacta en $\mathbb{Q}$**: Para prevenir imprecisiones por redondeo binario de coma flotante (IEEE-754) en el cálculo de rangos e independencia lineal, se utiliza la librería estándar `fractions.Fraction`.
 > - **Comentarios en el Código**: Cada función cuenta con documentación teórica exhaustiva que explica el procedimiento algebraico equivalente.
 
-Estas restricciones didácticas corresponden a los módulos originales de álgebra lineal (1 a 6). Los métodos numéricos (7 a 10) utilizan `ast` y `math` de Python y SVG en el navegador, sin dependencias de ejecución adicionales. Sus cálculos usan punto flotante y no alteran la aritmética fraccionaria de los otros módulos.
+Estas restricciones didácticas corresponden a los módulos originales de álgebra lineal (1 a 6). Los métodos numéricos (7 a 10) utilizan `ast` y `math` de Python y SVG en el navegador, sin dependencias de ejecución adicionales. Sus cálculos usan punto flotante y no alteran la aritmética fraccionaria de los otros módulos. Jacobi y Gauss-Seidel (módulo 11) combinan iteración numérica con análisis y verificación exactos.
 
 ---
 
@@ -57,7 +48,7 @@ Estas restricciones didácticas corresponden a los módulos originales de álgeb
 
 ### Módulo 1: Operaciones Vectoriales en $\mathbb{R}^n$
 
-Un vector $v \in \mathbb{R}^n$ es una $n$-tupla ordenada de escalares: $v = (v_1, v_2, \dots, v_n)$. El programa admite cualquier dimensión $n \ge 1$:
+Un vector $v \in \mathbb{R}^n$ es una $n$-tupla ordenada de escalares: $v = (v_1, v_2, \dots, v_n)$. La calculadora admite $1 \le n \le 20$:
 
 - **Suma Vectorial**: $u + v = (u_1 + v_1, u_2 + v_2, \dots, u_n + v_n)$, requiriendo $\dim(u) = \dim(v) = n$.
 - **Resta Vectorial**: $u - v = u + (-1)v = (u_1 - v_1, \dots, u_n - v_n)$.
