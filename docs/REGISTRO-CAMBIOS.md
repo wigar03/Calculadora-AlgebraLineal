@@ -36,3 +36,12 @@ Configuración local (no versionada): ganchos `.git/hooks/pre-commit` (≤ 100 l
 | integrador | auditoría y roadmap; README y guía matemática; release rc.3 | `docs/auditoria/*`, `README.md`, `docs/guia-matematica.md` |
 
 Todos los commits de agentes se integraron con `cherry-pick` (autoría del propietario conservada) y ≤ 100 líneas.
+
+## 2026-11-23 — etapa 5: consolidación con herramientas reales
+| Origen | Motivo | Archivos principales |
+|---|---|---|
+| integrador | job `externos` (TeX Live, Calc, Gnumeric); auditoría visual GitHub; fórmula de Gauss-Seidel; firma | `.github/workflows/windows-release.yml`, `docs/guia-matematica.md`, `docs/firma-opciones.md` |
+| `orca/consolidacion-latex-rendimiento` (Codex 2) | compilación pdflatex real; oráculo CSV revisado; mediciones 16 MiB | `tests/test_externo_latex.py`, `tests/test_exportacion_modulos.py`, `scripts/medir_*.py` |
+| `orca/consolidacion-csv` (Codex 1) | abrir/guardar/reabrir con Calc y Gnumeric; regla `<`/`>` en Markdown | `tests/test_externo_csv.py`, `scripts/verificar_markdown.py` |
+| `orca/consolidacion-chrome` (Antigravity) | diagnóstico Chrome; INC-024 a INC-027 en la exportación | `tests/test_p2_browser.cjs`, `src/ui/web/exportar.js`, `index.html` |
+| integrador | rutas personales sustituidas por `%TEMP%`; incidencias, estado y release | `docs/validacion/*`, `docs/INCIDENCIAS.md`, `docs/ORCA-ESTADO.md` |
