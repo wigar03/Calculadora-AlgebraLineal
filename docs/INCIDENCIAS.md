@@ -43,7 +43,7 @@ Revisión cruzada de la rama lineal: con 10 o más incógnitas o parámetros, `t
 muestra t₁0). El ayudante de vectores paramétricos reescribe fracciones con una expresión regular frágil.
 Sin discrepancias matemáticas (1010 comparaciones con SymPy).
 
-## INC-009 · 2026-11-23 · analizador · EN CURSO (Antigravity)
+## INC-009 · 2026-11-23 · analizador · CERRADA (integrada en main; «Escribe 2*x + 3 = 7.»)
 El diagnóstico de producto implícito propone solo «Escribe '2*x'»; el propietario pidió la expresión completa
 corregida («Escribe 2*x + 3 = 7»).
 
