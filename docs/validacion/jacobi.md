@@ -82,3 +82,45 @@ Sin pendientes funcionales ni decisiones para el propietario dentro del área as
 Pendientes de integración: Gauss-Seidel, convergencia, resolver, API e interfaz a cargo de las otras áreas;
 esta rama no declara validada su convergencia ni el recorrido del usuario del módulo nuevo.
 El integrador debe unir las exportaciones de `__init__.py`, revisar y ejecutar la batería sobre el conjunto integrado.
+
+## Actualización: revisión cruzada R1–R3 (2026-11-23)
+
+Rama `orca/jacobi` rebasada sobre `main` 046f720, sin repetir los commits ya integrados.
+Esta actualización sustituye los pendientes de integración iniciales anteriores para el área asignada.
+Se modificaron únicamente `entrada.py`, `matriz.py`, `jacobi.py`, sus dos archivos de pruebas y esta evidencia.
+No se editaron `resolver.py`, `convergencia.py`, Gauss-Seidel, analizador de texto ni archivos web.
+
+- R1: antes de corregir se ejecutaron tres regresiones y se observaron siete fallos/subcasos.
+  El caso mínimo `residuo([[1e-200]],[0.0],[1e-200])` pasó de relativo 0 a **1**, como exige
+  la razón independiente calculada con Fraction de los mismos floats binarios.
+- El respaldo racional del residuo ahora recalcula numerador y escala si el absoluto es cero/subnormal,
+  existen productos subnormales, o la escala subdesborda/desborda. No reconstruye la razón de un absoluto redondeado.
+  También se cubre una escala subdesbordada aunque los productos particulares Ax sean todos cero.
+- Jacobi conserva los productos subnormales mediante un respaldo racional del paso con redondeo final a float;
+  siempre utiliza la tupla anterior. La vía ordinaria sigue usando doble y las referencias del banco no cambian.
+- R1 por HTTP: A diagonal `1e-200`, fuera de diagonal `5e-201`, b=`[5e-324,5e-324]` ahora converge en **22 pasos**,
+  x=`[3.293770186978782e-124,3.293770186978782e-124]`, residuo relativo **1.192093037759159e-7**.
+  La prueba verifica esa razón independientemente con Fraction de la A, b y x devueltas.
+- R2/R3: tres pruebas de regresión produjeron nueve fallos/subcasos antes de corregir.
+  La lectura comprueba magnitudes mediante umbrales racionales de IEEE-754, antes de diagnósticos y permutaciones.
+  `sistema_float` sigue siendo la única conversión de celdas a float; el triple leído conserva Fraction exactos.
+- Se comprueban los umbrales de empate a cero/infinito, incluido un racional que redondea al máximo finito
+  aunque sea algo mayor que este. Los errores siguen indicando cómo corregir la magnitud.
+- R2 por HTTP: `A=[[1,0],[1e400,1]]` identifica **fila 2, columna 1**, sin error interno en inglés.
+- R3 por HTTP con reordenar: `A=[[0,1],[1,1e-400]]` identifica **fila 2, columna 2** del editor original.
+
+Validación final: **31 pruebas del área OK**, incluidas siete nuevas; batería completa
+`python -m unittest discover tests -v`: **407 pruebas OK, 14.985 s**;
+bucle completo `node --test` por archivo: **58 pruebas OK**. `git diff 046f720 --check` sin errores.
+Comprobación de rendimiento con 20 variables en bloques [[1,0.9999],[0.9999,1]], tolerancia 1e-12 y
+máximo 10000: ambos consumen las 10000 iteraciones; Jacobi **2.848 s**, Gauss-Seidel **5.839 s** (llamada directa).
+
+| Hash | Mensaje | Añadidas + eliminadas |
+|---|---|---:|
+| d2ef468 | fix(iterativos): preservar el residuo relativo ante subdesbordamiento | 59 |
+| e121ede | fix(jacobi): conservar los productos subnormales en cada barrido | 42 |
+| 15e5e13 | fix(iterativos): validar magnitudes en las celdas originales | 66 |
+
+Pendiente del integrador: revisar y unir estas correcciones con la verificación final exacta de Codex 2
+en `resolver.py`. Los dos P2 de la auditoría del analizador de texto se entregan aparte, sin corregir archivos ajenos,
+en `C:/Users/wigar/AppData/Local/Temp/orca_texto_audit_task_fa36e0a61ef6/HALLAZGOS.md`.
