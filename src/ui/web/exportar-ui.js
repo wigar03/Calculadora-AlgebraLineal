@@ -69,7 +69,98 @@
     return btn;
   }
 
-  const api = { MODULOS, obtener: id => procedimientos.get(id) || null };
+  const visibles = inst => inst.items.filter(b => !b.hidden && !b.disabled);
+
+  function anunciar(inst, texto) {
+    clearTimeout(inst.timer);
+    inst.status.textContent = texto;
+    if (texto) inst.timer = setTimeout(() => { inst.status.textContent = ""; }, 2600);
+  }
+
+  function cerrar(inst, devolverFoco = true) {
+    if (!inst) return;
+    inst.menu.hidden = true;
+    inst.trigger.setAttribute("aria-expanded", "false");
+    if (abierto === inst) abierto = null;
+    if (devolverFoco && !inst.trigger.disabled) inst.trigger.focus();
+  }
+
+  function abrir(inst, indiceFoco = null) {
+    if (!inst || inst.trigger.disabled) return;
+    if (abierto && abierto !== inst) cerrar(abierto, false);
+    inst.menu.hidden = false;
+    inst.trigger.setAttribute("aria-expanded", "true");
+    abierto = inst;
+    if (indiceFoco !== null) {
+      const lista = visibles(inst);
+      if (lista.length) lista[((indiceFoco % lista.length) + lista.length) % lista.length].focus();
+    }
+  }
+
+  function sincronizar(moduloId) {
+    const inst = instancias.get(moduloId);
+    if (!inst) return;
+    const proc = procedimientos.get(moduloId) || null;
+    const activo = Boolean(proc);
+    inst.trigger.disabled = !activo;
+    inst.trigger.setAttribute("aria-disabled", String(!activo));
+    inst.csvBtn.hidden = !tieneTablas(proc);
+    if (!activo) {
+      anunciar(inst, "");
+      if (abierto === inst) cerrar(inst, false);
+    }
+  }
+
+  async function copiarTexto(texto, doc) {
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(texto);
+      return true;
+    }
+    if (!doc || !doc.body) return false;
+    const ta = doc.createElement("textarea");
+    ta.value = texto; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    doc.body.appendChild(ta); ta.select?.();
+    const ok = typeof doc.execCommand === "function" ? doc.execCommand("copy") : false;
+    ta.remove?.();
+    return Boolean(ok);
+  }
+
+  function ejecutarAccion(inst, accion, doc) {
+    const proc = procedimientos.get(inst.moduloId);
+    const exp = typeof window !== "undefined" ? window.ExportarProcedimiento : null;
+    if (!proc) return;
+    cerrar(inst, false);
+    if (accion === "latex" && exp) {
+      Promise.resolve(copiarTexto(exp.procedimientoALatex(proc), doc))
+        .then(ok => anunciar(inst, ok ? "Copiado" : "No se pudo copiar"))
+        .catch(() => anunciar(inst, "No se pudo copiar"));
+    } else if (accion === "csv" && exp && tieneTablas(proc)) {
+      const csv = exp.tablasACSV(proc.tablas);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = doc.createElement("a");
+      a.href = url; a.download = `calculadora-${proc.modulo || inst.moduloId.replace(/^tab-/, "")}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      anunciar(inst, "CSV descargado");
+    } else if (accion === "imprimir" && typeof window !== "undefined" && window.print) {
+      window.print();
+    }
+  }
+
+  function registrar(moduloId, respuesta) {
+    const proc = extraerProcedimiento(respuesta);
+    if (proc) procedimientos.set(moduloId, proc);
+    else procedimientos.delete(moduloId);
+    sincronizar(moduloId);
+  }
+
+  function limpiar(moduloId) {
+    procedimientos.delete(moduloId);
+    sincronizar(moduloId);
+  }
+
+  const api = { MODULOS, registrar, limpiar, obtener: id => procedimientos.get(id) || null };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   if (typeof window !== "undefined") window.ExportarUI = api;
 })();
