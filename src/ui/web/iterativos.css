@@ -1,0 +1,49 @@
+/* Módulo 11 (Jacobi y Gauss-Seidel): estilos mínimos y estrictamente acotados. */
+.iterativos-pane .it-textarea { min-height: 5.5rem; resize: vertical; line-height: 1.55; }
+.iterativos-pane .it-grid-scroll { overflow-x: auto; padding: .35rem 0 .5rem; }
+.iterativos-pane .it-augmented-grid { display: inline-grid; gap: .35rem; align-items: center; padding: .4rem .6rem; border-left: 1px solid var(--bis-rule); border-right: 1px solid var(--bis-rule); }
+.iterativos-pane .it-col-head { text-align: center; font-size: .76rem; color: var(--bis-muted); padding-bottom: .15rem; }
+.iterativos-pane .it-sep { text-align: center; color: var(--bis-muted); font-weight: 600; user-select: none; }
+.iterativos-pane .it-cell { width: 4.1rem; min-width: 3.6rem; padding: .42rem .35rem; margin: 0; text-align: center; font: .82rem 'JetBrains Mono', monospace; }
+.iterativos-pane .it-cell-b { border-color: var(--bis-accent); background: var(--bis-soft); }
+.iterativos-pane .it-x0-grid { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .35rem; }
+.iterativos-pane .it-x0-item { display: inline-flex; flex-direction: column; align-items: center; gap: .2rem; font-size: .75rem; color: var(--bis-muted); }
+.iterativos-pane .it-checkbox { display: flex; align-items: flex-start; gap: .55rem; font-size: .84rem; line-height: 1.5; cursor: pointer; }
+.iterativos-pane .it-checkbox input { margin-top: .25rem; flex: none; }
+.iterativos-pane .it-actions-row { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
+.iterativos-pane .it-text-box { border-top: 1px solid var(--bis-rule); padding-top: .85rem; margin-top: .5rem; }
+.iterativos-pane .it-text-box summary { cursor: pointer; font-size: .84rem; font-weight: 500; color: var(--bis-accent); }
+.iterativos-pane .it-text-inner { display: grid; gap: .6rem; margin-top: .6rem; }
+.iterativos-pane .it-badge { display: inline-block; font: 500 .74rem/1.4 'JetBrains Mono', monospace; padding: .15rem .5rem; border: 1px solid var(--bis-rule); border-radius: 2px; }
+.iterativos-pane .it-badge-ok { color: var(--accent-emerald); border-color: var(--accent-emerald); }
+.iterativos-pane .it-badge-obs { color: var(--accent-blue); border-color: var(--accent-blue); }
+.iterativos-pane .it-badge-warn { color: var(--accent-rose); border-color: var(--accent-rose); }
+.iterativos-pane .it-compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; margin-top: .8rem; }
+.iterativos-pane .it-compare-col { border-top: 2px solid var(--bis-rule); padding-top: .8rem; min-width: 0; }
+.iterativos-pane .it-compare-col h4 { font: 400 1.05rem/1.4 Georgia, 'Times New Roman', serif; margin: 0 0 .5rem; }
+.iterativos-pane .it-step-block { border-left: 2px solid var(--bis-accent); padding: .5rem 0 .5rem .85rem; margin: .7rem 0; background: var(--bis-soft); }
+.iterativos-pane .it-step-block summary { cursor: pointer; font-weight: 500; font-size: .85rem; }
+.iterativos-pane .it-step-eq { overflow-x: auto; padding: .3rem 0; border-top: 1px solid var(--bis-rule); margin-top: .4rem; }
+.iterativos-pane .it-step-eq:first-of-type { border-top: 0; }
+.iterativos-pane .it-chart-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin: .6rem 0 .3rem; }
+.iterativos-pane .it-chart-block + .it-chart-block { border-top: 1px solid var(--bis-rule); margin-top: 1.2rem; padding-top: 1rem; }
+.iterativos-pane .it-legend { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin: .4rem 0 0; padding: 0; font-size: .75rem; color: var(--bis-muted); }
+.iterativos-pane .it-legend li { display: inline-flex; align-items: center; gap: .35rem; }
+.iterativos-pane .it-swatch { width: 1rem; height: 2.5px; display: inline-block; }
+.iterativos-pane .it-subtable { margin-top: .75rem; }
+.iterativos-pane .it-subtable h4 { font: 400 1.05rem/1.4 Georgia, 'Times New Roman', serif; margin: .8rem 0 .4rem; }
+.iterativos-pane .it-table-wide table { width: max-content; min-width: 100%; table-layout: auto; }
+.iterativos-pane .it-table-wide th:first-child,
+.iterativos-pane .it-table-wide th:last-child { width: auto; }
+.iterativos-pane .it-dom-list { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .35rem; font-size: .83rem; }
+.iterativos-pane .it-dom-list li { display: flex; gap: .5rem; align-items: baseline; overflow-x: auto; }
+.iterativos-pane .it-results-col { display: grid; gap: 1.6rem; min-width: 0; }
+.iterativos-pane .it-results-col .rf-card + .rf-card { border-top: 1px solid var(--bis-ink); padding-top: 1.3rem; }
+@media (max-width: 1100px) {
+  .iterativos-pane .rf-layout { grid-template-columns: minmax(0, 1fr); }
+  .iterativos-pane .rf-column, .iterativos-pane .it-results-col { display: grid; }
+}
+@media (max-width: 720px) {
+  .iterativos-pane .it-compare-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.iterativos-pane [hidden] { display: none; }
