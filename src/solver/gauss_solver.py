@@ -80,6 +80,9 @@ class GaussResult:
         self.solution_vector: List[Union[Fraction, str]] = []
         self.backward_substitution_steps: List[str] = []
         self.verification_steps: List[str] = []
+        self.parameter_names: List[str] = []
+        self.particular_solution: List[Fraction] = []
+        self.nullspace_basis: List[List[Fraction]] = []
 
 
 def clonar_matriz(mat: List[List[Fraction]]) -> List[List[Fraction]]:
@@ -252,6 +255,8 @@ def solve_gaussian_elimination(
             if inconsistent_row == -1:
                 inconsistent_row = r
                 
+    # La única columna adicional aumenta el rango como máximo en uno.
+    rank_Aug = rank_A + (inconsistent_row != -1)
     result.rank_A = rank_A
     result.rank_Aug = rank_Aug
     
@@ -295,6 +300,21 @@ def solve_gaussian_elimination(
             p_name = param_letters[idx % len(param_letters)] if idx < len(param_letters) else f"t_{idx+1}"
             param_names[f_col] = p_name
             result.solution[variable_names[f_col]] = p_name
+
+        # Cada incógnita se representa exactamente como constante + coeficientes libres.
+        affine = [[Fraction(0)] * (1 + len(free_vars)) for _ in range(num_vars)]
+        for idx, col in enumerate(free_vars):
+            affine[col][idx + 1] = Fraction(1)
+        for r, col in reversed(pivot_positions):
+            for k in range(1 + len(free_vars)):
+                rhs = mat[r][-1] if k == 0 else Fraction(0)
+                affine[col][k] = (rhs - sum((mat[r][c] * affine[c][k]
+                                            for c in range(col + 1, num_vars)), Fraction(0))) / mat[r][col]
+        result.parameter_names = [param_names[c] for c in free_vars]
+        result.particular_solution = [v[0] for v in affine]
+        result.nullspace_basis = [[v[k + 1] for v in affine] for k in range(len(free_vars))]
+        result.system_type_desc += "\nParámetros libres: " + ", ".join(
+            f"${variable_names[c]} = {param_names[c]} \\in \\mathbb{{R}}$" for c in free_vars)
             
         for r in reversed(range(num_rows)):
             if r in pivot_col_indices:
@@ -302,13 +322,12 @@ def solve_gaussian_elimination(
                 p_coeff = mat[r][p_col]
                 rhs = mat[r][num_cols - 1]
                 terms = []
-                const_term = rhs / p_coeff
+                const_term = affine[p_col][0]
                 
-                for c in range(p_col + 1, num_vars):
-                    coeff = mat[r][c]
-                    if coeff != 0:
-                        norm_coeff = -coeff / p_coeff
-                        var_rep = param_names.get(c, variable_names[c])
+                for idx, c in enumerate(free_vars):
+                    norm_coeff = affine[p_col][idx + 1]
+                    if norm_coeff != 0:
+                        var_rep = param_names[c]
                         if norm_coeff == 1:
                             terms.append(f"+ {var_rep}")
                         elif norm_coeff == -1:
