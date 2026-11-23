@@ -191,7 +191,8 @@ class ResolucionIterativa(unittest.TestCase):
             json.dumps(r, allow_nan=False)
         r = resolver_iterativo([["1e308", "-9e307"], ["-9e307", "1e308"]],
                                [1, 1], "gauss_seidel", x0=[1, 1], criterio="residuo")
-        self.assertEqual(r["motivo"], "no_finito")
+        self.assertEqual(r["motivo"], "max_iteraciones")
+        self.assertGreater(r["verificacion"]["residuo_rel"], r["tolerancia"])
         self.assertFalse(r["verificacion"]["cumple"])
         json.dumps(r, allow_nan=False)
 
@@ -270,3 +271,15 @@ class ResolucionIterativa(unittest.TestCase):
                     self.assertEqual(r["analisis"]["radio_espectral"][metodo], 0)
                     self.assertEqual(len(r["iteraciones"]),
                                      21 if superior or metodo == "jacobi" else 2)
+
+    def test_solucion_inicial_con_escala_auxiliar_desbordada(self):
+        from src.iterativos.resolver import resolver_iterativo
+        for metodo in ("jacobi", "gauss_seidel"):
+            with self.subTest(metodo=metodo):
+                r = resolver_iterativo([["1e308"]], ["1e308"], metodo, x0=[1])
+                self.assertTrue(r["convergio"])
+                self.assertEqual(r["motivo"], "tolerancia")
+                self.assertEqual(r["solucion"], [1])
+                self.assertEqual(len(r["iteraciones"]), 1)
+                self.assertEqual(r["verificacion"]["residuo_rel"], 0)
+                self.assertTrue(r["verificacion"]["cumple"])

@@ -91,12 +91,8 @@ def _json_finito(valor):
 
 def _verificar(A, b, x):
     from .matriz import residuo
-    verificacion = residuo(A, b, x)
-    escala = max(map(abs, b)) + max(sum(map(abs, fila)) for fila in A) * max(map(abs, x))
-    if not math.isfinite(escala):
-        # Evita un falso residuo relativo cero al dividir por una escala infinita.
-        verificacion["residuo_rel"] = math.inf
-    return verificacion
+    # La primitiva protege el cociente cuando su escala auxiliar desborda.
+    return residuo(A, b, x)
 
 
 def resolver_iterativo(A, b, metodo, x0=None, tolerancia=1e-6,
