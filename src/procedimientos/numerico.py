@@ -251,3 +251,101 @@ def adaptar_secante(res, _cuerpo):
                       ["n", "x_{n-1}", "x_n", "x_{n+1}", "|f(x_{n+1})|", "E_a", r"\varepsilon_r"], filas)],
         avisos=avisos,
     )
+
+
+def _formula_iter(metodo):
+    return (r"x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j < i} a_{ij} x_j^{(k+1)} - \sum_{j > i} a_{ij} x_j^{(k)}\right)"
+            if metodo == "gauss_seidel" else r"x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)")
+
+
+def _paso_analisis(a):
+    tex, det = [], list(a.get("razones") or ())
+    if a.get("rango"):
+        tex.append(f"\\operatorname{{rg}}(A) = {a['rango']['A']},\\quad \\operatorname{{rg}}([A\\mid b]) = {a['rango']['aumentada']}")
+    if a.get("radio_espectral"):
+        re_ = a["radio_espectral"]
+        tex.append(f"\\rho(T_J) = {_num(re_.get('jacobi'))},\\quad \\rho(T_{{GS}}) = {_num(re_.get('gauss_seidel'))}")
+    for idx, f in enumerate((a.get("dominancia") or {}).get("filas") or ()):
+        row = (f["i"] if isinstance(f.get("i"), int) else idx) + 1
+        op = ">" if f.get("cumple") else r"\le"
+        det.append(f"Fila {row}: $|a_{{{row},{row}}}| = {_num(f['diagonal'])} {op} \\sum_{{j\\ne {row}}} |a_{{{row},j}}| = {_num(f['suma'])}$.")
+    return paso("Análisis del sistema y convergencia", f"Garantía: {a.get('garantia', 'no_asegurada')}.", latex=tex, detalles=det)
+
+
+def _pasos_iter(res, prefijo=""):
+    etiq = f"{prefijo}: " if prefijo else ""
+    out = [paso(f"{etiq}Fórmula de iteración", res.get("mensaje", ""), latex=[_formula_iter(res.get("metodo"))])]
+    for p in res.get("iteraciones") or ():
+        if not p.get("detalle"):
+            continue
+        tex = [d[k] for d in p["detalle"] for k in ("formula_latex", "sustitucion_latex") if d.get(k)]
+        tex.append(f"\\left\\|x^{{({p['k']})}} - x^{{({p['k'] - 1})}}\\right\\|_\\infty = {_num(p.get('cambio_inf'))},\\quad "
+                   f"\\left\\|r^{{({p['k']})}}\\right\\|_\\infty = {_num(p.get('residuo_inf'))},\\quad "
+                   f"r_{{\\text{{rel}}}} = {_num(p.get('residuo_rel'))}")
+        out.append(paso(f"{etiq}Iteración k = {p['k']}", latex=tex))
+    return out
+
+
+def _tabla_iter(res, titulo):
+    nombres = res.get("nombres") or [f"x_{i + 1}" for i in range(res.get("n", 0))]
+    cols = ["k", *[f"{_var(nb, i)}^{{(k)}}" for i, nb in enumerate(nombres)],
+            r"\|x^{(k)}-x^{(k-1)}\|_\infty", r"\Delta_{\text{rel}}", r"\|r^{(k)}\|_\infty", r"r_{\text{rel}}"]
+    filas = [[p["k"], *(p.get("x") or ()), p.get("cambio_inf"), p.get("cambio_rel"),
+              p.get("residuo_inf"), p.get("residuo_rel")] for p in res.get("iteraciones") or ()]
+    return tabla(titulo, cols, filas)
+
+
+def _verif_iter(res, prefijo=""):
+    v = res.get("verificacion")
+    if not v:
+        return []
+    etiq = f"{prefijo}: " if prefijo else ""
+    estado = "cumple tolerancia" if v.get("cumple") else "no cumple tolerancia"
+    return [f"{etiq}Verificación por sustitución ({estado}).",
+            f"{etiq}$Ax \\approx {_vec(v.get('Ax'))}$, $b = {_vec(res.get('b'))}$.",
+            f"{etiq}$r = b - Ax \\approx {_vec(v.get('residuo'))}$, $\\|r\\|_\\infty = {_num(v.get('residuo_inf'))}$, "
+            f"$r_{{\\text{{rel}}}} = {_num(v.get('residuo_rel'))}$."]
+
+
+@registrar("/api/iterativos/resolver")
+def adaptar_iterativos(res, _cuerpo):
+    nombre = "Gauss-Seidel" if res.get("metodo") == "gauss_seidel" else "Jacobi"
+    iters, verif = res.get("iteraciones") or (), res.get("verificacion") or {}
+    k_fin = iters[-1]["k"] if iters else 0
+    pasos_out = ([_paso_analisis(res["analisis"])] if res.get("analisis") else []) + _pasos_iter(res)
+    return procedimiento(
+        "iterativos", f"Método iterativo de {nombre}",
+        entrada=[{"etiqueta": "A", "latex": _mat(res["A"])}, {"etiqueta": "b", "latex": _vec(res["b"])},
+                 {"etiqueta": "x^{(0)}", "latex": _vec(res["x0"])}, {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}],
+        pasos=pasos_out,
+        resultado=[{"etiqueta": f"x^{{({k_fin})}}", "latex": _vec(res["solucion"])},
+                   {"etiqueta": r"\|r\|_\infty", "latex": _num(verif.get("residuo_inf"))},
+                   {"etiqueta": r"r_{\text{rel}}", "latex": _num(verif.get("residuo_rel"))},
+                   {"etiqueta": r"\text{Iteraciones}", "latex": str(len(iters))}],
+        verificacion=_verif_iter(res), tablas=[_tabla_iter(res, f"Iteraciones — {nombre}")],
+        avisos=[] if res.get("convergio") else [res.get("mensaje", "Sin convergencia.")],
+    )
+
+
+@registrar("/api/iterativos/comparar")
+def adaptar_comparar_iterativos(res, _cuerpo):
+    j, gs = res["jacobi"], res["gauss_seidel"]
+    kj = j["iteraciones"][-1]["k"] if j.get("iteraciones") else 0
+    kg = gs["iteraciones"][-1]["k"] if gs.get("iteraciones") else 0
+    pasos_out = ([_paso_analisis(j["analisis"])] if j.get("analisis") else []) + _pasos_iter(j, "Jacobi") + _pasos_iter(gs, "Gauss-Seidel")
+    if res.get("resumen"):
+        pasos_out.append(paso("Resumen comparativo", res["resumen"]))
+    avisos = ([f"Jacobi: {j.get('mensaje', '')}"] if not j.get("convergio") else []) + ([f"Gauss-Seidel: {gs.get('mensaje', '')}"] if not gs.get("convergio") else [])
+    return procedimiento(
+        "iterativos", "Comparación: Jacobi vs. Gauss-Seidel",
+        entrada=[{"etiqueta": "A", "latex": _mat(j["A"])}, {"etiqueta": "b", "latex": _vec(j["b"])},
+                 {"etiqueta": "x^{(0)}", "latex": _vec(j["x0"])}, {"etiqueta": r"\varepsilon", "latex": _num(j["tolerancia"])}],
+        pasos=pasos_out,
+        resultado=[{"etiqueta": f"x_{{\\text{{Jacobi}}}}^{{({kj})}}", "latex": _vec(j["solucion"])},
+                   {"etiqueta": f"x_{{\\text{{GS}}}}^{{({kg})}}", "latex": _vec(gs["solucion"])},
+                   {"etiqueta": r"\text{Iter. Jacobi}", "latex": str(len(j.get("iteraciones") or ()))},
+                   {"etiqueta": r"\text{Iter. GS}", "latex": str(len(gs.get("iteraciones") or ()))}],
+        verificacion=_verif_iter(j, "Jacobi") + _verif_iter(gs, "Gauss-Seidel") + ([res["resumen"]] if res.get("resumen") else []),
+        tablas=[_tabla_iter(j, "Iteraciones — Jacobi"), _tabla_iter(gs, "Iteraciones — Gauss-Seidel")],
+        avisos=avisos,
+    )
