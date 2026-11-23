@@ -291,6 +291,7 @@ function cambiarDimVector(delta) {
 }
 
 function actualizarEntradasVectores() {
+  window.ExportarUI?.limpiar("tab-vectores");
   const input = document.getElementById("vec-dim");
   vectorDim = parseInt(input.value, 10) || 3;
 
@@ -342,6 +343,7 @@ function obtenerValoresVector(prefijo) {
 }
 
 function limpiarModuloVectores() {
+  window.ExportarUI?.limpiar("tab-vectores");
   for (let i = 0; i < vectorDim; i++) {
     const elU = document.getElementById(`vec-u-${i}`);
     const elV = document.getElementById(`vec-v-${i}`);
@@ -418,7 +420,9 @@ async function calcularOperacionVector(operacion) {
     // Guardar para permitir cambio de notación en tiempo real
     ultimoCalculoVector = { data, u, v, c, operacion };
     renderizarResultadoVectorUI(ultimoCalculoVector);
+    window.ExportarUI?.registrar("tab-vectores", data);
   } catch (err) {
+    window.ExportarUI?.limpiar("tab-vectores");
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error:", err.message);
@@ -513,6 +517,7 @@ function cambiarDimCombK(delta) {
 }
 
 function actualizarEntradasCombinacion() {
+  window.ExportarUI?.limpiar("tab-combinacion");
   combN = parseInt(document.getElementById("comb-dim-n").value, 10) || 2;
   combK = parseInt(document.getElementById("comb-num-k").value, 10) || 2;
 
@@ -572,6 +577,7 @@ function actualizarEntradasCombinacion() {
 }
 
 function limpiarModuloCombinacion() {
+  window.ExportarUI?.limpiar("tab-combinacion");
   for (let j = 0; j < combK; j++) {
     for (let i = 0; i < combN; i++) {
       const el = document.getElementById(`comb-v-${j}-${i}`);
@@ -675,7 +681,9 @@ async function evaluarCombinacionLinealUI() {
     // Guardar estado para reactividad al alternar modo de notación
     ultimoCalculoCombinacion = { data, vectores, b };
     renderizarResultadoCombinacionUI(ultimoCalculoCombinacion);
+    window.ExportarUI?.registrar("tab-combinacion", data);
   } catch (err) {
+    window.ExportarUI?.limpiar("tab-combinacion");
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error:", err.message);
@@ -845,6 +853,7 @@ function cambiarDimMatB(dr, dp) {
 }
 
 function renderizarMatrizA() {
+  window.ExportarUI?.limpiar("tab-matrices");
   const m = parseInt(document.getElementById("mat-a-m").value, 10) || 2;
   const n = parseInt(document.getElementById("mat-a-n").value, 10) || 3;
   const grid = document.getElementById("mat-a-grid");
@@ -864,6 +873,7 @@ function renderizarMatrizA() {
 }
 
 function renderizarMatrizB() {
+  window.ExportarUI?.limpiar("tab-matrices");
   const r = parseInt(document.getElementById("mat-b-r").value, 10) || 3;
   const p = parseInt(document.getElementById("mat-b-r_col").value, 10) || 2;
   const grid = document.getElementById("mat-b-grid");
@@ -896,6 +906,7 @@ function obtenerMatrizValores(prefijo, filas, cols) {
 }
 
 function limpiarModuloMatrices() {
+  window.ExportarUI?.limpiar("tab-matrices");
   const m = parseInt(document.getElementById("mat-a-m").value, 10) || 2;
   const n = parseInt(document.getElementById("mat-a-n").value, 10) || 3;
   const r = parseInt(document.getElementById("mat-b-r").value, 10) || 3;
@@ -1076,7 +1087,9 @@ async function operarMatrices(operacion) {
       resultBox.appendChild(mapWrapper);
     }
     refrescarIconosLucide();
+    window.ExportarUI?.registrar("tab-matrices", data);
   } catch (err) {
+    window.ExportarUI?.limpiar("tab-matrices");
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error Dimensional:", err.message);
@@ -1106,6 +1119,7 @@ function cambiarDimInversa(delta) {
 }
 
 function renderizarMatrizInversaInput() {
+  window.ExportarUI?.limpiar("tab-inversa");
   const el = document.getElementById("inv-dim-n");
   invN = parseInt(el.value, 10) || 2;
   const grid = document.getElementById("inv-matrix-grid");
@@ -1139,6 +1153,7 @@ function obtenerMatrizInversaValores() {
 }
 
 function limpiarModuloInversa() {
+  window.ExportarUI?.limpiar("tab-inversa");
   for (let i = 0; i < invN; i++) {
     for (let j = 0; j < invN; j++) {
       const el = document.getElementById(`inv-a-${i}-${j}`);
@@ -1402,7 +1417,9 @@ async function calcularInversaUI() {
     }
 
     refrescarIconosLucide();
+    window.ExportarUI?.registrar("tab-inversa", data);
   } catch (err) {
+    window.ExportarUI?.limpiar("tab-inversa");
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error en Cálculo:", err.message);
@@ -1476,6 +1493,7 @@ function cambiarDimEqN(delta) {
 }
 
 function renderizarEcuacionMatricial() {
+  window.ExportarUI?.limpiar("tab-ecuaciones");
   eqM = parseInt(document.getElementById("eq-rows-m").value, 10) || 3;
   eqN = parseInt(document.getElementById("eq-cols-n").value, 10) || 3;
 
@@ -1511,6 +1529,7 @@ function renderizarEcuacionMatricial() {
 }
 
 function limpiarModuloEcuaciones() {
+  window.ExportarUI?.limpiar("tab-ecuaciones");
   for (let i = 0; i < eqM; i++) {
     for (let j = 0; j < eqN; j++) {
       const elA = document.getElementById(`eq-a-${i}-${j}`);
@@ -1692,7 +1711,9 @@ async function resolverEcuacionMatricialUI() {
       resultBox.appendChild(stepsWrapper);
     }
     refrescarIconosLucide();
+    window.ExportarUI?.registrar("tab-ecuaciones", data);
   } catch (err) {
+    window.ExportarUI?.limpiar("tab-ecuaciones");
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error al resolver:", err.message);
@@ -1724,6 +1745,7 @@ function cambiarDimDet(delta) {
 }
 
 function renderizarMatrizDeterminante() {
+  window.ExportarUI?.limpiar("tab-determinante");
   const input = document.getElementById("det-order-n");
   const container = document.getElementById("det-matrix-grid");
   if (!input || !container) return;
@@ -1942,6 +1964,7 @@ function cargarEjemploDeterminante(caso) {
 }
 
 function limpiarModuloDeterminante() {
+  window.ExportarUI?.limpiar("tab-determinante");
   const input = document.getElementById("det-order-n");
   const n = input ? parseInt(input.value) || 3 : 3;
   for (let r = 0; r < n; r++) {
@@ -2120,8 +2143,10 @@ async function calcularDeterminanteUI() {
     }
 
     refrescarIconosLucide();
+    window.ExportarUI?.registrar("tab-determinante", data);
     mostrarToast(`Determinante calculado: $|A|=${detFmtLatex}$`);
   } catch (err) {
+    window.ExportarUI?.limpiar("tab-determinante");
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error al calcular:", err.message);
