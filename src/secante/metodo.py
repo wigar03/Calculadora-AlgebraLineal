@@ -5,6 +5,7 @@ from ..regla_falsa.dominio import (
     ExpresionNumerica as Expresion, validar_condicion, raiz_admisible, verificar_raiz,
 )
 from ..core.tolerancia import clasificar, informe
+from ..regla_falsa.certificacion import certificar_raiz, aviso_no_certificada
 
 
 def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, criterio="absoluto",
@@ -25,17 +26,22 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
     avisos = []
     ea = er = None
     iniciales = [a,b]
-    escala_residuo = max(1., min(abs(fa), abs(fb)))
 
     def resultado(motivo, convergio):
+        cert = None
         if convergio and not raiz_admisible(b, condicion):
             motivo, convergio = "raiz_no_admisible", False
+        elif convergio:
+            cert = certificar_raiz(f, b, tol, criterio, condicion)
+            if not cert["certificada"]:
+                motivo, convergio = "no_certificada", False
+                avisos.append(aviso_no_certificada(cert))
         valores = {"absoluto": ea, "relativo": er, "residuo": abs(fb)}
         clases = {k: clasificar(v, tol) for k, v in valores.items()}
         return {"funcion": f.texto, "funcion_latex": f.latex(), "iniciales": iniciales,
                 "raiz": b, "f_raiz": fb, "residuo": abs(fb), "error_absoluto": ea,
                 "condicion": condicion, "verificacion": verificar_raiz(f, b, tol),
-                "escala_residuo": escala_residuo, "residuo_escalado": abs(fb)/escala_residuo,
+                "certificacion": cert,
                 "error_relativo": er, "iteraciones": len(pasos), "pasos": pasos,
                 "convergio": convergio, "motivo": motivo, "advertencias": avisos,
                 "tolerancia": tol, "criterio": criterio,
@@ -76,14 +82,12 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
         a,b,fa,fb = b,c,fb,fc
         if fc == 0:
             return resultado("raiz_evaluada", True)
+        valor = {"absoluto":ea,"relativo":er,"residuo":abs(fc)}[criterio]
+        if clasificar(valor, tol):
+            return resultado("tolerancia", True)
         if sin_progreso:
             return resultado("sin_progreso", False)
         if (a,b) in vistos:
             return resultado("ciclo", False)
-        valor = {"absoluto":ea,"relativo":er,"residuo":abs(fc)}[criterio]
-        # La tolerancia es aproximada: se acepta hasta MARGEN_TOLERANCIA por encima de ella.
-        residuo_compatible = abs(fc)/escala_residuo <= tol
-        if clasificar(valor, tol) and (criterio == "residuo" or residuo_compatible):
-            return resultado("tolerancia", True)
         vistos.add((a,b))
     return resultado("max_iteraciones", False)
