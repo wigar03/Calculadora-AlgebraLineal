@@ -106,12 +106,12 @@ class TestExternoLatex(unittest.TestCase):
             "tablas": [{"titulo": ESPECIALES, "columnas": ["k", ESPECIALES],
                         "filas": [[k, ESPECIALES] for k in range(40)]}]}
         salida = ejecutar_node([procedimiento])[0]
+        with self.subTest(comprobacion="PDF y paginación del texto UTF-8"):
+            self.comprobar_pdf("especiales_utf8", salida["latex"], multipagina=True)
         # Compilar no basta: reescapar las llaves de textbackslash imprime llaves espurias.
         with self.subTest(comprobacion="escape literal de barra inversa"):
             self.assertIn(r"\textbackslash{}", salida["latex"])
             self.assertNotIn(r"\textbackslash\{\}", salida["latex"])
-        with self.subTest(comprobacion="PDF y paginación del texto UTF-8"):
-            self.comprobar_pdf("especiales_utf8", salida["latex"], multipagina=True)
 
 
 def _pendiente(nombre, motivo):
