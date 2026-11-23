@@ -2,25 +2,14 @@
 
 import ast
 import math
+from decimal import Decimal, localcontext
+from fractions import Fraction
 
 from ..biseccion.expresiones import Expresion
 
 
 class ExpresionNumerica(Expresion):
-    """Conserva el analizador y detecta polos trigonométricos representables.
-
-    math.tan(pi/2) devuelve un flotante enorme: no significa que exista tan(pi/2).
-    La guarda usa el error de representación del argumento, no una tolerancia de raíz.
-    """
-
-    def _evaluar(self, nodo, x):
-        if isinstance(nodo, ast.Call) and nodo.func.id == "tan":
-            u = self._evaluar(nodo.args[0], x)
-            if abs(math.cos(u)) <= 2 * math.ulp(max(1.0, abs(u))):
-                raise ValueError("tan no está definida en un polo (pi/2 + k*pi).")
-            if u and abs(math.sin(u)) <= 2 * math.ulp(abs(u)):
-                return 0.0
-        return super()._evaluar(nodo, x)
+    """Reutiliza el dominio del analizador sin alterar los valores de la función."""
 
 
 def validar_condicion(condicion):
@@ -43,9 +32,9 @@ def verificar_raiz(f, x, tolerancia):
 def _polinomio(n):
     """Coeficientes hasta grado dos; None pide continuar con análisis numérico."""
     if isinstance(n, ast.Constant):
-        return [float(n.value)]
+        return [Fraction(str(n.value))]
     if isinstance(n, ast.Name):
-        return [0., 1.] if n.id == "x" else [getattr(math, n.id)]
+        return [Fraction(0), Fraction(1)] if n.id == "x" else [Fraction(str(getattr(math, n.id)))]
     if isinstance(n, ast.UnaryOp):
         p = _polinomio(n.operand)
         return None if p is None else [(-v if isinstance(n.op, ast.USub) else v) for v in p]
@@ -54,6 +43,8 @@ def _polinomio(n):
     p, q = _polinomio(n.left), _polinomio(n.right)
     if p is None or q is None:
         return None
+    if isinstance(n.op, ast.Div) and len(q) == 1 and q[0]:
+        return [v / q[0] for v in p]
     if isinstance(n.op, ast.Pow) and q == [2.] and len(p) <= 2:
         q = p
     elif not isinstance(n.op, (ast.Add, ast.Sub, ast.Mult)):
@@ -61,12 +52,12 @@ def _polinomio(n):
     if isinstance(n.op, (ast.Mult, ast.Pow)):
         if len(p) + len(q) > 4:
             return None
-        r = [0.] * (len(p) + len(q) - 1)
+        r = [Fraction(0)] * (len(p) + len(q) - 1)
         for i, u in enumerate(p):
             for j, v in enumerate(q):
                 r[i + j] += u * v
         return r
-    r = [0.] * max(len(p), len(q))
+    r = [Fraction(0)] * max(len(p), len(q))
     for i, v in enumerate(p):
         r[i] += v
     for i, v in enumerate(q):
@@ -74,21 +65,25 @@ def _polinomio(n):
     return r
 
 
-def _ceros(n, nivel=0.):
+def _ceros(n, nivel=0):
     p = _polinomio(n)
     if p is None:
         return []
-    p[0] -= nivel
+    p[0] -= Fraction(str(nivel))
     while len(p) > 1 and p[-1] == 0:
         p.pop()
     if len(p) == 2:
-        return [-p[0] / p[1]]
+        return [float(-p[0] / p[1])]
     if len(p) == 3:
         c, b, a = p
         discriminante = b*b - 4*a*c
         if discriminante >= 0:
-            q = -.5 * (b + math.copysign(math.sqrt(discriminante), b))
-            return [q/a, c/q] if q else [-b/(2*a)]
+            with localcontext() as ctx:
+                ctx.prec = 80
+                decimal = lambda v: Decimal(v.numerator)/Decimal(v.denominator)
+                raiz = decimal(discriminante).sqrt()
+                q = -(decimal(b) + (raiz if b >= 0 else -raiz))/2
+                return [float(q/decimal(a)), float(decimal(c)/q)] if q else [float(-b/(2*a))]
     return []
 
 
