@@ -96,7 +96,7 @@ Cada caso incluye un título válido `# A` antes de la entrada indicada; tiempos
 | `[x][ausente]` | `referencia sin definir`, línea 2 | 1,421 |
 | Código literal con dólares, LaTeX y enlace inexistente | `OK` (contenido literal) | 0,927 |
 
-También se prueban imágenes, referencias colapsadas, rutas con espacios/codificación URL y paréntesis, anclas
+También se prueban imágenes, referencias, rutas con codificación URL y paréntesis, anclas
 acentuadas y repetidas, anclas HTML, cercas de longitud distinta, dólares escapados y revisión interna solo de enlaces.
 
 ## Pruebas finales y límites de la evidencia
@@ -112,3 +112,40 @@ La CI existente descubre `tests/test_markdown.py`; sus pruebas y el verificador 
 No se modificaron el motor, la UI, los recursos JS/CSS ni sus versiones. La inspección visual final en github.com tras
 publicar corresponde al coordinador; la validación realizada aquí es estructural y sintáctica, no una inspección visual.
 Queda para el integrador valorar los comentarios erróneos del motor mencionados arriba, fuera del alcance autorizado.
+
+## Commits anteriores al cierre del informe
+
+Líneas = añadidas + eliminadas; todos los ganchos permanecieron activos. El commit que añade esta tabla
+se identifica en la entrega de Orca; no se hizo push, merge ni release.
+
+| Hash | Mensaje | Líneas |
+|---|---|---:|
+| `c0281db` | test(docs): definir regresiones del Markdown publico | 79 |
+| `00d5966` | docs(validacion): registrar errores y linea base de Markdown | 37 |
+| `a430417` | docs(readme): actualizar descarga y resumir los once modulos | 35 |
+| `d8186ea` | feat(docs): analizar bloques y delimitadores matematicos | 84 |
+| `6b3c8bb` | feat(docs): comprobar enlaces internos y anclas | 64 |
+| `bd74fa7` | feat(docs): integrar validacion publica en la bateria existente | 46 |
+| `a6a0587` | docs: actualizar alcance y enlaces de distribucion | 27 |
+| `698764d` | docs(releases): ordenar titulos y delimitar formulas historicas | 48 |
+| `f66bb5a` | docs(guia): actualizar contexto y dimensiones vectoriales | 37 |
+| `4a17640` | docs(guia): corregir geometria y conteos de determinantes | 26 |
+| `5351f66` | docs(guia): sincronizar entradas requisitos y validaciones | 16 |
+| `7cfa5fe` | docs(guia): reemplazar el arbol obsoleto por la estructura actual | 85 |
+| `291c52e` | docs(guia): reunir los fundamentos de los once modulos | 28 |
+| `e2ab7a1` | docs(guia): separar formulas iterativas y aclarar su alcance | 18 |
+| `c046ceb` | docs(math): preservar notacion de vectores y combinacion en GitHub | 62 |
+| `74c1687` | docs(math): delimitar operaciones y propiedades matriciales | 54 |
+| `e2ba90f` | docs(math): preservar matrices y fracciones de la inversa | 50 |
+| `b199240` | docs(math): delimitar sistemas determinantes y sumatorias | 72 |
+| `36765e2` | docs(math): delimitar biseccion y regla falsa | 30 |
+| `b3976d1` | docs(math): preservar derivadas y formulas de metodos abiertos | 22 |
+| `4395133` | docs(math): preservar subindices y normas de iterativos | 8 |
+| `956be80` | docs(math): delimitar notacion del historial de desarrollo | 18 |
+| `2e871e9` | docs(math): conservar separadores de matriz en el renderizador GitHub | 7 |
+| `011aea4` | docs(math): reparar el separador de filas del contraejemplo iterativo | 9 |
+| `16c681e` | test(docs): cubrir referencias ausentes y diagnosticos internos | 18 |
+| `0c0e351` | fix(docs): detectar enlaces con referencia sin definir | 5 |
+| `fc81ceb` | docs(validacion): respaldar precisiones de continuidad traza y normas | 6 |
+| `f884bf4` | docs(guia): precisar hipotesis de traza y criterios relativos | 6 |
+| `1bb4eda` | docs(validacion): registrar renderizado y evidencia de Markdown | 77 |
