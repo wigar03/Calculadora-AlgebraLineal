@@ -55,7 +55,7 @@ acepta exp(1e8·x), que no tiene raíces. (P2) polos falsos por cancelación en 
 como afín; falso salto de III-11 en [1e-16, 2]. Corrección: certificar la raíz final (cambio de signo sin puntos
 excluidos) antes de declarar convergencia.
 
-## INC-011 · 2026-11-23 · presentación · EN CURSO (Antigravity) — hallado por el integrador
+## INC-011 · 2026-11-23 · presentación · CERRADA (tests/test_motivos_contrato.cjs; también faltaba sin_progreso en regla-falsa.js)
 El motor devuelve `motivo = "raiz_no_admisible"` (condición positiva o positiva no nula), pero ningún diccionario
 `MOTIVOS` de las cuatro páginas lo contiene: el mensaje se mostraría como «undefined». Lo mismo ocurrirá con
 `no_certificada` (INC-010). Corrección: añadir los textos y una prueba de contrato entre motivos y diccionarios.
