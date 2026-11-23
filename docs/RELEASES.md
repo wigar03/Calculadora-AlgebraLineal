@@ -6,7 +6,7 @@
 | v1.0.0-rc.2 | 2026-11-23 | prerelease publicada (CI 45209275071 en verde) | 47/47 ejercicios definidos validados; ver abajo |
 | v1.0.0-rc.3 | 2026-11-23 | **etiqueta sin release** (CI 45224566698 falló) | diagnóstico del ejecutable esperaba 10 módulos |
 | v1.0.0-rc.4 | 2026-11-23 | **prerelease publicada** (CI 45225495488 en verde) | módulo 11 validado + diagnóstico corregido; ver abajo |
-| v1.0.0-rc.5 | 2026-11-23 | prerelease | etapa 3: robustez (P1) y procedimientos comunes; ver abajo |
+| v1.0.0-rc.5 | 2026-11-23 | **prerelease publicada** (CI 45254879718 en verde) | etapa 3: robustez (P1) y procedimientos comunes; ver abajo |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -52,3 +52,4 @@
   (457 pruebas en cada una; ejecutable empaquetado con procesos aislados correcto).
 - **No es estable:** sigue siendo prerelease (P2 pendiente de aprobación; ejecutables sin firma).
 - **Notas:** `docs/notas-v1.0.0-rc.5.md`.
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.5 (prerelease); sumas SHA-256 verificadas.

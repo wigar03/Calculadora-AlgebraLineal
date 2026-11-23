@@ -1,8 +1,13 @@
 # Estado operativo de Orca
 
-Última actualización: 2026-11-23, etapa 2 (integrador: Claude Business, Opus 5.5).
+Última actualización: 2026-11-23, etapa 3 (integrador: Claude Business, Opus 5.5).
 
 ## Resumen para el propietario
+- **Etapa 3 (P1) completa:** robustez y formato común de procedimientos, publicada en la prerelease `v1.0.0-rc.5`.
+  Evidencia: `docs/validacion/robustez-antes.md`, `robustez-despues.md`. CI Linux y Windows en verde.
+- **P2 espera tu decisión** sobre `docs/propuestas/P2-exportacion.md` (3 preguntas). P3 no autorizado.
+
+### Etapa 2 (anterior)
 - **Módulo 11 (Jacobi y Gauss-Seidel) integrado y validado** por API, navegador y referencias exactas.
   Release `v1.0.0-rc.4` (rc.3 quedó sin release: CI del ejecutable; ver `docs/RELEASES.md`).
 - **Auditoría y roadmap**: `docs/auditoria/01..04`. Las 5 prioridades recomendadas y la siguiente etapa están en
