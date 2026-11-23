@@ -31,7 +31,7 @@ PREFIJO_PELIGROSO = re.compile(r"^[\s\x00-\x1f\x7f-\x9f\ufeff]*[=+\-@]")
 
 
 def fraccion_valida(texto):
-    return bool(FRACCION.fullmatch(texto) and texto.rsplit("/", 1)[1].lstrip("0"))
+    return bool(FRACCION.fullmatch(texto) and Decimal(texto.rsplit("/", 1)[1]) != 0)
 
 
 def entero_largo(texto):
@@ -294,6 +294,13 @@ class TestExportacionModulos(unittest.TestCase):
 
 
 class TestOraculoCSV(unittest.TestCase):
+    @staticmethod
+    def codificar(columnas, filas):
+        buffer = io.StringIO(newline="")
+        escritor = csv.writer(buffer, delimiter=";", lineterminator="\r\n")
+        escritor.writerows([columnas, *filas])
+        return "\ufeff" + buffer.getvalue()
+
     def test_acepta_codificacion_contractual_sin_usar_exportador(self):
         tabla = {"columnas": ["x", "texto", "q"],
                  "filas": [[-0.0, "=cmd|x", "-1/2"], [1e-300, 'a;"b"\nfin', None]]}
@@ -305,6 +312,52 @@ class TestOraculoCSV(unittest.TestCase):
         errores = problemas_csv("x;texto\r\n0;@SUM(1)\r\n1,2346;fin", tabla)
         self.assertEqual(len(errores), 3)
         self.assertTrue(any("Filas perdidas" in e for e in problemas_csv("\ufeffx;texto", tabla)))
+
+    def test_cero_negativo_exige_cero_normalizado(self):
+        for original in (-0.0, "-0", "-0.000", "-0e10"):
+            tabla = {"columnas": ["x"], "filas": [[original]]}
+            with self.subTest(original=original):
+                self.assertEqual(problemas_csv(self.codificar(["x"], [["0"]]), tabla), [])
+                self.assertTrue(problemas_csv(self.codificar(["x"], [["-0"]]), tabla))
+
+    def test_enteros_limite_15_cifras_y_texto_validado_sin_perder_digitos(self):
+        for valor in ("9007199254740993123456789", "-1234567890123456", "0001234567890123456", 1234567890123456):
+            tabla = {"columnas": ["x"], "filas": [[valor]]}
+            with self.subTest(valor=valor):
+                self.assertEqual(problemas_csv(self.codificar(["x"], [[f'=\"{valor}\"']]), tabla), [])
+                self.assertTrue(problemas_csv(self.codificar(["x"], [[str(valor)]]), tabla))
+        for valor in ("123456789012345", "000123456789012345", "-123456789012345"):
+            tabla = {"columnas": ["x"], "filas": [[valor]]}
+            self.assertEqual(problemas_csv(self.codificar(["x"], [[valor]]), tabla), [])
+
+    def test_fracciones_con_denominador_cero_nunca_son_formulas_validadas(self):
+        for valor in ("1/0", "-1/0", "0/0", "17/000", "-17/000", "1/-0"):
+            tabla = {"columnas": ["q"], "filas": [[valor]]}
+            esperado = "'" + valor if valor.startswith("-") else valor
+            with self.subTest(valor=valor):
+                self.assertEqual(problemas_csv(self.codificar(["q"], [[esperado]]), tabla), [])
+                self.assertTrue(problemas_csv(self.codificar(["q"], [[f'=\"{valor}\"']]), tabla))
+        tabla = {"columnas": ["q"], "filas": [["0003/0007"]]}
+        self.assertEqual(problemas_csv(self.codificar(["q"], [['="0003/0007"']]), tabla), [])
+
+    def test_detecta_inyeccion_tras_espacios_y_controles_en_celdas_y_cabeceras(self):
+        for inicio in (" ", "\n", "\r", "\t", "\v", "\f", "\x00", "\x1f", "\x7f",
+                       "\u00a0", "\u2003", "\u3000", "\ufeff", " \n\t\u00a0\u2003\u3000"):
+            for formula in ("=1+1", "+SUM(A1)", "-SUM(A1)", "@SUM(A1)"):
+                valor = inicio + formula
+                tabla = {"columnas": [valor], "filas": [[valor]]}
+                with self.subTest(inicio=repr(inicio), formula=formula):
+                    seguro = self.codificar(["'" + valor], [["'" + valor]])
+                    self.assertEqual(problemas_csv(seguro, tabla), [])
+                    self.assertEqual(len(problemas_csv(self.codificar([valor], [[valor]]), tabla)), 2)
+                    alterado = "'" + valor.lstrip()
+                    self.assertTrue(problemas_csv(self.codificar([alterado], [[alterado]]), tabla))
+
+    def test_preserva_texto_inocuo_y_no_autoriza_formulas_arbitrarias(self):
+        for valor in ("\n  texto", "\u00a0\u2003\u3000texto", '=\"1/0\"', '=\"1234567890123456\"'):
+            tabla = {"columnas": [valor], "filas": [[valor]]}
+            esperado = "'" + valor if valor.startswith("=") else valor
+            self.assertEqual(problemas_csv(self.codificar([esperado], [[esperado]]), tabla), [])
 
 
 def escribir_informe(destino):
