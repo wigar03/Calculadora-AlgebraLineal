@@ -25,7 +25,7 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
     avisos = []
     ea = er = None
     iniciales = [a,b]
-    escala_residuo = max(1., abs(fa), abs(fb))
+    escala_residuo = max(1., min(abs(fa), abs(fb)))
 
     def resultado(motivo, convergio):
         if convergio and not raiz_admisible(b, condicion):

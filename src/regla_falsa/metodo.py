@@ -108,6 +108,7 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
     xl, xu, f_xl, f_xu = previa["xl"], previa["xu"], previa["f_xl"], previa["f_xu"]
     validar_continuidad(f, xl, xu)
     inicial = [xl, xu]
+    escala_residuo = max(1., min(abs(f_xl), abs(f_xu)))
     pasos = []
     racha = {"extremo": None, "actual": 0, "mayor": 0, "extremo_mayor": None}
 
@@ -124,6 +125,7 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
             "error_absoluto": pasos[-1]["error_absoluto"] if pasos else None,
             "criterio": "relativo_porcentual", "condicion": condicion,
             "verificacion": verificar_raiz(f, xr, tolerancia),
+            "escala_residuo": escala_residuo, "residuo_escalado": abs(f_xr)/escala_residuo,
             "tolerancia": tolerancia, "convergio": convergio, "motivo": motivo,
             "estancamiento": estancamiento,
             "iteraciones": len(pasos), "pasos": pasos,
@@ -156,7 +158,8 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
             motivo, convergio = "precision_agotada", False
         elif anterior == xr:
             motivo, convergio = "sin_progreso", False
-        elif error_rel is not None and error_rel <= tolerancia:
+        elif (error_rel is not None and error_rel <= tolerancia
+              and abs(f_xr)/escala_residuo <= tolerancia):
             motivo, convergio = "tolerancia", True
         elif numero == int(limite):
             motivo, convergio = "max_iteraciones", False

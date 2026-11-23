@@ -184,6 +184,10 @@ def _explorar(f, a, b, muestras):
         if x is not None:
             hallazgos.append(_discontinuidad("asintota", x, x))
 
+    # Las restricciones siguen vigentes aunque f tenga una cancelación algebraica.
+    for x in puntos_excluidos(f, a, b):
+        if not any(d["desde"] - paso*1e-3 <= x <= d["hasta"] + paso*1e-3 for d in hallazgos):
+            hallazgos.append(_discontinuidad("punto_indefinido", x, x))
     # Un mismo punto puede detectarse por dos vías: se conserva una sola entrada.
     discontinuidades = []
     for hallazgo in hallazgos:
@@ -226,12 +230,6 @@ def _leer_region(funcion, a, b, muestras):
 
 
 def _resumen_continuidad(f, a, b, muestras, discontinuidades):
-    # Una cancelación algebraica puede ocultar un punto excluido al muestreo de f.
-    for x in puntos_excluidos(f, a, b):
-        if not any(d["desde"] - (b-a)/muestras*1e-3 <= x <=
-                   d["hasta"] + (b-a)/muestras*1e-3 for d in discontinuidades):
-            discontinuidades.append(_discontinuidad("punto_indefinido", x, x))
-    discontinuidades.sort(key=lambda d: d["desde"])
     return {
         "funcion": f.texto, "intervalo": [a, b], "muestras": muestras + 1,
         "continua": not discontinuidades,
