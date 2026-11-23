@@ -1,5 +1,16 @@
 # Historial de versiones
 
+## 1.0.0-rc.5
+
+Candidata de robustez; resultados y procedimientos de los once módulos sin cambios.
+
+### Incluido
+
+- Cálculos en procesos aislados con tiempo, memoria y tamaño de respuesta acotados.
+- Límites iguales en interfaz, servidor y motores; cofactores hasta 6×6 con LU recomendado; Bareiss como comprobación.
+- Errores uniformes en español sin texto interno; cabeceras de seguridad y peticiones solo locales.
+- Formato común de procedimientos en la API y biblioteca de exportación preparada (sin cambios visibles).
+
 ## 1.0.0-rc.4
 
 Candidata con el módulo 11, Jacobi y Gauss-Seidel. (La etiqueta `v1.0.0-rc.3` no se publicó: la CI del
