@@ -10,6 +10,12 @@ const ultimasLineas = (txt, n = 12) => String(txt || '').trim().split(/\r?\n/).f
 const esBloqueoPolitica = err => Boolean(err && (['EACCES', 'EPERM', 'ENOENT'].includes(err.code) || [5, 1260, 4551].includes(err.exitCode) || POLITICA_RE.test(`${err.message || ''}\n${err.stderr || ''}`)));
 
 const opcionesSpawn = (opts, platform = process.platform) => ({ ...opts, detached: platform !== 'win32' });
+const argsNavegador = (perfil, platform = process.platform) => [
+  '--headless=new', '--disable-gpu', '--no-sandbox', '--no-first-run', '--no-default-browser-check',
+  '--disable-extensions', '--disable-background-networking', '--noerrdialogs',
+  ...(platform === 'win32' ? ['--do-not-de-elevate'] : []),
+  '--remote-debugging-port=0', `--user-data-dir=${perfil}`, 'about:blank',
+];
 
 function matarArbol(proc, { platform = process.platform, killFn = process.kill, spawnSyncFn = spawnSync } = {}) {
   if (!proc) return;
@@ -77,22 +83,23 @@ test('navegador real: 11 módulos calculan y exportan, impresión emulada, móvi
     for (const tm of timers) clearTimeout(tm); timers.clear();
     for (const ws of sockets) try { ws.close(); } catch (_) {} sockets.clear();
     for (const p of procs) matarArbol(p); procs.clear();
-    for (const d of perfiles) try { fs.rmSync(d, { recursive: true, force: true }); } catch (_) {} perfiles.length = 0;
+    for (const d of perfiles) try { fs.rmSync(d, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 }); } catch (_) {} perfiles.length = 0;
   };
   t.after(limpiar); t.signal?.addEventListener('abort', limpiar, { once: true });
   const ctx = { timeoutMs: ARRANQUE_MS, signal: t.signal, procs, timers };
   const py = "import sys; from src.ui.web_server import servidor_local\nwith servidor_local() as u:\n print(u, flush=True); sys.stdin.read()\n";
   try {
     const srv = await lanzar('python', ['-u', '-c', py], { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] }, /http:\/\/127\.0\.0\.1:\d+/, 'stdout', ctx);
-    let nav = null, ultimoErr = null, huboPolitica = false;
+    let nav = null, huboPolitica = false;
+    const errores = [];
     for (const exe of navegadores) {
       const perfil = fs.mkdtempSync(path.join(os.tmpdir(), 'p2-cdp-')); perfiles.push(perfil);
       try {
-        nav = await lanzar(exe, ['--headless=new', '--disable-gpu', '--no-sandbox', '--no-first-run', '--no-default-browser-check', '--disable-extensions', '--disable-background-networking', '--remote-debugging-port=0', `--user-data-dir=${perfil}`, 'about:blank'], { stdio: ['ignore', 'pipe', 'pipe'] }, /DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)\//, 'stderr', ctx);
+        nav = await lanzar(exe, argsNavegador(perfil), { stdio: ['ignore', 'pipe', 'pipe'] }, /DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)\//, 'stderr', ctx);
         break;
-      } catch (e) { ultimoErr = e; if (esBloqueoPolitica(e)) huboPolitica = true; }
+      } catch (e) { errores.push(`${path.basename(exe)}: ${e.message}`); if (esBloqueoPolitica(e)) huboPolitica = true; }
     }
-    if (!nav) { if (huboPolitica) { t.skip(`Arranque bloqueado por política del sistema: ${ultimoErr.message}`); return; } throw ultimoErr; }
+    if (!nav) { const detalle = errores.join('\n---\n'); if (huboPolitica) { t.skip(`Arranque bloqueado por política del sistema:\n${detalle}`); return; } throw new Error(detalle); }
     const capDir = process.env.P2_CAPTURAS ? path.join(ROOT, 'docs', 'validacion', 'p2-ui') : null;
     if (capDir) fs.mkdirSync(capDir, { recursive: true });
     const cdp = await conectarCDP(Number(nav.val), sockets);
@@ -171,6 +178,9 @@ test('arranque del navegador: vence a tiempo con stderr, mata el proceso y disti
   const fakeProc = () => ({ pid: 4242, exitCode: null, signalCode: null, killed: false, kill(s) { this.killed = s; }, unref() {} });
   assert.equal(opcionesSpawn({ stdio: 'pipe' }, 'linux').detached, true);
   assert.equal(opcionesSpawn({ stdio: 'pipe' }, 'win32').detached, false);
+  assert.ok(argsNavegador('C:\\tmp\\p', 'win32').includes('--do-not-de-elevate'));
+  assert.ok(argsNavegador('C:\\tmp\\p', 'win32').includes('--noerrdialogs'));
+  assert.ok(!argsNavegador('/tmp/p', 'linux').includes('--do-not-de-elevate'));
   matarArbol(fakeProc(), { platform: 'linux', killFn: (pid, sig) => llamadasPosix.push([pid, sig]), spawnSyncFn: () => { throw new Error('no taskkill en POSIX'); } });
   assert.deepEqual(llamadasPosix, [[-4242, 'SIGKILL']]);
   matarArbol(fakeProc(), { platform: 'win32', killFn: () => {}, spawnSyncFn: (cmd, args) => llamadasWin.push([cmd, args]) });
