@@ -1,5 +1,8 @@
 # Auditoría de seguridad y compatibilidad CSV
 
+Registro histórico: las ocho omisiones se retiraron y la versión integrada pasa sin ellas.
+Véase el [cierre sobre e11d33e](csv-integrado-e11d33e.md).
+
 Fecha: 2026-11-23. Rama `orca/consolidacion-csv`, desde `main` `60c6d0c`.
 Se revisó `src/ui/web/exportar.js` sin editarlo; SHA-256:
 `3ef92d0bb4fc0e5b65842d765d5dce1029ff4e4a1bf88951537fcb7b95a474fc`.
