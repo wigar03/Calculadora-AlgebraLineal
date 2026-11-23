@@ -47,7 +47,7 @@ Sin discrepancias matemáticas (1010 comparaciones con SymPy).
 El diagnóstico de producto implícito propone solo «Escribe '2*x'»; el propietario pidió la expresión completa
 corregida («Escribe 2*x + 3 = 7»).
 
-## INC-010 · 2026-11-23 · motor · EN CURSO (Codex 2) — hallado en revisión cruzada (Codex 1)
+## INC-010 · 2026-11-23 · motor · CERRADA (d329aa4; `tests/test_raices_revision.py`; verificado por HTTP) — hallado en revisión cruzada (Codex 1)
 Siete hallazgos reproducidos por HTTP, ninguno en los datos del banco con datos iniciales razonables:
 (P1) III-10 por secante desde (0.2, 0.5) acepta x ≈ 5.8·10⁻¹³ como raíz positiva no nula; IV-3 por Newton desde −2.75
 «converge» al punto excluido 0; la guarda de tan fabrica f = 0 y rechaza tan(1e16); el residuo escalado por f(x0)
