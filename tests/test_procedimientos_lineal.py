@@ -63,7 +63,7 @@ class TestProcedimientosLineales(unittest.TestCase):
 
     def test_todo_latex_renderiza_en_katex_estricto(self):
         procedimientos = [ADAPTADORES[c["ruta"]](c["respuesta"], c["cuerpo"]) for c in casos_lineales()]
-        proceso = subprocess.run(["node", "tests/procedimientos_lineal_katex.cjs"], cwd=RAIZ,
+        proceso = subprocess.run(["node", "tests/procedimientos_lineal_katex.cjs", "--stdin"], cwd=RAIZ,
                                  input=json.dumps(procedimientos), capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(proceso.returncode, 0, proceso.stdout + proceso.stderr)
         self.assertGreater(json.loads(proceso.stdout)["bloques"], 500)
