@@ -4,6 +4,7 @@ P2_EXPORTAR_JS permite revisar la biblioteca de otra rama sin modificar src/.
 Ejecutar con --informe ruta.json conserva medidas y diagnósticos reproducibles.
 """
 import csv
+import hashlib
 import io
 import json
 import math
@@ -195,14 +196,14 @@ class TestExportacionModulos(unittest.TestCase):
             for i, (tabla, texto) in enumerate(zip(caso["procedimiento"]["tablas"], salida["csv"])):
                 with self.subTest(caso=caso["id"], tabla=i):
                     errores = problemas_csv(texto, tabla)
-                    self.assertFalse(errores, f"{len(errores)} incumplimientos CSV: " + "; ".join(errores[:12]))
+                    self.assertEqual(len(errores), 0, f"{len(errores)} incumplimientos CSV: " + "; ".join(errores[:12]))
             self.assertEqual(len(salida["csv"]), len(caso["procedimiento"]["tablas"]))
 
     def test_csv_espacios_extremos_citados_y_escapes(self):
         texto = self.salidas[-1]["csv"][0]
-        self.assertIn('"  bordes  "', texto, "Los espacios extremos requieren comillas RFC 4180")
-        self.assertIn('"comillas ""dobles""; fin"', texto)
-        self.assertIn('"línea 1\nlínea 2"', texto)
+        for campo in ('"  bordes  "', '"comillas ""dobles""; fin"', '"línea 1\nlínea 2"'):
+            with self.subTest(campo=campo):
+                self.assertTrue(campo in texto, f"Campo sin escape RFC 4180: {campo!r}")
 
     def test_latex_entornos_y_cada_fragmento_katex_estricto(self):
         for caso, salida in zip(self.casos, self.salidas):
@@ -211,30 +212,35 @@ class TestExportacionModulos(unittest.TestCase):
                 self.assertEqual(validacion["fallos"], 0, "\n".join(validacion["errores"]))
                 self.assertGreater(validacion["fragmentos"], 0)
                 for latex in fragmentos_fuente(caso["procedimiento"]):
-                    self.assertIn(latex, salida["latex"], f"Fragmento original alterado: {latex}")
+                    self.assertTrue(latex in salida["latex"], f"Fragmento original alterado: {latex[:240]}")
 
-    def test_latex_documento_completo_y_tablas_paginadas(self):
+    def test_latex_documento_completo(self):
         for caso, salida in zip(self.casos, self.salidas):
             with self.subTest(caso=caso["id"]):
                 doc = salida["latex"]
-                self.assertRegex(doc, r"\\documentclass(?:\[[^]]*\])?\{article\}")
+                self.assertTrue(re.search(r"\\documentclass(?:\[[^]]*\])?\{article\}", doc), "Falta clase article")
                 for paquete in ("amsmath", "amssymb"):
-                    self.assertRegex(doc, r"\\usepackage\{[^}]*" + paquete + r"[^}]*\}")
-                self.assertIn(r"\usepackage[utf8]{inputenc}", doc)
-                self.assertIn(r"\usepackage[spanish]{babel}", doc)
+                    self.assertTrue(re.search(r"\\usepackage\{[^}]*" + paquete + r"[^}]*\}", doc), paquete)
+                for paquete in (r"\usepackage[utf8]{inputenc}", r"\usepackage[spanish]{babel}"):
+                    self.assertTrue(paquete in doc, f"Falta {paquete}")
                 for seccion, campo in (("Datos de entrada", "entrada"), ("Procedimiento", "pasos"),
                                        ("Resultado", "resultado"), ("Verificación", "verificacion")):
                     if caso["procedimiento"][campo]:
-                        self.assertIn(seccion, doc)
+                        self.assertTrue(seccion in doc, f"Falta sección {seccion}")
+
+    def test_latex_tablas_completas_y_paginadas(self):
+        for caso, salida in zip(self.casos, self.salidas):
+            with self.subTest(caso=caso["id"]):
+                doc = salida["latex"]
                 for tabla, tex in zip(caso["procedimiento"]["tablas"], salida["tablas_latex"]):
-                    self.assertIn(tex, doc, "El documento omitió una tabla exportada")
+                    self.assertTrue(tex in doc, "El documento omitió una tabla exportada")
                     filas = re.findall(r"(?m)^.*\\\\\s*$", tex)
                     cabeceras = 2 if r"\endfirsthead" in tex else 1
                     self.assertEqual(len(filas), len(tabla["filas"]) + cabeceras,
                                      "LaTeX truncado o con filas duplicadas")
                     if len(tabla["filas"]) >= limites.RAICES_ITER_MAX:
-                        self.assertIn(r"\begin{longtable}", tex, "Tabla larga no paginable")
-                        self.assertIn(r"\endhead", tex, "Falta encabezado repetido")
+                        self.assertTrue(r"\begin{longtable}" in tex, "Tabla larga no paginable")
+                        self.assertTrue(r"\endhead" in tex, "Falta encabezado repetido")
 
     def test_tablas_10000_tiempo_y_memoria(self):
         for caso, salida in zip(self.casos, self.salidas):
