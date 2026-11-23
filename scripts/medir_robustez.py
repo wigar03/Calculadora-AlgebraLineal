@@ -34,6 +34,7 @@ def post(url, ruta, cuerpo, crudo=None, timeout=90, cabeceras=None):
         cuerpo, estado = e.read(), e.code
     except (URLError, TimeoutError, socket.timeout) as e:
         return {"estado": "sin respuesta", "s": round(time.perf_counter() - t, 2), "bytes": 0, "msg": str(e)[:60]}
+    datos = None
     try:
         datos = json.loads(cuerpo)
         msg = str(datos.get("error", ""))[:70]
@@ -166,4 +167,18 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if "--servidor-medicion" in sys.argv:
+        servidor_medicion()
+    elif "--concurrencia-grande" in sys.argv:
+        informe = concurrencia_grande()
+        print(json.dumps(informe, ensure_ascii=True, indent=2))
+        grandes, triviales = informe["grandes"], informe["triviales"]
+        validas = all(r["estado"] == 200 and r.get("iteraciones") == informe["iteraciones_esperadas"]
+                      and r["bytes"] <= limites.RESPUESTA_MAX_BYTES for r in grandes)
+        memoria = all(informe["memoria_bytes"][pid]["memoria_limite_max"] < limites.MEMORIA_CALCULO_MB * 1024**2
+                      for pid in informe["procesos"]["trabajadores"])
+        tiempos = all(r["estado"] == 200 and r["s"] < limites.TIEMPO_CALCULO_S for r in grandes + triviales)
+        sys.exit(0 if validas and memoria and tiempos and informe["recuperacion"]["estado"] == 200
+                 and not informe["errores_muestreo"] else 1)
+    else:
+        main()
