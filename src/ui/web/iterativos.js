@@ -201,8 +201,9 @@
     let dimN = 4, ultimo = null, metricaConv = "residuo", metodoEvo = "jacobi";
     const requests = new Map();
 
-    function error(msg) { const e = el("error"); e.textContent = msg; e.hidden = !msg; }
+    function error(msg) { const e = el("error"); e.textContent = msg; e.hidden = !msg; if (msg) window.ExportarUI?.limpiar("tab-iterativos"); }
     function limpiarResultados() {
+      window.ExportarUI?.limpiar("tab-iterativos");
       ultimo = null;
       ["analysis-card", "result-card", "charts-card", "steps-card", "table-card"].forEach(id => { el(id).hidden = true; });
       ["analysis", "result", "plot-vars", "plot-conv", "steps", "table"].forEach(id => el(id).replaceChildren());
@@ -221,6 +222,7 @@
     }
 
     function renderGrid(n, A = null, b = null, x0 = null) {
+      window.ExportarUI?.limpiar("tab-iterativos");
       const prev = !A ? leerSistemaUI() : null;
       dimN = Math.max(2, Math.min(10, parseInt(n, 10) || 4));
       el("dim-n").value = String(dimN);
@@ -479,6 +481,7 @@
         const uno = [{ titulo: payload.metodo === "gauss_seidel" ? "Gauss-Seidel" : "Jacobi", datos: payload }];
         renderPasosDetalle(uno); renderTabla(uno); renderGraficas();
       }
+      window.ExportarUI?.registrar("tab-iterativos", payload);
     }
 
     async function ejecutar(btn, fn) {

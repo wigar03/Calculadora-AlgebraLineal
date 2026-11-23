@@ -630,6 +630,7 @@
     }
 
     function limpiarResultado(mensaje = "Ingrese la función y un intervalo para calcular su raíz aproximada.") {
+      window.ExportarUI?.limpiar("tab-biseccion");
       version++;
       controlador?.abort();
       controlador = null;
@@ -694,8 +695,10 @@
           renderizarTabla(tabla, datos);
           tarjetaTabla.hidden = false;
         }
+        window.ExportarUI?.registrar("tab-biseccion", datos);
       } catch (error) {
         if (actual !== version || error.name === "AbortError") return;
+        window.ExportarUI?.limpiar("tab-biseccion");
         estado.className = "badge badge-error";
         estado.textContent = "Revise los datos";
         resultado.replaceChildren(crear("p", error.message, "bis-message bis-error"));

@@ -512,6 +512,7 @@
     /* Cualquier cambio en un paso invalida los posteriores: se ocultan y se cancela lo pendiente.
        "visible" es el último paso que sigue a la vista (por defecto, el anterior al reiniciado). */
     function reiniciarDesde(paso, visible = Math.max(1, paso - 1)) {
+      window.ExportarUI?.limpiar("tab-regla-falsa");
       estado.version++;
       estado.aborto?.abort();
       estado.aborto = null;
@@ -556,6 +557,7 @@
     }
 
     function mostrarError(numero, mensaje) {
+      window.ExportarUI?.limpiar("tab-regla-falsa");
       if (numero === 1) {
         errorFuncion.textContent = mensaje;
         errorFuncion.hidden = false;
@@ -782,6 +784,7 @@
           tarjetaTabla.hidden = false;
         }
         fijarPaso(4, true);
+        window.ExportarUI?.registrar("tab-regla-falsa", resultado);
         revelar(el("rf-result"));
       });
     });

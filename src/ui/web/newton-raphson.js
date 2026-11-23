@@ -76,7 +76,7 @@
       navegacion.cancelar();
       solicitudes.forEach(c => c.abort()); solicitudes.clear(); clearTimeout(temporizador);
     }
-    function mensajeError(texto) { el("error").textContent = texto; el("error").hidden = !texto; }
+    function mensajeError(texto) { el("error").textContent = texto; el("error").hidden = !texto; if (texto) window.ExportarUI?.limpiar("tab-newton-raphson"); }
     async function pedir(ruta, datos, canal = ruta) {
       solicitudes.get(canal)?.abort();
       const control = new AbortController(); solicitudes.set(canal, control);
@@ -104,6 +104,7 @@
       });
     }
     function limpiarResultado() {
+      window.ExportarUI?.limpiar("tab-newton-raphson");
       estado.resultado = null; el("result").replaceChildren(); el("table-card").hidden = true;
       el("focus-root").disabled = true;
     }
@@ -271,6 +272,7 @@
       ejecutar(e.currentTarget,async()=>{
         const r=await pedir("resolver",{funcion:estado.funcion,x0:el("x0").value,tolerancia:el("tolerance").value,max_iteraciones:el("limit").value,criterio:document.querySelector('[name="nr-criterion"]:checked').value}); if(!r)return;
         estado.resultado=r; resultado(r); dibujar();
+        window.ExportarUI?.registrar("tab-newton-raphson", r);
         const v=estado.vista;
         if(Math.min(r.x0,r.raiz)<v.xMin || Math.max(r.x0,r.raiz)>v.xMax){const a=Math.min(estado.base[0],r.x0,r.raiz),b=Math.max(estado.base[1],r.x0,r.raiz),m=(b-a)*.1; cambiarVista(a-m,b+m);}
       });

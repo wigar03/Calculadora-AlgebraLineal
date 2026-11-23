@@ -17,8 +17,8 @@
     Object.entries({viewBox:"0 0 600 330",role:"img",tabindex:"0","aria-label":"Función y rectas secantes. Use flechas para desplazar, más y menos para zoom e Inicio para restablecer."}).forEach(([k,v])=>lienzo.setAttribute(k,v));
     const requests=new Map();
     function cancel(){version++;requests.forEach(c=>c.abort());requests.clear();clearTimeout(temporizador);}
-    function error(s){el("error").textContent=s;el("error").hidden=!s;}
-    function clearResult(){res=null;el("result").replaceChildren();el("table-card").hidden=true;el("focus-root").disabled=true;draw();}
+    function error(s){el("error").textContent=s;el("error").hidden=!s;if(s)window.ExportarUI?.limpiar("tab-secante");}
+    function clearResult(){window.ExportarUI?.limpiar("tab-secante");res=null;el("result").replaceChildren();el("table-card").hidden=true;el("focus-root").disabled=true;draw();}
     function invalidate(level){cancel();navegacion.cancelar();error("");clearResult();if(level<=2){el("card-3").hidden=true;el("card-4").hidden=true;el("first").replaceChildren();}if(level===1){funcion=null;vista=null;vistaBase=null;base=null;puntos=[];marcar(null);el("graph-controls").hidden=true;el("readout").replaceChildren();el("card-2").hidden=true;el("plot").replaceChildren();el("hint").replaceChildren();}}
     async function request(route,data){
       requests.get(route)?.abort();const c=new AbortController(),v=version;requests.set(route,c);
@@ -74,7 +74,7 @@
       d.pasos.forEach(p=>{const row=node("tr");[p.n,p.a,p.b,p.c,Math.abs(p.fc),p.error_absoluto,p.error_relativo].forEach((v,i)=>{const td=node("td");td.className="bis-cell";td.title=String(v??"No definido");const l=node("span");l.className="bis-cell-label";l.append(math(headers[i],false));td.append(l,math(num(v),false));row.append(td);});const td=node("td"),details=node("details");td.className="bis-detail-cell";details.append(node("summary","Ver detalle"),math(sustitucion(p)));td.append(details);row.append(td);body.append(row);});
       t.append(h,body);el("table").replaceChildren(t);el("table-card").hidden=false;
     }
-    el("solve-form").addEventListener("submit",e=>{e.preventDefault();cancel();clearResult();run(e.currentTarget,async()=>{const d=await request("resolver",datos());if(!d)return;res=d;result(d);draw();if(d.raiz<vista.xMin||d.raiz>vista.xMax){const a=Math.min(...base,d.raiz),b=Math.max(...base,d.raiz),m=(b-a)*.1;await graph(a-m,b+m);}});});
+    el("solve-form").addEventListener("submit",e=>{e.preventDefault();cancel();clearResult();run(e.currentTarget,async()=>{const d=await request("resolver",datos());if(!d)return;res=d;result(d);draw();window.ExportarUI?.registrar("tab-secante",d);if(d.raiz<vista.xMin||d.raiz>vista.xMax){const a=Math.min(...base,d.raiz),b=Math.max(...base,d.raiz),m=(b-a)*.1;await graph(a-m,b+m);}});});
     function cambiarVista(nueva){
       if(!vista)return;requests.get("graficar")?.abort();requests.delete("graficar");
       vista={...nueva};draw();clearTimeout(temporizador);
