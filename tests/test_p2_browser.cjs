@@ -133,3 +133,20 @@ test('navegador real: 11 módulos calculan y exportan, impresión emulada, móvi
     limpiar();
   }
 });
+
+test('arranque del navegador: vence a tiempo con stderr, mata el proceso y distingue bloqueo de política', async () => {
+  const procs = new Set(), timers = new Set();
+  await assert.rejects(
+    lanzar(process.execPath, ['-e', "console.error('err-linea-1\\nerr-linea-2'); setInterval(() => {}, 1000);"],
+      { stdio: ['ignore', 'pipe', 'pipe'] }, /DevTools listening/, 'stderr', { timeoutMs: 300, procs, timers }),
+    err => err.code === 'ETIMEDOUT' && err.message.includes('err-linea-1') && err.message.includes('err-linea-2')
+  );
+  assert.equal(timers.size, 0);
+  for (const p of procs) {
+    assert.throws(() => process.kill(p.pid, 0), 'El proceso hijo debe quedar terminado tras vencer el arranque');
+  }
+  assert.equal(esBloqueoPolitica({ code: 'EACCES', message: 'spawn EACCES' }), true);
+  assert.equal(esBloqueoPolitica({ exitCode: 4551, message: 'blocked by Application Control' }), true);
+  assert.equal(esBloqueoPolitica({ code: 'ETIMEDOUT', message: 'timeout sin política' }), false);
+  assert.equal(esBloqueoPolitica(new Error('CSV inválido en tab-biseccion')), false);
+});
