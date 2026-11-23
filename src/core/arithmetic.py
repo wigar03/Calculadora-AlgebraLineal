@@ -15,7 +15,25 @@ Las operaciones de suma, resta, multiplicación y división inversa son cerradas
 """
 
 from fractions import Fraction
+import re
 from typing import Any, List, Union, Tuple
+
+from src.core.limites import DIGITOS_MAX, EXPONENTE_MAX, LimiteExcedido, exigir_dimension
+
+
+def _validar_literal_numerico(texto: str):
+    """Acota dígitos y exponente antes de convertir a int o Fraction."""
+    partes = texto.split("/") if "/" in texto else re.split("[eE]", texto)
+    for parte in partes:
+        if sum(c.isdecimal() for c in parte) > DIGITOS_MAX:
+            raise LimiteExcedido(f"Cada número admite como máximo {DIGITOS_MAX} dígitos.")
+    if "/" not in texto and len(partes) == 2:
+        try:
+            exponente = int(partes[1])
+        except ValueError:
+            return  # Fraction conserva el diagnóstico de sintaxis.
+        if abs(exponente) > EXPONENTE_MAX:
+            raise LimiteExcedido(f"El exponente debe estar entre -{EXPONENTE_MAX} y {EXPONENTE_MAX}.")
 
 
 def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
@@ -37,16 +55,17 @@ def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
         ValueError: Si la cadena no puede ser interpretada como un número racional válido o si b == 0.
     """
     if isinstance(val, Fraction):
+        # Los resultados internos exactos pueden superar los límites de entrada.
         return val
     if isinstance(val, int):
+        if abs(val) >= 10 ** DIGITOS_MAX:
+            raise LimiteExcedido(f"Cada entero admite como máximo {DIGITOS_MAX} dígitos.")
         return Fraction(val, 1)
-    if isinstance(val, float):
-        # Convertir float a string para evitar residuos binarios flotantes
-        return Fraction(str(val))
     
     s = str(val).strip()
     if not s:
         return Fraction(0, 1)
+    _validar_literal_numerico(s)
     
     # Manejo de notación de división a/b
     if "/" in s:
@@ -56,11 +75,11 @@ def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
         try:
             num = int(partes[0].strip())
             den = int(partes[1].strip())
-            if den == 0:
-                raise ZeroDivisionError(f"División por cero en la fracción '{s}'.")
-            return Fraction(num, den)
         except ValueError:
             raise ValueError(f"Numerador o denominador no entero en: '{s}'.")
+        if den == 0:
+            raise ValueError("El denominador de una fracción no puede ser cero. Usa un denominador distinto de cero.")
+        return Fraction(num, den)
             
     try:
         return Fraction(s)
