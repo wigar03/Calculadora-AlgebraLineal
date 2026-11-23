@@ -3,7 +3,7 @@
 | Versión | Fecha | Estado | Decisión |
 |---|---|---|---|
 | v1.0.0-rc.1 | 2026-11-14 | prerelease publicada (anterior a esta orquestación) | línea base |
-| v1.0.0-rc.2 | 2026-11-23 | prerelease | 47/47 ejercicios definidos validados; ver abajo |
+| v1.0.0-rc.2 | 2026-11-23 | prerelease publicada (CI 45209275071 en verde) | 47/47 ejercicios definidos validados; ver abajo |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -22,3 +22,6 @@
 - **Notas publicadas:** `docs/notas-v1.0.0-rc.2.md`. Historial: `CHANGELOG.md`.
 - **Procedimiento:** el existente. Push de `main` y del tag `v1.0.0-rc.2`; la CI de Windows compila y prueba el
   setup y el portable; la release se crea como prerelease con esos tres archivos.
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.2 (prerelease).
+  CI del tag (45209275071) y de `main` (45209275117) en verde: pruebas, compilación, portable y ciclo de instalación.
+  Archivos de la CI, con sumas SHA-256 verificadas: setup.exe, portable.zip y SHA256SUMS.txt.
