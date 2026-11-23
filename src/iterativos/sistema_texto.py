@@ -8,6 +8,10 @@ import re
 _SUBINDICES = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
 _NORM_OPS = str.maketrans({"−": "-", "–": "-", "—": "-", "×": "*", "·": "*", "⋅": "*", "÷": "/"})
 _SUP_RE = re.compile(r"[⁰¹²³⁴⁵⁶⁷⁸⁹]")
+_MAX_VARS, _MAX_TEXTO, _MAX_TOKENS, _MAX_PROF = 20, 20_000, 2_000, 32
+_MAX_LITERAL, _MAX_EXP, _MAX_BITS = 64, 350, 4096
+_UMBRAL_CERO = Fraction(1, 1 << 1075)
+_UMBRAL_INFINITO = Fraction((1 << 1024) - (1 << 970))
 _TOKEN_RE = re.compile(
     r"\s*(?:"
     r"(?P<POW>\*\*|\^)"
@@ -20,11 +24,30 @@ _TOKEN_RE = re.compile(
 _VAR_RE = re.compile(r"^([A-Za-z])_?([0-9₀-₉]+)$")
 
 
+def _validar_magnitud(val: Fraction, linea: int) -> Fraction:
+    if val != 0 and not (_UMBRAL_CERO < abs(val) < _UMBRAL_INFINITO):
+        raise ValueError(f"Línea {linea}: magnitud numérica fuera del rango representable en precisión doble.")
+    if val.numerator.bit_length() > _MAX_BITS or val.denominator.bit_length() > _MAX_BITS:
+        raise ValueError(f"Línea {linea}: magnitud o complejidad fraccionaria excesiva.")
+    return val
+
+
+def _leer_numero(val: str, linea: int) -> Fraction:
+    if len(val) > _MAX_LITERAL:
+        raise ValueError(f"Línea {linea}: literal numérico demasiado largo ('{val[:24]}...'). Usa una magnitud representable.")
+    partes = val.lower().split("e")
+    if len(partes) == 2:
+        exp = partes[1]
+        if len(exp.lstrip("+-0")) > 4 or abs(int(exp)) > _MAX_EXP:
+            raise ValueError(f"Línea {linea}: magnitud numérica fuera de rango en '{val[:24]}'. Usa valores representables en precisión doble.")
+    return _validar_magnitud(Fraction(val), linea)
+
+
 def _tokenizar(texto: str, linea: int) -> list[tuple[str, object]]:
     if m_sup := _SUP_RE.search(texto):
         raise ValueError(f"Línea {linea}: término no lineal con exponente '{m_sup.group()}'. Solo se admiten ecuaciones lineales.")
     tokens: list[tuple[str, object]] = []
-    pos = 0
+    pos, prof = 0, 0
     while pos < len(texto):
         m = _TOKEN_RE.match(texto, pos)
         if not m or m.end() == pos:
@@ -34,25 +57,40 @@ def _tokenizar(texto: str, linea: int) -> list[tuple[str, object]]:
         if kind == "POW":
             raise ValueError(f"Línea {linea}: término no lineal con potencia ('{val}'). Las incógnitas deben tener exponente 1.")
         if kind == "NUM":
-            tokens.append(("NUM", Fraction(val)))
+            tokens.append(("NUM", _leer_numero(val, linea)))
         elif kind == "ID":
             mv = _VAR_RE.match(val)
-            if pos < len(texto) and texto[pos:].lstrip().startswith("(") and not mv:
-                raise ValueError(f"Línea {linea}: término no lineal '{val}(...)'. No se admiten funciones en un sistema lineal.")
             if not mv:
+                j = pos
+                while j < len(texto) and texto[j].isspace():
+                    j += 1
+                if j < len(texto) and texto[j] == "(":
+                    raise ValueError(f"Línea {linea}: término no lineal '{val[:24]}(...)'. No se admiten funciones en un sistema lineal.")
                 if val.isalpha():
-                    raise ValueError(f"Línea {linea}: variable sin índice '{val}'. Usa variables indexadas como x1, x_1 o x₁.")
-                raise ValueError(f"Línea {linea}: nombre de variable inválido '{val}'. Usa una letra con índice entero positivo (ej. x1, x_1, x₁).")
-            idx = int(mv.group(2).translate(_SUBINDICES))
-            if idx < 1:
-                raise ValueError(f"Línea {linea}: índice inválido en '{val}'. Los índices deben iniciar en 1 (x1, x2, ...).")
-            tokens.append(("VAR", (mv.group(1), idx, val)))
+                    raise ValueError(f"Línea {linea}: variable sin índice '{val[:24]}'. Usa variables indexadas como x1, x_1 o x₁.")
+                raise ValueError(f"Línea {linea}: nombre de variable inválido '{val[:24]}'. Usa una letra con índice entero positivo (ej. x1, x_1, x₁).")
+            dig = mv.group(2).translate(_SUBINDICES).lstrip("0")
+            if not dig:
+                raise ValueError(f"Línea {linea}: índice inválido en '{val[:24]}'. Los índices deben iniciar en 1 (x1, x2, ...).")
+            if len(dig) > 2 or int(dig) > _MAX_VARS:
+                raise ValueError(f"Línea {linea}: el índice de '{val[:24]}' supera el máximo admitido ({_MAX_VARS}).")
+            tokens.append(("VAR", (mv.group(1), int(dig), val)))
         elif kind == "OP":
+            if val == "(":
+                prof += 1
+                if prof > _MAX_PROF:
+                    raise ValueError(f"Línea {linea}: demasiados paréntesis anidados (máximo {_MAX_PROF}).")
+            elif val == ")":
+                prof -= 1
+                if prof < 0:
+                    raise ValueError(f"Línea {linea}: paréntesis de cierre ')' sin apertura.")
             tokens.append((val, val))
         elif val == ",":
             raise ValueError(f"Línea {linea}: carácter ',' no admitido. Usa punto decimal (ej. 0.5) en lugar de coma.")
         else:
             raise ValueError(f"Línea {linea}: carácter no reconocido '{val}'.")
+        if len(tokens) > _MAX_TOKENS:
+            raise ValueError(f"Línea {linea}: la expresión excede el límite de {_MAX_TOKENS} elementos por lado.")
     return tokens
 
 
@@ -85,12 +123,12 @@ class _ParserLineal:
             sign = 1 if op == "+" else -1
             coeffs = dict(acc[0])
             for k, v in rhs[0].items():
-                nv = coeffs.get(k, Fraction(0)) + sign * v
+                nv = _validar_magnitud(coeffs.get(k, Fraction(0)) + sign * v, self.linea)
                 if nv == 0:
                     coeffs.pop(k, None)
                 else:
                     coeffs[k] = nv
-            acc = (coeffs, acc[1] + sign * rhs[1])
+            acc = (coeffs, _validar_magnitud(acc[1] + sign * rhs[1], self.linea))
         return acc
 
     def _term(self) -> tuple[dict[tuple[str, int], Fraction], Fraction]:
@@ -102,14 +140,14 @@ class _ParserLineal:
         return acc
 
     def _unary(self) -> tuple[dict[tuple[str, int], Fraction], Fraction]:
-        if (tok := self._peek()) and tok[0] in ("+", "-"):
-            op = self._next()[0]
-            c, k = self._unary()
-            return ({v: -val for v, val in c.items()}, -k) if op == "-" else (c, k)
+        signo = 1
+        while (tok := self._peek()) and tok[0] in ("+", "-"):
+            if self._next()[0] == "-":
+                signo = -signo
         acc = self._primary()
         while (tok := self._peek()) and tok[0] in ("VAR", "("):
             acc = self._mul(acc, self._primary())
-        return acc
+        return ({v: -val for v, val in acc[0].items()}, -acc[1]) if signo < 0 else acc
 
     def _primary(self) -> tuple[dict[tuple[str, int], Fraction], Fraction]:
         tok = self._peek()
@@ -137,21 +175,36 @@ class _ParserLineal:
         if b[0]:
             a, b = b, a
         s = b[1]
-        return ({k: v * s for k, v in a[0].items() if v * s != 0}, a[1] * s)
+        return (
+            {k: _validar_magnitud(v * s, self.linea) for k, v in a[0].items() if v * s != 0},
+            _validar_magnitud(a[1] * s, self.linea),
+        )
 
     def _div(self, a, b):
         if b[0]:
             raise ValueError(f"Línea {self.linea}: término no lineal (división entre una incógnita). Usa paréntesis para fracciones, ej. (1/2)x1.")
         if b[1] == 0:
             raise ValueError(f"Línea {self.linea}: división por cero.")
-        return ({k: v / b[1] for k, v in a[0].items()}, a[1] / b[1])
+        return (
+            {k: _validar_magnitud(v / b[1], self.linea) for k, v in a[0].items()},
+            _validar_magnitud(a[1] / b[1], self.linea),
+        )
 
 
 def leer_ecuaciones(texto: str) -> tuple[list[list[Fraction]], list[Fraction], list[str]]:
     """Analiza un sistema lineal cuadrado (una ecuación por línea) en coeficientes Fraction exactos."""
     if not isinstance(texto, str):
         raise ValueError("El texto del sistema debe ser una cadena de caracteres.")
-    lineas = [(i, ln.strip()) for i, ln in enumerate(texto.splitlines(), 1) if ln.strip()]
+    if len(texto) > _MAX_TEXTO:
+        raise ValueError(f"El texto excede el límite admitido de {_MAX_TEXTO} caracteres.")
+    lineas: list[tuple[int, str]] = []
+    for i, ln in enumerate(texto.splitlines(), 1):
+        s = ln.strip()
+        if not s:
+            continue
+        lineas.append((i, s))
+        if len(lineas) > _MAX_VARS:
+            raise ValueError(f"El sistema supera el máximo admitido de {_MAX_VARS} ecuaciones.")
     if not lineas:
         raise ValueError("Ingresa al menos una ecuación lineal (una por línea).")
 
@@ -175,7 +228,7 @@ def leer_ecuaciones(texto: str) -> tuple[list[list[Fraction]], list[Fraction], l
         if not v_izq:
             raise ValueError(f"Línea {num}: la ecuación no contiene incógnitas.")
         todas_vars.update(v_izq)
-        ecuaciones.append((c_izq, k_der - k_izq))
+        ecuaciones.append((c_izq, _validar_magnitud(k_der - k_izq, num)))
 
     bases = sorted({base for base, _ in todas_vars})
     if len(bases) > 1:
