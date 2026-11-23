@@ -15,6 +15,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Pruebas rápidas en Linux: detectan dependencias de plataforma y no intervienen en la compilación ni en la release.
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python tests
+        run: python -m unittest discover tests -v
+      - name: JavaScript tests
+        run: node --test tests/test_*.cjs
+      - name: Robustez (medición informativa)
+        run: python scripts/medir_robustez.py >> "$GITHUB_STEP_SUMMARY"
+
   windows:
     runs-on: windows-2022
     timeout-minutes: 20
