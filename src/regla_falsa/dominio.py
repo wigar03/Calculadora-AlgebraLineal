@@ -6,6 +6,7 @@ from decimal import Decimal, localcontext
 from fractions import Fraction
 
 from ..biseccion.expresiones import Expresion
+from .intervalos import dominio_continuo
 
 
 class ExpresionNumerica(Expresion):
@@ -119,6 +120,8 @@ def _periodicos(n, a, b, fase):
 def validar_continuidad(f, a, b):
     if puntos_excluidos(f, a, b):
         raise ValueError("El intervalo contiene una discontinuidad o un polo del dominio.")
+    if dominio_continuo(f, a, b):
+        return
     # El muestreo pierde sentido entre flotantes adyacentes.
     if b - a <= 64 * max(math.ulp(a), math.ulp(b)):
         return

@@ -42,6 +42,8 @@ def _rango(n, x):
             return _producto((a,b), (1/d,1/c))
         if c == d and c.denominator == 1 and abs(c) <= 1000:
             k = int(c)
+            if abs(k)*max(v.numerator.bit_length()+v.denominator.bit_length() for v in (a,b)) > 16384:
+                raise ValueError("Resolución insuficiente del análisis del dominio.")
             if k < 0 and a <= 0 <= b:
                 raise ValueError("Potencia singular.")
             valores = [a**k, b**k]

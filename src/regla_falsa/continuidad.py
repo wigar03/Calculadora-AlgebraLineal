@@ -10,6 +10,7 @@ import math
 
 from ..biseccion.expresiones import Expresion, numero_real
 from .dominio import ExpresionNumerica, puntos_excluidos
+from .intervalos import dominio_continuo
 
 MUESTRAS = 400          # subdivisiones de la región explorada
 _REFINAMIENTOS = 48     # bisecciones al estrechar un indicio
@@ -83,7 +84,8 @@ def _estrechar(f, izq, der, y_izq, y_der, por_signo):
         else:
             izq, y_izq = medio, y_medio
     x = izq + (der - izq) / 2
-    if _diferencia(y_izq, y_der) <= 1e-3 * brecha:
+    # Agotar refinamientos no prueba un salto: ln puede variar suavemente muy rápido.
+    if _diferencia(y_izq, y_der) <= 1e-3 * brecha or dominio_continuo(f, izq, der):
         return None, x
     return ("asintota" if max(abs(y_izq), abs(y_der)) > 1e3 * altura else "salto"), x
 
