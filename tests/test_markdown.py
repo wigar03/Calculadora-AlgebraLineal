@@ -74,6 +74,24 @@ class TestMarkdown(unittest.TestCase):
         self.assertEqual(self.revisar(
             "# A\n## B\n## B\n[x](#b-1)\n## C\n### D\n"), "")
 
+    def test_referencia_sin_definir(self):
+        self.assertIn("referencia sin definir", self.revisar("# A\n[guía][ausente]\n"))
+        self.assertIn("enlace inexistente", self.revisar("# A\n[r]: ausente.md\n"))
+
+    def test_delimitadores_escapados_y_bloques(self):
+        self.assertEqual(self.revisar("# A\n$\\$5$ y $`\\{x_i\\}`$\n"), "")
+        self.assertIn("bloque sin cerrar", self.revisar("# A\n~~~math\nx=1\n```\n"))
+        self.assertIn("$ sin pareja", self.revisar("# A\n$x\ntexto$\n"))
+
+    def test_solo_enlaces_en_documentacion_interna(self):
+        with tempfile.TemporaryDirectory() as carpeta:
+            archivo = Path(carpeta) / "interno.md"
+            archivo.write_text("### Interno\n\\frac{1}{2} y $x\n", encoding="utf-8")
+            self.assertEqual(verificar(archivo, carpeta, solo_enlaces=True), [])
+            archivo.write_text("### Interno\n[x](roto.md)", encoding="utf-8")
+            self.assertIn("enlace inexistente", " ".join(
+                verificar(archivo, carpeta, solo_enlaces=True)))
+
 
 if __name__ == "__main__":
     unittest.main()
