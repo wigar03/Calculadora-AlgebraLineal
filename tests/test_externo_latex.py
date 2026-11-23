@@ -15,14 +15,6 @@ from tests.test_exportacion_modulos import corpus_real, ejecutar_node
 
 OVERFULL_MAX_PT = 1  # Criterio del integrador: ningún hbox mayor de 1 pt, en ambas pasadas.
 ESPECIALES = r"áéíóú ÁÉÍÓÚ ñ Ñ ü Ü: 50% & x_1 # {llaves} ~ ^ \ ruta"
-FALLOS_CONOCIDOS = {
-    **dict.fromkeys(("biseccion[0]", "biseccion[1]", "biseccion_1000", "iterativos[0]",
-                     "iterativos[1]", "iterativos[2]", "newton[2]", "secante[1]",
-                     "ecuaciones[0]", "ecuaciones[1]"), "Contenido fuera del ancho: Overfull hbox > 1 pt"),
-    "jacobi_20x20_10000": "amsmath limita pmatrix a 10 columnas: Extra alignment tab",
-    "regla_falsa[3]": "Babel español redefine porcentaje: Incompatible glue units con \\,\\%",
-    "regla_falsa_1000": "Babel español redefine porcentaje: Incompatible glue units con \\,\\%",
-}
 
 
 def compilar(motor, fuente, carpeta):
@@ -86,16 +78,13 @@ class TestExternoLatex(unittest.TestCase):
         self.assertEqual(len(self.casos), 36)
         self.assertGreaterEqual(len({c["procedimiento"]["modulo"] for c in self.casos}), 11)
         for caso, salida in zip(self.casos, self.salidas):
-            if caso["id"] in FALLOS_CONOCIDOS:
-                continue
             with self.subTest(caso=caso["id"]):
                 tablas = caso["procedimiento"]["tablas"]
                 self.comprobar_pdf(caso["id"], salida["latex"],
                                    multipagina=any(len(t["filas"]) > 30 for t in tablas))
 
-    @unittest.expectedFailure
     def test_matrices_y_texto_especial_utf8_en_todos_los_campos(self):
-        """Pendiente Antigravity: barra inversa imprime llaves espurias por doble escape."""
+        """El texto UTF-8 y la barra inversa deben conservarse sin llaves espurias."""
         procedimiento = {"version": 1, "modulo": "prueba", "titulo": ESPECIALES,
             "entrada": [{"etiqueta": ESPECIALES, "latex": r"\frac{1}{2}"}],
             "pasos": [{"titulo": ESPECIALES, "texto": ESPECIALES,
@@ -112,17 +101,3 @@ class TestExternoLatex(unittest.TestCase):
         with self.subTest(comprobacion="escape literal de barra inversa"):
             self.assertIn(r"\textbackslash{}", salida["latex"])
             self.assertNotIn(r"\textbackslash\{\}", salida["latex"])
-
-
-def _pendiente(nombre, motivo):
-    @unittest.expectedFailure
-    def prueba(self):
-        caso, salida = next((c, s) for c, s in zip(self.casos, self.salidas) if c["id"] == nombre)
-        self.comprobar_pdf(nombre, salida["latex"],
-                           multipagina=any(len(t["filas"]) > 30 for t in caso["procedimiento"]["tablas"]))
-    prueba.__doc__ = "Pendiente Antigravity: " + motivo
-    return prueba
-
-
-for _nombre, _motivo in FALLOS_CONOCIDOS.items():
-    setattr(TestExternoLatex, "test_pendiente_" + re.sub(r"\W", "_", _nombre), _pendiente(_nombre, _motivo))
