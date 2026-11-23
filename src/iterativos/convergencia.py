@@ -70,3 +70,76 @@ def schur_estable(p):
         p = _primitivo([a * p[i] - b * p[-1-i]
                         for i in range(len(p) - 1)])
     return p[0] != 0
+
+
+def _division(p, q):
+    p, q = list(p), list(q)
+    cociente = [F(0)] * max(1, len(p) - len(q) + 1)
+    while len(p) >= len(q) and any(p):
+        diferencia = len(p) - len(q)
+        c = p[0] / q[0]
+        cociente[len(cociente) - 1 - diferencia] = c
+        for j in range(len(q)):
+            p[j] -= c * q[j]
+        while len(p) > 1 and p[0] == 0:
+            p.pop(0)
+    return cociente, p
+
+
+def libre_de_cuadrados(p):
+    """p/gcd(p,p'): mismas raíces, sin multiplicidades, todo racional."""
+    p = [F(v) for v in p]
+    n = len(p) - 1
+    if n == 0:
+        return p
+    a, b = p, [p[i] * (n - i) for i in range(n)]
+    while any(b):
+        _, resto = _division(a, b)
+        a, b = b, resto
+    a = [v / a[0] for v in a]
+    return _division(p, a)[0]
+
+
+def radio_polinomio(p):
+    """Aproxima el mayor módulo con un intervalo racional certificado.
+
+    Bisección sobre la propiedad monótona «raíces de p(r*z) en |z|<1».
+    Evita raíces complejas mal condicionadas, incluso matrices defectivas.
+    Error absoluto <= max(1, 2*rho)*2^-38; solo el resultado final es float.
+    """
+    p = libre_de_cuadrados(p)
+    if all(v == 0 for v in p[1:]):
+        return 0.0
+    n = len(p) - 1
+
+    def dentro(r):
+        return schur_estable([v * r ** (n - i) for i, v in enumerate(p)])
+
+    superior = F(1)
+    while not dentro(superior):
+        superior *= 2
+    inferior = F(0)
+    for _ in range(38):
+        medio = (inferior + superior) / 2
+        if dentro(medio):
+            superior = medio
+        else:
+            inferior = medio
+    try:
+        return float((inferior + superior) / 2)
+    except OverflowError:
+        return None  # no representable en doble; la decisión exacta se conserva
+
+
+def analizar_espectro(A):
+    """Radios para mostrar y decisiones exactas separadas para cada método."""
+    radios = {"jacobi": None, "gauss_seidel": None}
+    estables = {"jacobi": None, "gauss_seidel": None}
+    calculo = "No calculado: diagonal nula o dimensión mayor que 12."
+    if len(A) <= LIMITE_ESPECTRAL and all(A[i][i] != 0 for i in range(len(A))):
+        calculo = "Faddeev-LeVerrier y Schur-Cohn exactos; radio por bisección racional."
+        for metodo in estables:
+            p = polinomio_caracteristico(matriz_iteracion(A, metodo))
+            estables[metodo] = schur_estable(p)
+            radios[metodo] = radio_polinomio(p)
+    return {**radios, "metodo_calculo": calculo}, estables
