@@ -63,4 +63,34 @@ if (process.argv.includes('--stdin')) {
     assert.ok(verificarLatex('\\[\\comandoInexistente{x}\\]').fallos > 0);
     assert.equal(verificarLatex('\\[\\frac{1}{2}\\] precio \\$2').fallos, 0);
   });
+  test('P2: texto y cabeceras no pueden inyectar fórmulas', () => {
+    for (const s of ['=cmd|x', '@SUM(1)', '+SUM(A1)', '-SUM(A1)', '\t=1', '\r=1']) {
+      const texto = api.tablaACSV({ columnas: [s], filas: [[s]] }, { separador: ';', decimal: ',' });
+      const prefijos = texto.match(/'/g) || [];
+      assert.equal(prefijos.length, 2, `Cabecera/celda sin prefijo protector: ${JSON.stringify(s)}`);
+    }
+  });
+  test('P2: fracciones solo usan una fórmula fija tras validar toda la cadena', () => {
+    const texto = api.tablaACSV({ columnas: ['q'], filas: [['1/2'], ['-17/19'], ['=1/2']] },
+      { separador: ';', decimal: ',' });
+    assert.ok(texto.includes('"=""1/2"""'), 'Fracción 1/2 sin protección contra fechas');
+    assert.ok(texto.includes('"=""-17/19"""'), 'Fracción negativa sin protección');
+    assert.ok(texto.includes("'=1/2"), 'No se puede aceptar una fórmula de usuario como fracción');
+  });
+  test('P2: NaN e infinitos se rechazan explícitamente o se conservan como aviso', () => {
+    for (const n of [NaN, Infinity, -Infinity]) {
+      try {
+        const texto = api.tablaACSV({ columnas: ['x'], filas: [[n]] }, { separador: ';', decimal: ',' });
+        assert.match(texto, /NaN|Infinity|no finito/i, `Valor no finito borrado: ${n}`);
+      } catch (e) {
+        if (e instanceof assert.AssertionError) throw e;
+        assert.match(e.message, /finito|NaN|Infinity|n[uú]mero/i, 'Rechazo sin diagnóstico');
+      }
+    }
+  });
+  test('P2: el cero negativo mantiene su signo al releerlo', () => {
+    const texto = api.tablaACSV({ columnas: ['x'], filas: [[-0.0]] }, { separador: ';', decimal: ',' });
+    const celda = texto.split('\r\n')[1];
+    assert.ok(Object.is(Number(celda.replace(',', '.')), -0), 'Se perdió el signo de -0.0');
+  });
 }

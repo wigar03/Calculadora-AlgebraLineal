@@ -269,3 +269,45 @@ class TestExportacionModulos(unittest.TestCase):
                                        timeout=limites.TIEMPO_CALCULO_S * 6)
                     self.assertEqual(p.returncode, 0, p.stdout.decode(errors="replace")[-4000:])
                     self.assertTrue(tex.with_suffix(".pdf").exists() or tex.with_suffix(".dvi").exists())
+
+
+class TestOraculoCSV(unittest.TestCase):
+    def test_acepta_codificacion_contractual_sin_usar_exportador(self):
+        tabla = {"columnas": ["x", "texto", "q"],
+                 "filas": [[-0.0, "=cmd|x", "-1/2"], [1e-300, 'a;"b"\nfin', None]]}
+        texto = '\ufeffx;texto;q\r\n-0;\'=cmd|x;"=""-1/2"""\r\n1E-300;"a;""b""\nfin";'
+        self.assertEqual(problemas_csv(texto, tabla), [])
+
+    def test_detecta_truncado_redondeo_inyeccion_y_signo_de_cero(self):
+        tabla = {"columnas": ["x", "texto"], "filas": [[-0.0, "@SUM(1)"], [1.2345678901234567, "fin"]]}
+        errores = problemas_csv("x;texto\r\n0;@SUM(1)\r\n1,2346;fin", tabla)
+        self.assertEqual(len(errores), 4)
+        self.assertTrue(any("Filas perdidas" in e for e in problemas_csv("\ufeffx;texto", tabla)))
+
+
+def escribir_informe(destino):
+    casos, consultas = corpus_real()
+    casos.append({"id": "adversario", "procedimiento": adversario()})
+    salidas = ejecutar_node([c["procedimiento"] for c in casos])
+    biblioteca = Path(os.environ.get("P2_EXPORTAR_JS", ROOT / "src/ui/web/exportar.js"))
+    informe = {"biblioteca": str(biblioteca), "sha256": hashlib.sha256(biblioteca.read_bytes()).hexdigest(),
+               "consultas": consultas, "casos": [], "motores_latex": [n for n in
+               ("pdflatex", "lualatex", "xelatex", "tectonic", "latex") if shutil.which(n)]}
+    for caso, salida in zip(casos, salidas):
+        tablas = caso["procedimiento"]["tablas"]
+        errores = [e for t, csv_ in zip(tablas, salida["csv"]) for e in problemas_csv(csv_, t)]
+        informe["casos"].append({"id": caso["id"], "modulo": caso["procedimiento"]["modulo"],
+            "filas": [len(t["filas"]) for t in tablas], "metricas": salida["metricas"],
+            "csv_errores": len(errores), "csv_muestra": errores[:12], "latex": salida["validacion"],
+            "babel": r"\usepackage[spanish]{babel}" in salida["latex"],
+            "longtable": r"\begin{longtable}" in salida["latex"],
+            "filas_latex": [len(re.findall(r"(?m)^.*\\\\\s*$", t)) for t in salida["tablas_latex"]]})
+    Path(destino).write_text(json.dumps(informe, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Informe: {destino}; {len(casos)} procedimientos, {len(consultas)} consultas HTTP")
+
+
+if __name__ == "__main__":
+    if "--informe" in sys.argv:
+        escribir_informe(sys.argv[sys.argv.index("--informe") + 1])
+    else:
+        unittest.main()
