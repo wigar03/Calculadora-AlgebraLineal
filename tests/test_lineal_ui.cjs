@@ -139,3 +139,16 @@ test('determinante e inversa envian celdas textuales y el metodo seleccionado', 
     assert.equal(c.enviado.datos.metodo, c.metodo);
   }
 });
+
+test('la lista de diez parametros agrupa el indice completo para KaTeX', async () => {
+  const { el, contexto: c, renderizados } = pagina();
+  el('eq-rows-m').value = '1'; el('eq-cols-n').value = '10'; c.renderizarEcuacionMatricial();
+  const parametros = ['t', 's', 'r', 'u', 'v', 't_6', 't_7', 't_8', 't_9', 't_10'];
+  c.respuesta = { tipo_sistema: 'SCI', parametros, vector_solucion: parametros };
+  await c.resolverEcuacionMatricialUI();
+  const tex = renderizados.find(t => t.includes('\\quad t, s'));
+  assert.ok(tex);
+  assert.doesNotMatch(tex, /t_10/);
+  const html = katex.renderToString(tex, { throwOnError: true });
+  assert.ok(html.includes('<msub><mi>t</mi><mn>10</mn></msub>'));
+});

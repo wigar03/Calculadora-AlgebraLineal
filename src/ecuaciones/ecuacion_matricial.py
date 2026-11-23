@@ -49,7 +49,7 @@ from src.core.arithmetic import (
     formatear_vector,
     formatear_matriz,
 )
-from src.solver.gauss_solver import GaussResult, Step
+from src.solver.gauss_solver import GaussResult, Step, formatear_subindices_latex
 from src.solver.anterior_programa import resolver_sistema_con_programa_anterior
 
 
@@ -209,7 +209,7 @@ def resolver_ecuacion_matricial(
             constante = sum((a * x for a, x in zip(fila, res.solucion_particular)), Fraction(0))
             coeficientes = [sum((a * v for a, v in zip(fila, base)), Fraction(0))
                             for base in res.base_nucleo]
-            terminos = "".join(f" + ({format_latex_number(c)}){p}"
+            terminos = "".join(f" + ({format_latex_number(c)}){formatear_subindices_latex(p)}"
                                for c, p in zip(coeficientes, res.parametros))
             valido = constante == b[i] and all(c == 0 for c in coeficientes)
             res.verificacion_residual.append(

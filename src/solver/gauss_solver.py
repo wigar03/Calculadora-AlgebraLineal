@@ -24,6 +24,7 @@ Teorema de Rouché-Capelli:
 """
 
 from fractions import Fraction
+import re
 from typing import List, Tuple, Dict, Any, Optional, Union
 
 from src.core.arithmetic import (
@@ -32,6 +33,11 @@ from src.core.arithmetic import (
     format_latex_number,
     format_latex_scalar,
 )
+
+
+def formatear_subindices_latex(texto: str) -> str:
+    """Agrupa índices completos sin modificar los nombres usados como claves JSON."""
+    return re.sub(r"_(\d+)", r"_{\1}", texto)
 
 
 class Step:
@@ -314,7 +320,8 @@ def solve_gaussian_elimination(
         result.particular_solution = [v[0] for v in affine]
         result.nullspace_basis = [[v[k + 1] for v in affine] for k in range(len(free_vars))]
         result.system_type_desc += "\nParámetros libres: " + ", ".join(
-            f"${variable_names[c]} = {param_names[c]} \\in \\mathbb{{R}}$" for c in free_vars)
+            f"${formatear_subindices_latex(variable_names[c])} = "
+            f"{formatear_subindices_latex(param_names[c])} \\in \\mathbb{{R}}$" for c in free_vars)
             
         for r in reversed(range(num_rows)):
             if r in pivot_col_indices:
@@ -348,7 +355,8 @@ def solve_gaussian_elimination(
                         
                 result.solution[variable_names[p_col]] = expr_str or "0"
                 result.backward_substitution_steps.append(
-                    f"Fila {r + 1}: ${variable_names[p_col]} = {expr_str}$"
+                    f"Fila {r + 1}: ${formatear_subindices_latex(variable_names[p_col])} = "
+                    f"{formatear_subindices_latex(expr_str)}$"
                 )
                 
         result.solution_vector = [result.solution[var] for var in variable_names]
@@ -378,7 +386,7 @@ def solve_gaussian_elimination(
             sol_dict[col] = val
             result.solution[variable_names[col]] = val
             result.backward_substitution_steps.append(
-                f"Fila {r + 1}: ${variable_names[col]} = "
+                f"Fila {r + 1}: ${formatear_subindices_latex(variable_names[col])} = "
                 f"\\frac{{{format_latex_number(rhs)} - ({format_latex_number(contributions)})}}"
                 f"{{{format_latex_number(mat[r][col])}}} = {format_latex_number(val)}$"
             )

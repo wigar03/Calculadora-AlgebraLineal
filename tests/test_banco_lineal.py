@@ -112,7 +112,7 @@ class TestBancoLineal(unittest.TestCase):
                     self.assertTrue(all("Satisface" in v for v in res["verificacion"]))
                 else:
                     self.assertEqual(res["parametros"], ["t"])
-                    self.assertIn("x_4 = t", res["descripcion_sistema"])
+                    self.assertIn("x_{4} = t", res["descripcion_sistema"])
                     for t in (F(-3), F(0), F(2, 3)):
                         x = [evaluar_parametrica(v, {"t": t}) for v in res["vector_solucion"]]
                         self.assertEqual(producto(fracciones(datos["A"]), [[v] for v in x]),
@@ -193,6 +193,27 @@ class TestBancoLineal(unittest.TestCase):
     def test_incompatible_rango_aumentado_no_cuenta_filas_dependientes(self):
         res = self.post("ecuaciones/resolver", dict(A=[[0, 0], [0, 0]], b=[1, 2]))
         self.assertEqual((res["tipo_sistema"], res["rango_A"], res["rango_aumentada"]), ("SI", 0, 1))
+
+    def test_diez_parametros_con_subindices_agrupados(self):
+        for jordan in (True, False):
+            res = self.post("ecuaciones/resolver", dict(A=[[0] * 10], b=[0], usar_gauss_jordan=jordan))
+            self.assertEqual(res["parametros"][-1], "t_10")
+            self.assertEqual(res["vector_solucion"][-1], "t_10")
+            self.assertIn("x_{10} = t_{10}", res["descripcion_sistema"])
+            self.assertIn("(0)t_{10}", res["verificacion"][0])
+            identidad = [[F(i == j) for j in range(10)] for i in range(10)]
+            self.assertEqual(fracciones(res["base_nucleo"]), identidad)
+            self.assertEqual(res["solucion_particular"], ["0"] * 10)
+            textos = [res["descripcion_sistema"], *res["verificacion"]]
+            self.assertNotRegex(" ".join(textos), r"_\d{2}")
+
+    def test_sustitucion_con_variables_y_parametros_indexados(self):
+        res = self.post("ecuaciones/resolver", dict(A=[[1] * 11], b=[0], usar_gauss_jordan=False))
+        self.assertIn("t_{10}", res["sustitucion"][0])
+        a = [[int(i == j) for j in range(10)] for i in range(10)]
+        res = self.post("ecuaciones/resolver", dict(A=a, b=[0] * 10, usar_gauss_jordan=False))
+        self.assertTrue(any("x_{10}" in paso for paso in res["sustitucion"]))
+        self.assertNotRegex(" ".join(res["sustitucion"]), r"_\d{2}")
 
 
 def caso(clave, metodo):

@@ -1599,7 +1599,7 @@ async function resolverEcuacionMatricialUI() {
         latexSol = `\\vec{x}^* = ${vectorToLatexCol(data.vector_solucion)}`;
       }
     } else if (data.tipo_sistema === "SCI") {
-      latexSol = `\\vec{x} = ${vectorSolucionLinealToLatex(data.vector_solucion)} \\quad ${data.parametros.join(", ")} \\in \\mathbb{R}`;
+      latexSol = `\\vec{x} = ${vectorSolucionLinealToLatex(data.vector_solucion)} \\quad ${data.parametros.map(formatLatexFrac).join(", ")} \\in \\mathbb{R}`;
     } else {
       latexSol = `\\text{No existe } \\vec{x} \\in \\mathbb{R}^${eqN} \\text{ tal que } A\\vec{x} = \\vec{b}`;
     }
