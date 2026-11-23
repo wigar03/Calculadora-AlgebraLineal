@@ -96,6 +96,26 @@ iteración con A = [[1e308]]. Ahora: convergen en k = 10 y k = 21 («demostrada�
 Con valores subnormales el residuo se redondeaba a 0 y se declaraba convergencia con residuo relativo exacto 0.2.
 Ahora la x final se verifica con `Fraction`; si no cumple, motivo `precision_insuficiente`.
 
+## Etapa 3 — Robustez (P1)
+
+### INC-019 · 2026-11-23 · robustez · CERRADA (auditoría AU-01 a AU-10)
+Bloqueos por cálculos costosos, servidor de un hilo, socket lento, límites solo en la UI, JSON inválido, textos de
+Python, HTML inyectable en errores, números enormes, CORS y listado de directorios. Corregidos con procesos de cálculo
+aislados y cancelables, servidor con hilos, límites centrales, errores uniformes y cabeceras de seguridad.
+Antes y después: `docs/validacion/robustez-antes.md` y `robustez-despues.md`.
+
+### INC-020 · 2026-11-23 · pruebas · CERRADA
+La línea base dorada falló en la CI de Linux: `exp`, `sin` y `ln` de la biblioteca C difieren en el último bit entre
+Windows y Linux. La comparación admite 1e-12 relativo en flotantes (también dentro de textos LaTeX).
+
+### INC-021 · 2026-11-23 · integración · CERRADA
+Al combinar las ramas, `tests/test_iterativos_api.py` rechazaba la clave nueva `procedimiento`, que el contrato
+permite; ahora la admite y la valida con `src/procedimientos/base.py`.
+
+### INC-022 · 2026-11-23 · entorno · REGISTRADA
+Windows Application Control bloqueó en la máquina de Codex 2 un ejecutable recompilado («An Application Control
+policy has blocked this file»). No se eludió: el diagnóstico del ejecutable empaquetado lo hace la CI de Windows.
+
 ## INC-004 · 2026-11-23 · infraestructura · CERRADA
 `pytest` no está instalado; la suite oficial usa `unittest` (README y CI). Línea base: 169 pruebas OK y
 5 archivos `node --test` OK. No es un fallo.
