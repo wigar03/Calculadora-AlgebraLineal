@@ -72,3 +72,17 @@ La referencia de I-14 solo especifica clasificación y rangos: la familia se val
 ## Límites y entrega
 
 No se cambiaron referencias, HTML, otros módulos ni controles UX; el caso singular ya diagnosticaba correctamente la causa y ahora tiene regresión HTTP y de vista. El integrador debe revisar e integrar la rama y trasladar esta evidencia a sus documentos globales; no hubo push ni merge.
+
+## Seguimiento de la revisión cruzada (2026-11-23)
+
+La rama se rebasó sobre main actualizado, base `e3bdbf9` (incluye `c6fdf36`); los conteos siguientes sustituyen a los de la primera entrega para esta revisión posterior.
+
+- **P2 corregido:** descripción, lista de parámetros, sustitución y verificación usan `x_{10}` / `t_{10}` en LaTeX; los identificadores JSON conservan `x_10` / `t_10` para no alterar su contrato. HTTP real con A=[[0]*10], b=[0] confirma diez parámetros y base del núcleo identidad; se comprueba también la sustitución de sistemas con once variables y diez parámetros.
+- **P3 corregido:** `vectorSolucionLinealToLatex` recibe `solucion_particular`, `base_nucleo` y `parametros`; construye cada término con coeficientes racionales canónicos y nombres separados. Elimina la sustitución de fracciones dentro de texto; rechaza explícitamente componentes antiguas como `0.5/2+t`, `1/2.5+t` o `x_1/2` en vez de transformarlas parcialmente.
+- Las fracciones equivalentes `1/4+t`, `2/5+t` y `(1/2)x_1` se renderizan desde datos estructurados; se cubren signos, ceros, coeficientes ±1 e índices de dos cifras sin perder la separación vertical existente.
+- `tests/test_banco_lineal.py`: **36 pruebas OK**, incluidos los 29 ejercicios anteriores y tres regresiones nuevas; los coeficientes de respuestas HTTP se comparan con `Fraction` en forma canónica.
+- `tests/test_lineal_ui.cjs`: **13 pruebas OK**, sin paquetes externos; KaTeX local con `throwOnError: true` interpreta los textos reales generados por Python, y MathML contiene `<msub><mi>t</mi><mn>10</mn></msub>` como un único subíndice.
+- Batería completa ejecutada después de los cambios: `python -m unittest discover tests -v`: **308 pruebas OK**; todos los `tests/*.cjs`: **8 archivos OK, 50 pruebas OK** (6+5+3+13+4+3+11+5). `git diff --check` sin errores.
+- Commits de código/pruebas: `ffe4cf2` (56 líneas), `b3bccc8` (48), `194e30c` (47), `000ec50` (16); todos por debajo de 100 líneas modificadas, sin cambios UX, push ni merge.
+
+La revisión numérica solicitada por separado fue de solo lectura y se entregó al coordinador en `C:/Users/wigar/AppData/Local/Temp/orca-audit-numerico-lineal.md`, con siete hallazgos reproducidos por HTTP, severidad, comparación con la versión anterior y correcciones sugeridas; esta rama solo modifica el área lineal.
