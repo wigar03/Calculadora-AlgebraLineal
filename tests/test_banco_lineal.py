@@ -215,6 +215,18 @@ class TestBancoLineal(unittest.TestCase):
         self.assertTrue(any("x_{10}" in paso for paso in res["sustitucion"]))
         self.assertNotRegex(" ".join(res["sustitucion"]), r"_\d{2}")
 
+    def test_coeficientes_parametricos_estructurados_son_racionales_canonicos(self):
+        for a, b, constante, coeficiente in (([[2, -2]], ["0.5"], "1/4", "1"),
+                                            ([[5, -5]], [2], "2/5", "1"),
+                                            ([[2, -1]], [0], "0", "1/2")):
+            for jordan in (True, False):
+                res = self.post("ecuaciones/resolver", dict(A=a, b=b, usar_gauss_jordan=jordan))
+                self.assertEqual(res["solucion_particular"], [constante, "0"])
+                self.assertEqual(res["base_nucleo"], [[coeficiente, "1"]])
+                self.assertEqual(res["parametros"], ["t"])
+                for valor in res["solucion_particular"] + res["base_nucleo"][0]:
+                    self.assertEqual(valor, str(F(valor)))
+
 
 def caso(clave, metodo):
     def prueba(self):

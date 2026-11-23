@@ -169,6 +169,10 @@ test('el vector estructurado rechaza texto ambiguo sin reescribir partes de toke
   assert.match(tex, /\\frac\{1\}\{4\} \+ t/);
   assert.match(tex, /\\frac\{2\}\{5\} \+ t/);
   assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
+  const variableDividida = c.vectorSolucionLinealToLatex({ solucion_particular: ['0'],
+    base_nucleo: [['1/2']], parametros: ['x_1'] });
+  assert.match(variableDividida, /\\frac\{1\}\{2\}x_\{1\}/);
+  assert.doesNotThrow(() => katex.renderToString(variableDividida, { throwOnError: true }));
 });
 
 test('el vector estructurado conserva ceros, signos, coeficientes unitarios e indices', () => {
