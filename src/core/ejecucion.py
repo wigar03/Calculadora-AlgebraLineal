@@ -8,6 +8,7 @@ import os
 import queue
 import threading
 import time
+import traceback
 
 from . import limites
 
@@ -114,7 +115,8 @@ def _trabajador(conexion, memoria_mb):
                 conexion.send_bytes(b"o" + serializar(funcion(*args, **kwargs)))
             except Exception as exc:
                 error = clasificar_error(exc)
-                conexion.send_bytes(b"e" + json.dumps([error.respuesta(), error.estado]).encode())
+                traza = traceback.format_exc(limit=12) if error.tipo == "interno" else None
+                conexion.send_bytes(b"e" + json.dumps([error.respuesta(), error.estado, traza]).encode())
     except (EOFError, BrokenPipeError):
         pass
     finally:
@@ -145,11 +147,13 @@ class Supervisor:
             return tuple(self._activos)
 
     def _crear(self):
-        padre, hijo = self._contexto.Pipe()
-        proceso = self._contexto.Process(target=_trabajador, args=(hijo, self._memoria), daemon=True)
-        proceso.start()
-        hijo.close()
         with self._candado:
+            if self._cerrado:
+                raise ErrorEjecucion("El servidor está cerrando.")
+            padre, hijo = self._contexto.Pipe()
+            proceso = self._contexto.Process(target=_trabajador, args=(hijo, self._memoria), daemon=True)
+            proceso.start()
+            hijo.close()
             self._activos[proceso] = padre
         if not padre.poll(limites.TIEMPO_CALCULO_S) or padre.recv_bytes() != b"listo":
             self._retirar(proceso, padre)
@@ -194,7 +198,9 @@ class Supervisor:
             mensaje = conexion.recv_bytes(limites.RESPUESTA_MAX_BYTES + 1)
             datos = json.loads(mensaje[1:])
             if mensaje[:1] == b"e":
-                error, estado = datos
+                error, estado, traza = datos
+                if traza:
+                    _log.error("Fallo interno en trabajador:\n%s", traza)
                 raise ErrorEjecucion(error["error"], error["tipo"], error["codigo"], estado)
             return datos
         except (EOFError, OSError) as exc:
