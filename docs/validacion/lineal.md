@@ -6,20 +6,20 @@ Fecha: 2026-11-23. Rama: orca/lineal. Base: 7a241ad.
 
 ## Evidencia ejecutada
 
-- python -m unittest discover tests -v: **202 pruebas OK**, incluidas las **33** de 	est_banco_lineal.py (29 ejercicios y 4 regresiones adicionales).
-- Get-ChildItem tests/*.cjs | ForEach-Object { node --test .FullName }: **6 archivos OK; 40 pruebas OK** (6 + 5 + 9 + 4 + 11 + 5). Equivale al bucle solicitado en Bash.
+- python -m unittest discover tests -v: **202 pruebas OK**, incluidas las **33** de test_banco_lineal.py (29 ejercicios y 4 regresiones adicionales).
+- Get-ChildItem tests/*.cjs | ForEach-Object { node --test $_.FullName }: **6 archivos OK; 40 pruebas OK** (6 + 5 + 9 + 4 + 11 + 5). Equivale al bucle solicitado en Bash.
 - Las pruebas usan servidor_local(), HTTP real y referencias JSON inmutables; comprueban ambos métodos de sistemas, ambos de determinante y ambos de inversa.
 - Sustitución independiente con Fraction: A·X=B, A·A⁻¹=I y A⁻¹·A=I; cada operación elemental se reproduce desde el estado anterior; las matrices LU conservan el valor absoluto del determinante calculado por permutaciones independientes.
 - Navegador Orca real, servidor del worktree: los **19 sistemas × 2 métodos** y **10 matrices × 4 métodos** se introdujeron en las grillas DOM y se ejecutaron llamando las funciones de los botones de la página: **78 resoluciones sin error ni .katex-error**.
 - I-11 mostró sus cinco incógnitas y 29/14 matrices intermedias con Jordan/Gauss; I-12 se repitió con 0.5, -0.75, -2.5, 0.75, 1/3 y 181/60; las celdas mantienen cadenas exactas y no pasan por parseFloat.
 - I-14 mostró t∈R, x₄=t y cuatro filas de verificación válidas para cualquier t; cada inversa mostró exactamente 16 entradas Correcto en cada producto (32 en total).
 - Se ejecutó el ejemplo singular visible [[2,3,4],[2,3,4],[2,3,4]]: explica ausencia de pivote, rango deficiente y por qué no existe la inversa; 0 errores KaTeX.
-- 	ests/test_lineal_ui.cjs: **9 pruebas OK**, sin paquetes externos, con el KaTeX ya incluido en la aplicación; verifican controles hasta 5×5, entradas exactas, envío HTTP, renderizado paramétrico, procedimiento y diagnóstico singular.
+- tests/test_lineal_ui.cjs: **9 pruebas OK**, sin paquetes externos, con el KaTeX ya incluido en la aplicación; verifican controles hasta 5×5, entradas exactas, envío HTTP, renderizado paramétrico, procedimiento y diagnóstico singular.
 - Se inspeccionó visualmente la página de sistemas tras resolver I-14; navegación, controles, colores, tipografía y flujos se conservan.
 
 ## Resultados por ejercicio
 
-Entradas A por filas y b exactamente como en los bancos; las matrices inversas de la tabla son la respuesta HTTP completa. Referencia: 	ests/validacion/referencias.json, claves indicadas; Δ=0 significa igualdad racional exacta, sin tolerancias.
+Entradas A por filas y b exactamente como en los bancos; las matrices inversas de la tabla son la respuesta HTTP completa. Referencia: tests/validacion/referencias.json, claves indicadas; Δ=0 significa igualdad racional exacta, sin tolerancias.
 
 | Ejercicio | Entrada utilizada | Resultado de la calculadora | Referencia independiente | Diferencia | Estado | Commit de prueba |
 |---|---|---|---|---|---|---|
