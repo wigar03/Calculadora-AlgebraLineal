@@ -158,8 +158,7 @@ def evaluar_combinacion_lineal(
     gauss_res = solve_gaussian_elimination(
         matriz_aumentada,
         variable_names=nombres_escalares,
-        use_gauss_jordan=True,
-        es_combinacion=True
+        use_gauss_jordan=True
     )
     
     resultado.pasos_reduccion = gauss_res.steps

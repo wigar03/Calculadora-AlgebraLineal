@@ -59,11 +59,13 @@ class TestDimensionesDefensivas(unittest.TestCase):
         for funcion, args in [(calcular_inversa_matriz, (identidad(lim.INVERSA_MAX + 1),)),
                               (calcular_determinante, (identidad(lim.DETERMINANTE_MAX + 1),)),
                               (analizar_eficiencia_determinante, (lim.EFICIENCIA_N_MAX + 1,)),
-                              (resolver_ecuacion_matricial, (identidad(lim.SISTEMA_MAX + 1), [1] * (lim.SISTEMA_MAX + 1))),
-                              (solve_gaussian_elimination, ([[1, 1]] * (lim.SISTEMA_MAX + 1),)),
-                              (solve_gaussian_elimination, ([[1] * (lim.SISTEMA_MAX + 2)],))]:
+                              (resolver_ecuacion_matricial, (identidad(lim.SISTEMA_MAX + 1), [1] * (lim.SISTEMA_MAX + 1)))]:
             with self.subTest(funcion=funcion.__name__), self.assertRaises(LimiteExcedido):
                 funcion(*args)
+
+    def test_gauss_compartido_admite_el_orden_de_iterativos(self):
+        matriz = [fila + [1] for fila in identidad(lim.ITERATIVOS_MAX)]
+        self.assertEqual(solve_gaussian_elimination(matriz).solution_vector, [1] * lim.ITERATIVOS_MAX)
 
     def test_combinacion_admite_quince_componentes_y_diez_vectores(self):
         vectores = [fila[:lim.COMBINACION_N_MAX] for fila in identidad(lim.COMBINACION_N_MAX)[:lim.COMBINACION_K_MAX]]

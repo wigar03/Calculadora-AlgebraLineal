@@ -24,7 +24,6 @@ Teorema de Rouché-Capelli:
 """
 
 from fractions import Fraction
-from src.core.limites import SISTEMA_MAX, COMBINACION_N_MAX, COMBINACION_K_MAX, exigir_dimension
 import re
 from typing import List, Tuple, Dict, Any, Optional, Union
 
@@ -101,7 +100,6 @@ def solve_gaussian_elimination(
     augmented_matrix: List[List[Union[str, int, float, Fraction]]],
     variable_names: Optional[List[str]] = None,
     use_gauss_jordan: bool = True,
-    *, es_combinacion: bool = False,
 ) -> GaussResult:
     """
     Resuelve el sistema aumentado [A | b] paso a paso mediante Gauss o Gauss-Jordan.
@@ -110,13 +108,11 @@ def solve_gaussian_elimination(
     num_rows = len(augmented_matrix)
     if num_rows == 0:
         raise ValueError("La matriz aumentada no puede estar vacía.")
-    exigir_dimension("El número de ecuaciones", num_rows, COMBINACION_N_MAX if es_combinacion else SISTEMA_MAX)
     num_cols = len(augmented_matrix[0])
     if num_cols < 2:
         raise ValueError("La matriz aumentada debe tener al menos una columna de variables y una columna de términos independientes.")
         
     num_vars = num_cols - 1
-    exigir_dimension("El número de variables", num_vars, COMBINACION_K_MAX if es_combinacion else SISTEMA_MAX)
     if any(not isinstance(fila, (list, tuple)) or len(fila) != num_cols for fila in augmented_matrix):
         raise ValueError("Todas las filas de la matriz aumentada deben tener la misma longitud.")
     result.num_equations = num_rows
