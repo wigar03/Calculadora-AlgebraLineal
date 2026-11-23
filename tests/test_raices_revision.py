@@ -89,7 +89,31 @@ class TestRevisionRaices(unittest.TestCase):
             self.assertEqual(estado, 400, r)
 
     def test_7_ln_cerca_del_borde_sigue_continua(self):
-        estado, r = self.resolver("biseccion", funcion="ln(x)+sin(x)-1.2", a=1e-16, b=2)
-        self.assertEqual(estado, 200, r)
-        self.assertTrue(r["convergio"])
-        self.assertAlmostEqual(r["raiz"], 1.2754495800797368, delta=1e-6)
+        for metodo in ("biseccion", "regla-falsa"):
+            estado, r = self.resolver(metodo, funcion="ln(x)+sin(x)-1.2", a=1e-16, b=2, xl=1e-16, xu=2)
+            self.assertEqual(estado, 200, r)
+            self.assertTrue(r["convergio"])
+            self.assertAlmostEqual(r["raiz"], 1.2754495800797368, delta=1e-6)
+
+    def test_cero_por_subdesbordamiento_no_certifica_una_raiz(self):
+        for metodo, semillas in (("newton-raphson", dict(x0=-1000)),
+                                  ("secante", dict(x0=-1000, x1=-1001))):
+            estado, r = self.resolver(metodo, funcion="exp(x)", **semillas)
+            self.assertEqual(estado, 200)
+            self.assertEqual(r["f_raiz"], 0)
+            self.assertFalse(r["convergio"])
+            self.assertEqual(r["motivo"], "no_certificada")
+
+    def test_raiz_multiple_queda_sin_certificar_con_cambio_de_signo(self):
+        estado, r = self.resolver("secante", funcion="x^2", x0=0, x1=1)
+        self.assertEqual(estado, 200)
+        self.assertFalse(r["convergio"])
+        self.assertEqual(r["certificacion"]["razon"], "sin_cambio_de_signo")
+
+    def test_residuo_pequeno_lejos_de_raiz_no_certifica(self):
+        for metodo, semillas in (("newton-raphson", dict(x0=0)),
+                                  ("secante", dict(x0=-1, x1=0))):
+            estado, r = self.resolver(metodo, funcion="1e-12*(x-100)", criterio="residuo", **semillas)
+            self.assertEqual(estado, 200)
+            self.assertTrue(r["cumple"]["residuo"])
+            self.assertFalse(r["convergio"])
