@@ -23,6 +23,16 @@ Pendiente de verificar con datos iniciales realistas: polos (IV-3, IV-4), domini
 raíz trivial x = 0 (III-10). En bisección con criterio «intervalo» y tol 10⁻⁶, III-1 deja |f| ≈ 3.7·10⁻⁶:
 hay que explicitar la diferencia entre cota de error y residuo.
 
+## INC-005 · 2026-11-23 · infraestructura · ABIERTA (menor, preexistente)
+`iniciar_servidor_web` imprime un emoji y falla con `UnicodeEncodeError` si la salida estándar usa cp1252
+(consola de Windows redirigida). No afecta a `servidor_local()` ni a la página. Solución temporal:
+`PYTHONIOENCODING=utf-8`. La página carga sin errores de consola salvo `favicon.ico` 404 (inocuo).
+
+## INC-006 · 2026-11-23 · presentación · EN CURSO (Antigravity)
+Reproducido en la interfaz (Bisección): `2x + 3 = 7` → «Revise los datos · Función inválida. Use, por ejemplo,
+x^3 - x - 2.». Es el mensaje genérico que debe sustituirse por diagnósticos específicos (INC-002).
+Capturas de línea base (fuera del repositorio): inicio, Bisección, Bisección con error, Ecuaciones matriciales.
+
 ## INC-004 · 2026-11-23 · infraestructura · CERRADA
 `pytest` no está instalado; la suite oficial usa `unittest` (README y CI). Línea base: 169 pruebas OK y
 5 archivos `node --test` OK. No es un fallo.
