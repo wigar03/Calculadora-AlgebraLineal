@@ -20,6 +20,7 @@ from urllib.request import Request, urlopen
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.ui.web_server import servidor_local  # noqa: E402
 from src.core import limites  # noqa: E402
+from src.core.ejecucion import Supervisor  # noqa: E402
 from scripts.memoria_procesos import memoria_proceso  # noqa: E402
 
 
@@ -50,10 +51,22 @@ def post(url, ruta, cuerpo, crudo=None, timeout=90, cabeceras=None):
 
 def servidor_medicion():
     """Proceso dedicado: su memoria no incluye las respuestas retenidas por el cliente."""
+    supervisiones = []
+    ejecutar = Supervisor.ejecutar
+
+    def cronometrar(self, referencia, *args, **kwargs):
+        inicio = time.perf_counter()
+        try:
+            return ejecutar(self, referencia, *args, **kwargs)
+        finally:
+            supervisiones.append(time.perf_counter() - inicio)
+
+    Supervisor.ejecutar = cronometrar
     with servidor_local() as url:
         print(json.dumps({"url": url, "servidor": os.getpid(),
                           "trabajadores": [p.pid for p in multiprocessing.active_children()]}), flush=True)
         sys.stdin.readline()
+    print(json.dumps({"supervision_s": supervisiones}), flush=True)
 
 
 def concurrencia_grande():
@@ -100,7 +113,7 @@ def concurrencia_grande():
         recuperacion = post(url, "/api/vectores/operar", {"operacion": "suma", "u": ["1"], "v": ["2"]})
         detener.set()
         monitor.join(2)
-        return {"caso": nombre, "limites": {"respuesta_bytes": limites.RESPUESTA_MAX_BYTES,
+        informe = {"caso": nombre, "limites": {"respuesta_bytes": limites.RESPUESTA_MAX_BYTES,
                 "trabajador_mb": limites.MEMORIA_CALCULO_MB, "tiempo_s": limites.TIEMPO_CALCULO_S},
                 "procesos": inicio, "memoria_bytes": muestras, "base": base,
                 "grandes": grandes, "triviales": triviales, "recuperacion": recuperacion,
@@ -108,10 +121,13 @@ def concurrencia_grande():
     finally:
         detener.set()
         try:
-            hijo.communicate("\n", timeout=8)
+            salida, _ = hijo.communicate("\n", timeout=8)
         except subprocess.TimeoutExpired:
             hijo.kill()
             hijo.communicate()
+            raise RuntimeError("El servidor no cerró tras finalizar el ensayo") from None
+    informe.update(json.loads(salida.strip()))
+    return informe
 
 
 def matriz(n, semilla=1):
@@ -177,7 +193,9 @@ if __name__ == "__main__":
                       and r["bytes"] <= limites.RESPUESTA_MAX_BYTES for r in grandes)
         memoria = all(informe["memoria_bytes"][pid]["memoria_limite_max"] < limites.MEMORIA_CALCULO_MB * 1024**2
                       for pid in informe["procesos"]["trabajadores"])
-        tiempos = all(r["estado"] == 200 and r["s"] < limites.TIEMPO_CALCULO_S for r in grandes + triviales)
+        # P1 limita cálculo supervisado (incluida la cola), no transporte HTTP y serialización del servidor.
+        tiempos = (all(s < limites.TIEMPO_CALCULO_S for s in informe["supervision_s"])
+                   and all(r["estado"] == 200 and r["s"] < limites.TIEMPO_CALCULO_S for r in triviales))
         sys.exit(0 if validas and memoria and tiempos and informe["recuperacion"]["estado"] == 200
                  and not informe["errores_muestreo"] else 1)
     else:
