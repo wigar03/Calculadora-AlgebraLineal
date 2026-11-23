@@ -144,3 +144,49 @@ def comprobar_destino(destino, archivo, raiz):
     return None
 
 
+def verificar(archivo, raiz=RAIZ, solo_enlaces=False):
+    archivo, raiz = Path(archivo).resolve(), Path(raiz).resolve()
+    try:
+        texto = archivo.read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeError) as error:
+        return [f"{archivo}: no se puede leer: {error}"]
+    vista, errores = separar(texto)
+    if solo_enlaces:
+        errores = []
+    else:
+        nivel = 0
+        for titulo in TITULO.finditer(vista):
+            nuevo = len(titulo[1])
+            if nuevo > nivel + 1:
+                errores.append((titulo.start(), f"salto de título: {nivel} a {nuevo}"))
+            nivel = nuevo
+        for latex in re.finditer(r"\\(?:[A-Za-z]+|[\[\]()])", vista):
+            if not escapado(vista, latex.start()):
+                errores.append((latex.start(), "LaTeX fuera de matemáticas: " + latex[0]))
+    for posicion, destino in destinos(vista):
+        error = comprobar_destino(destino, archivo, raiz)
+        if error:
+            errores.append((posicion, error))
+    nombre = archivo.relative_to(raiz) if archivo.is_relative_to(raiz) else archivo
+    return [f"{nombre}:{texto.count(chr(10), 0, pos) + 1}: {error}"
+            for pos, error in sorted(errores)]
+
+
+def main(argumentos=None):
+    argumentos = sys.argv[1:] if argumentos is None else argumentos
+    archivos = [Path(a) for a in argumentos] if argumentos else archivos_publicos()
+    errores = [error for archivo in archivos for error in verificar(archivo)]
+    internos = []
+    if not argumentos:
+        internos = [RAIZ / "AGENTS.md"] + [p for p in (RAIZ / "docs").rglob("*.md")
+                                           if p not in archivos]
+        errores.extend(error for archivo in internos
+                       for error in verificar(archivo, solo_enlaces=True))
+    for error in errores:
+        print(error)
+    print(f"{len(archivos)} públicos; {len(internos)} internos (enlaces); {len(errores)} problemas")
+    return bool(errores)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
