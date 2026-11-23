@@ -43,7 +43,7 @@ def clasificar_error(exc):
 def serializar(valor):
     """Acota la salida mientras se codifica, sin crear una segunda copia enorme."""
     salida = bytearray()
-    for fragmento in json.JSONEncoder(ensure_ascii=True).iterencode(valor):
+    for fragmento in json.JSONEncoder(ensure_ascii=True, default=str).iterencode(valor):
         if len(fragmento) > limites.RESPUESTA_MAX_BYTES - len(salida):
             raise ErrorEjecucion("La respuesta supera el tamaño máximo permitido.",
                                  "limite", "respuesta_grande", 400)
