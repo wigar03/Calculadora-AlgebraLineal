@@ -86,6 +86,27 @@ class TestProcedimientosNumerico(unittest.TestCase):
                 todos_latex.extend(_extraer_latex(proc))
         _validar_katex_estricto(todos_latex)
 
+    def test_casos_borde_y_no_convergencia(self):
+        from src.biseccion.metodo import resolver_biseccion
+        from src.iterativos.resolver import resolver_iterativo
+        from src.regla_falsa.metodo import resolver_regla_falsa
+        from src.secante.metodo import resolver_secante
+        casos = [
+            ("/api/biseccion/resolver", {**resolver_biseccion("x - 1", 1, 2), "funcion_latex": "x - 1"}),
+            ("/api/regla-falsa/resolver", {**resolver_regla_falsa("x^10 - 1", 0, 1.3, tolerancia=1e-4, max_iteraciones=20),
+                                           "funcion_latex": "x^{10} - 1"}),
+            ("/api/secante/resolver", resolver_secante("x^2 - 4", 2, 3)),
+            ("/api/iterativos/resolver", resolver_iterativo([["1", "2"], ["2", "4"]], ["3", "6"], "jacobi")),
+        ]
+        latex = []
+        for ruta, resp in casos:
+            with self.subTest(ruta):
+                proc = validar(adjuntar(ruta, resp, {})["procedimiento"])
+                esperado = len(resp["iteraciones"]) if "iterativos" in ruta else resp["iteraciones"]
+                self.assertEqual(len(proc["tablas"][0]["filas"]), esperado)
+                latex.extend(_extraer_latex(proc))
+        _validar_katex_estricto(latex)
+
 
 if __name__ == "__main__":
     unittest.main()
