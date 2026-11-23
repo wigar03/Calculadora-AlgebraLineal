@@ -3,6 +3,7 @@
 Hasta n=12: polinomio exacto y Schur-Cohn estricto (incluye multiplicidades
 y frontera). El radio mostrado se encierra por bisección racional usando el
 mismo criterio sobre p(r*z); ningún autovalor flotante decide la garantía.
+Por encima de n=12 se demuestra también el caso triangular: T^n=0 y rho=0.
 """
 from fractions import Fraction as F
 from functools import reduce
@@ -136,6 +137,17 @@ def analizar_espectro(A):
     radios = {"jacobi": None, "gauss_seidel": None}
     estables = {"jacobi": None, "gauss_seidel": None}
     calculo = "No calculado: diagonal nula o dimensión mayor que 12."
+    n = len(A)
+    diagonal_valida = all(A[i][i] != 0 for i in range(n))
+    if n > LIMITE_ESPECTRAL and diagonal_valida and (
+        all(A[i][j] == 0 for i in range(n) for j in range(i)) or
+        all(A[i][j] == 0 for i in range(n) for j in range(i + 1, n))
+    ):
+        # Si A es triangular, T_J y T_GS son triangulares estrictas (o cero).
+        # Por tanto T^n=0, incluso fuera del límite del polinomio general.
+        return ({"jacobi": 0.0, "gauss_seidel": 0.0,
+                 "metodo_calculo": "Nilpotencia triangular exacta: T^n=0, radio espectral 0."},
+                {"jacobi": True, "gauss_seidel": True})
     if len(A) <= LIMITE_ESPECTRAL and all(A[i][i] != 0 for i in range(len(A))):
         calculo = "Faddeev-LeVerrier y Schur-Cohn exactos; radio por bisección racional."
         for metodo in estables:
@@ -164,7 +176,7 @@ def definida_positiva(A):
 def garantia_convergencia(A, metodo, estricta, estable):
     razones = []
     if estable is True:
-        razones.append("Radio espectral menor que 1 demostrado por Schur-Cohn exacto.")
+        razones.append("Radio espectral menor que 1 demostrado exactamente.")
     if estricta:
         razones.append("Matriz estrictamente dominante por filas.")
     if metodo == "gauss_seidel" and definida_positiva(A):

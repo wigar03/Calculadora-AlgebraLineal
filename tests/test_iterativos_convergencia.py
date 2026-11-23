@@ -75,6 +75,8 @@ class AnalisisExacto(unittest.TestCase):
 
     def test_limite_y_diagonal_nula(self):
         for A in ([[F(i == j) for j in range(13)] for i in range(13)], [[0, 1], [1, 1]]):
+            if len(A) == 13:
+                A[0][1] = A[1][0] = F(1, 2)  # caso general, no triangular
             radios, estables = analizar_espectro(A)
             self.assertIsNone(radios["jacobi"])
             self.assertIsNone(estables["gauss_seidel"])
@@ -251,3 +253,20 @@ class ResolucionIterativa(unittest.TestCase):
                 self.assertTrue(r["convergio"])
                 self.assertEqual(r["solucion"], [1] * 9)
                 self.assertEqual(len(r["iteraciones"]), 10)
+
+    def test_nilpotencia_triangular_fuera_del_limite_espectral(self):
+        from src.iterativos.resolver import resolver_iterativo
+        for superior in (True, False):
+            A = [[int(i == j) - 100 * int(j == i + 1 if superior else i == j + 1)
+                  for j in range(20)] for i in range(20)]
+            b = [-99] * 19 + [1] if superior else [1] + [-99] * 19
+            for metodo in ("jacobi", "gauss_seidel"):
+                with self.subTest(superior=superior, metodo=metodo):
+                    r = resolver_iterativo(A, b, metodo, tolerancia=1e-10)
+                    self.assertEqual(r["motivo"], "tolerancia")
+                    self.assertTrue(r["convergio"])
+                    self.assertEqual(r["solucion"], [1] * 20)
+                    self.assertEqual(r["convergencia"], "demostrada")
+                    self.assertEqual(r["analisis"]["radio_espectral"][metodo], 0)
+                    self.assertEqual(len(r["iteraciones"]),
+                                     21 if superior or metodo == "jacobi" else 2)
