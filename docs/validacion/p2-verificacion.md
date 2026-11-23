@@ -69,9 +69,29 @@ Su exportación final tarda 0.34 ms; la entrada íntegra reproducible está en `
 ## Reproducción y resultado de la batería
 
 `python -m unittest tests.test_golden_api`: 1 prueba OK (las 43 respuestas).
-`python -m unittest discover tests -v`: 467 pruebas; 56 fallos de subpruebas P2, 1 omitida por falta de motor.
+`python -m unittest discover tests -v`: 467 pruebas en 41.324 s; 56 fallos de subpruebas P2, 1 omitida por falta de motor.
 Las 457 pruebas Python anteriores pasan; las 10 nuevas tienen 4 métodos OK, 5 con fallos y 1 omitido.
 `tests/*.cjs`, ejecutados individualmente con `node --test`: 72 pruebas, 67 OK y 5 fallidas (todas nuevas).
 Las 66 pruebas Node anteriores pasan. No se declara P2 validado; estos fallos son la entrega solicitada.
 `python -m tests.test_exportacion_modulos --informe ruta.json` genera tiempos, entradas largas y diagnósticos.
 `P2_EXPORTAR_JS` puede apuntar al `exportar.js` de otra rama para repetir sin editar `src/`.
+
+## Commits de implementación y evidencia
+
+Líneas = añadidas + eliminadas, según `git show --numstat`; todos respetan el máximo de 100.
+
+| Hash | Mensaje | Líneas |
+|---|---|---:|
+| `a0eacbc` | test(exportacion): añadir puente Node y oraculo KaTeX estricto | 65 |
+| `f3d02d9` | test(exportacion): releer CSV con oraculo independiente de precision | 77 |
+| `6bcce1f` | test(exportacion): obtener corpus HTTP y casos largos sin simular motores | 72 |
+| `50aa2d4` | test(exportacion): cubrir corpus completo y entradas adversarias de usuario | 65 |
+| `214cb97` | test(exportacion): comprobar paginacion compilacion y coste de tablas largas | 54 |
+| `cd409f7` | test(exportacion): separar verificaciones y acotar mensajes de fallo | 34 |
+| `1458e3b` | test(exportacion): registrar mediciones y casos no finitos e inyeccion | 72 |
+| `4a6a748` | test(exportacion): detectar delimitadores matematicos incompletos | 9 |
+| `c20288c` | docs(validacion): documentar incumplimientos P2 y mediciones independientes | 77 |
+
+El siguiente commit solo completa este índice y registra la duración de la batería final.
+La verificación se entrega completa aunque el exportador aún incumple P2; el integrador debe asignar las
+correcciones y repetir las pruebas sobre la implementación integrada antes de aprobar P2.
