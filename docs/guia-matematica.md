@@ -210,81 +210,81 @@ R = A \cdot A^{-1} - I_n = 0_{n \times n}
 - Si $`A`$ es invertible, la ecuación matricial $`Ax = b`$ posee solución única $`x = A^{-1}b`$.
 - Caracterizaciones equivalentes: $`\mathrm{rg}(A) = n`$, $`n`$ posiciones pivote, columnas linealmente independientes y núcleo trivial ($`Ax = 0 \implies x = 0`$).
 
-### Módulo 5: Ecuaciones Matriciales $Ax = b$ y Enlace al Programa Anterior
+### Módulo 5: Ecuaciones Matriciales $`Ax = b`$ y Enlace al Programa Anterior
 
-Dada una matriz de coeficientes $A \in \mathcal{M}_{m \times n}(\mathbb{R})$ y un vector de términos independientes $b \in \mathbb{R}^m$, el sistema lineal se expresa en forma matricial compacta:
+Dada una matriz de coeficientes $`A \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un vector de términos independientes $`b \in \mathbb{R}^m`$, el sistema lineal se expresa en forma matricial compacta:
 
-$$
+```math
 A \cdot x = b
-$$
+```
 
 El proceso de análisis y resolución comprende:
 
-1. **Matriz Aumentada**: Se construye $[A \mid b] \in \mathcal{M}_{m \times (n+1)}(\mathbb{R})$.
+1. **Matriz Aumentada**: Se construye $`[A \mid b] \in \mathcal{M}_{m \times (n+1)}(\mathbb{R})`$.
 2. **Llamada Directa al Motor de la Semana #3**: Se invoca directamente el módulo de eliminación por renglones desarrollado en el proyecto anterior, obteniendo la matriz escalonada y reducida junto con el registro detallado de las operaciones elementales de fila (intercambio de filas, multiplicación por escalar y adición de múltiplos de otra fila).
 3. **Clasificación y Solución**: Aplicación rigurosa del Teorema de Rouché-Capelli para determinar si el sistema es Compatible Determinado (solución única), Compatible Indeterminado (infinitas soluciones con parámetros libres) o Incompatible (sin solución).
-4. **Comprobación Computacional del Residuo**: En sistemas consistentes con solución $x_{\mathrm{sol}}$, el programa comprueba computacionalmente que el vector residual sea exactamente cero:
+4. **Comprobación Computacional del Residuo**: En sistemas consistentes con solución $`x_{\mathrm{sol}}`$, el programa comprueba computacionalmente que el vector residual sea exactamente cero:
 
-$$
+```math
 r = A \cdot x_{\mathrm{sol}} - b = 0
-$$
+```
 
-### Módulo 6: Determinante de Matrices Cuadradas $|A|$ (Cofactores vs Descomposición LU)
+### Módulo 6: Determinante de Matrices Cuadradas $`|A|`$ (Cofactores vs Descomposición LU)
 
-Este módulo implementa el cálculo exacto del determinante $|A|$ o $\det(A)$ para cualquier matriz cuadrada $A \in \mathcal{M}_{n \times n}(\mathbb{R})$ mediante una pestaña interactiva dedicada dentro del servidor web de la aplicación, desarrollada 100% en Python estándar (sin librerías prohibidas como NumPy, SciPy o rutinas de `math`):
+Este módulo implementa el cálculo exacto del determinante $`|A|`$ o $`\det(A)`$ para cualquier matriz cuadrada $`A \in \mathcal{M}_{n \times n}(\mathbb{R})`$ mediante una pestaña interactiva dedicada dentro del servidor web de la aplicación, desarrollada 100% en Python estándar (sin librerías prohibidas como NumPy, SciPy o rutinas de `math`):
 
 #### 1. Definición Formal y Significado Geométrico
-El determinante es un escalar único asociado a una matriz cuadrada que cuantifica el factor de dilatación o contracción del hipervolumen $n$-dimensional generado por los vectores fila o columna.
-- Para $n = 1$: $\det([a]) = a$.
-- Para $n = 2$: el valor absoluto $|\det(A)|$ representa el área del paralelogramo en $\mathbb{R}^2$; el signo de $\det(A)$ indica la orientación.
-- Para $n = 3$: $|\det(A)|$ representa el volumen del paralelepípedo en $\mathbb{R}^3$; el signo indica la orientación.
-- Invertibilidad: $\det(A) \neq 0 \iff$ la matriz $A$ es no singular (invertible, rango completo $\mathrm{rg}(A) = n$). Si $\det(A) = 0$, la matriz es singular (filas linealmente dependientes, sin matriz inversa).
+El determinante es un escalar único asociado a una matriz cuadrada que cuantifica el factor de dilatación o contracción del hipervolumen $`n`$-dimensional generado por los vectores fila o columna.
+- Para $`n = 1`$: $`\det([a]) = a`$.
+- Para $`n = 2`$: el valor absoluto $`|\det(A)|`$ representa el área del paralelogramo en $`\mathbb{R}^2`$; el signo de $`\det(A)`$ indica la orientación.
+- Para $`n = 3`$: $`|\det(A)|`$ representa el volumen del paralelepípedo en $`\mathbb{R}^3`$; el signo indica la orientación.
+- Invertibilidad: $`\det(A) \neq 0 \iff`$ la matriz $`A`$ es no singular (invertible, rango completo $`\mathrm{rg}(A) = n`$). Si $`\det(A) = 0`$, la matriz es singular (filas linealmente dependientes, sin matriz inversa).
 
 #### 2. Método de Expansión por Cofactores (Teorema de Laplace)
-Para cualquier fila fija $i \in \{1, \dots, n\}$:
+Para cualquier fila fija $`i \in \{1, \dots, n\}`$:
 
-$$
+```math
 \det(A) = \sum_{j=1}^n a_{ij} C_{ij} = \sum_{j=1}^n (-1)^{i+j} a_{ij} \det(M_{ij})
-$$
+```
 
-Donde $C_{ij} = (-1)^{i+j} \det(M_{ij})$ es el cofactor del elemento $a_{ij}$, y $M_{ij}$ es la submatriz menor de orden $(n-1) \times (n-1)$ obtenida suprimiendo la fila $i$ y la columna $j$.
+Donde $`C_{ij} = (-1)^{i+j} \det(M_{ij})`$ es el cofactor del elemento $`a_{ij}`$, y $`M_{ij}`$ es la submatriz menor de orden $`(n-1) \times (n-1)`$ obtenida suprimiendo la fila $`i`$ y la columna $`j`$.
 
 - **Estrategia Óptima**: El algoritmo inspecciona sistemáticamente filas y columnas para seleccionar aquella con mayor cantidad de ceros, anulando términos y reduciendo la recursión.
-- **Complejidad computacional**: $\mathcal{O}(n!)$ en el caso general. Al expandir una fila de una matriz de orden $n$ aparecen $n$ menores inmediatos de orden $n-1$, que se resuelven recursivamente. No debe confundirse ese número con los $n!$ términos de la fórmula de Leibniz.
+- **Complejidad computacional**: $`\mathcal{O}(n!)`$ en el caso general. Al expandir una fila de una matriz de orden $`n`$ aparecen $`n`$ menores inmediatos de orden $`n-1`$, que se resuelven recursivamente. No debe confundirse ese número con los $`n!`$ términos de la fórmula de Leibniz.
 - **Límite de la calculadora**: cofactores hasta orden 6, sujeto al presupuesto de salida; para órdenes mayores se utiliza LU.
 
-#### 3. Método de Descomposición LU con Pivoteo Parcial ($PA = LU$)
+#### 3. Método de Descomposición LU con Pivoteo Parcial ($`PA = LU`$)
 Mediante eliminación gaussiana por renglones con pivoteo parcial y aritmética fraccionaria exacta:
 
-$$
+```math
 P \cdot A = L \cdot U
-$$
+```
 
 Donde:
-- $P$ es la matriz de permutación con $s$ intercambios de filas ($\det(P) = (-1)^s$).
-- $L$ es triangular inferior unitaria con unos en la diagonal ($\det(L) = 1$) y multiplicadores $m_{ik} = \frac{u_{ik}}{u_{kk}}$ debajo de la diagonal.
-- $U$ es la matriz triangular superior con los pivotes resultantes en su diagonal principal.
+- $`P`$ es la matriz de permutación con $`s`$ intercambios de filas ($`\det(P) = (-1)^s`$).
+- $`L`$ es triangular inferior unitaria con unos en la diagonal ($`\det(L) = 1`$) y multiplicadores $`m_{ik} = \frac{u_{ik}}{u_{kk}}`$ debajo de la diagonal.
+- $`U`$ es la matriz triangular superior con los pivotes resultantes en su diagonal principal.
 
 Aplicando las propiedades del determinante:
 
-$$
+```math
 \det(P \cdot A) = \det(L \cdot U) \implies (-1)^s \det(A) = 1 \cdot \left(\prod_{i=1}^n u_{ii}\right)
-$$
+```
 
-$$
+```math
 \det(A) = (-1)^s \prod_{i=1}^n u_{ii}
-$$
+```
 
-Si en alguna columna no existe ningún pivote no nulo disponible, la matriz tiene rango deficiente ($\mathrm{rg}(A) < n$) y se concluye inmediatamente que $\det(A) = 0$.
+Si en alguna columna no existe ningún pivote no nulo disponible, la matriz tiene rango deficiente ($`\mathrm{rg}(A) < n`$) y se concluye inmediatamente que $`\det(A) = 0`$.
 
-- **Complejidad computacional**: $\mathcal{O}(n^3)$ operaciones aritméticas; el término dominante del conteo habitual es $\frac{2}{3}n^3$. El coste de cada operación con fracciones depende también del tamaño de sus enteros.
+- **Complejidad computacional**: $`\mathcal{O}(n^3)`$ operaciones aritméticas; el término dominante del conteo habitual es $`\frac{2}{3}n^3`$. El coste de cada operación con fracciones depende también del tamaño de sus enteros.
 - **Límite de la calculadora**: determinantes hasta orden 8; comprobación independiente mediante Bareiss.
 
 #### 4. Análisis Comparativo de Eficiencia Previo a la Selección
-Cumpliendo la especificación requerida, la aplicación evalúa e informa **antes de que el usuario elija el método** cuál es el más eficiente según la dimensión $n$ actual:
-- **Para $n \le 2$**: ambos métodos tienen un coste mínimo. Cofactores ofrece la fórmula directa ($ad - bc$ para orden 2).
-- **Para $n = 3$**: Ambos métodos son rápidos y exactos. Cofactores es didáctico (desarrollo por Sarrus / Laplace) mientras que LU presenta una leve ventaja en operaciones elementales.
-- **Para $n \ge 4$**: se recomienda LU. Su coste cúbico crece más lentamente que el coste factorial de la expansión general por cofactores. La cantidad real de ceros puede reducir el trabajo de esa expansión; las estimaciones no son mediciones de tiempo.
+Cumpliendo la especificación requerida, la aplicación evalúa e informa **antes de que el usuario elija el método** cuál es el más eficiente según la dimensión $`n`$ actual:
+- **Para $`n \le 2`$**: ambos métodos tienen un coste mínimo. Cofactores ofrece la fórmula directa ($`ad - bc`$ para orden 2).
+- **Para $`n = 3`$**: Ambos métodos son rápidos y exactos. Cofactores es didáctico (desarrollo por Sarrus / Laplace) mientras que LU presenta una leve ventaja en operaciones elementales.
+- **Para $`n \ge 4`$**: se recomienda LU. Su coste cúbico crece más lentamente que el coste factorial de la expansión general por cofactores. La cantidad real de ceros puede reducir el trabajo de esa expansión; las estimaciones no son mediciones de tiempo.
 
 ---
 
