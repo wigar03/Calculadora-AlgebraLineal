@@ -53,3 +53,9 @@
 - **No es estable:** sigue siendo prerelease (P2 pendiente de aprobación; ejecutables sin firma).
 - **Notas:** `docs/notas-v1.0.0-rc.5.md`.
 - **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.5 (prerelease); sumas SHA-256 verificadas.
+
+## v1.0.0-rc.6 — P2 y documentación pública
+- **Evidencia:** CI 45270508552 en Linux y Windows (476 Python, 68 Node con navegador real; ejecutable con 11 módulos).
+  Batería independiente de exportaciones (Codex 2) en verde; verificador Markdown sin problemas; guía en GitHub con
+  274 fórmulas en MathML, sin LaTeX suelto ni desbordamientos.
+- **No es estable:** ejecutables sin firma. **Notas:** `docs/notas-v1.0.0-rc.6.md`.
