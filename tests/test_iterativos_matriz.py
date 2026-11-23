@@ -145,3 +145,43 @@ class TestMatrizIterativos(unittest.TestCase):
                 self.assertEqual(dominancia_diagonal(nueva)["estricta"], estricta)
                 self.assertEqual(not diagonal_nula(nueva), sin_ceros)
                 self.assertEqual(nuevo_b, [i + 1 for i in info["permutacion"]])
+
+    def test_residuo_signo_norma_por_filas_y_escala(self):
+        A, b, x = [[4.0, -1.0], [2.0, 3.0]], [1.0, 2.0], [.5, -.25]
+        original = copy.deepcopy((A, b, x))
+        r = residuo(A, b, x)
+        self.assertEqual(r["Ax"], [2.25, .25])
+        self.assertEqual(r["residuo"], [-1.25, 1.75])
+        self.assertEqual(r["residuo_inf"], 1.75)
+        self.assertEqual(r["residuo_rel"], 7 / 18)
+        self.assertEqual((A, b, x), original)
+        for factor in (1000, 1e-100):
+            escalado = residuo([[a * factor for a in fila] for fila in A],
+                               [v * factor for v in b], x)
+            self.assertAlmostEqual(escalado["residuo_rel"], r["residuo_rel"], places=15)
+
+    def test_residuo_en_soluciones_independientes_de_todo_el_banco(self):
+        for nombre, caso in CASOS.items():
+            if "solucion" not in REFERENCIAS[nombre]:
+                continue
+            A, b, _ = sistema_float(*leer_sistema(**caso))
+            x = [float(F(v)) for v in REFERENCIAS[nombre]["solucion"]]
+            with self.subTest(caso=nombre):
+                self.assertLessEqual(residuo(A, b, x)["residuo_rel"], 1e-15)
+
+    def test_residuo_escala_cero_y_no_finitos(self):
+        self.assertEqual(residuo([[0.0]], [0.0], [0.0]),
+                         {"Ax": [0.0], "residuo": [0.0], "residuo_inf": 0.0, "residuo_rel": 0.0})
+        for valor in (math.inf, -math.inf, math.nan):
+            with self.subTest(valor=valor):
+                r = residuo([[1.0]], [1.0], [valor])
+                self.assertEqual(r["residuo_inf"], math.inf)
+                self.assertEqual(r["residuo_rel"], math.inf)
+        self.assertEqual(residuo([[1e308]], [0.0], [2.0])["residuo_rel"], math.inf)
+
+    def test_residuo_relativo_no_se_anula_por_desbordamiento_de_la_escala(self):
+        r = residuo([[1e308]], [1e308], [.9])
+        self.assertAlmostEqual(r["residuo_rel"], 1 / 19, places=15)
+        r = residuo([[1e308, 1e308], [1e308, -1e308]], [1e307, 0.0], [.1, .1])
+        self.assertAlmostEqual(r["residuo_rel"], 1 / 3, places=15)
+        self.assertTrue(math.isfinite(r["residuo_inf"]))

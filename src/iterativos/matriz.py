@@ -1,5 +1,6 @@
 """Diagnósticos matriciales y residuo; índices base 0, filas completas al reordenar."""
 
+from fractions import Fraction
 from math import inf, isfinite
 
 from src.solver.gauss_solver import solve_gaussian_elimination
@@ -138,5 +139,12 @@ def residuo(A, b, x):
     norma_A = max(sum(abs(v) for v in fila) for fila in A)
     norma_b, norma_x = max(abs(v) for v in b), max(abs(v) for v in x)
     denominador = norma_b + norma_A * norma_x
-    relativo = norma / denominador if denominador else norma
+    if not isfinite(denominador):
+        # La escala puede desbordarse aunque Ax y r sean finitos: no informar
+        # falsamente residuo relativo cero por dividir entre infinito.
+        norma_exacta = max(sum(Fraction(abs(v)) for v in fila) for fila in A)
+        escala = Fraction(norma_b) + norma_exacta * Fraction(norma_x)
+        relativo = float(Fraction(norma) / escala) if escala else norma
+    else:
+        relativo = norma / denominador if denominador else norma
     return {"Ax": Ax, "residuo": r, "residuo_inf": norma, "residuo_rel": relativo}
