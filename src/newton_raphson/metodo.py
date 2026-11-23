@@ -2,7 +2,10 @@
 
 import math
 
-from ..biseccion.expresiones import Expresion, numero_real
+from ..biseccion.expresiones import numero_real
+from ..regla_falsa.dominio import (
+    ExpresionNumerica as Expresion, validar_condicion, raiz_admisible, verificar_raiz,
+)
 from ..core.tolerancia import clasificar, informe
 from ..derivadas import derivada_simbolica, analizar_derivada
 
@@ -39,8 +42,10 @@ def evaluar_inicial(funcion, x0):
     return _evaluar(f, derivada_simbolica(f), numero_real(x0, "El valor inicial"))
 
 
-def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="absoluto"):
+def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="absoluto",
+                    condicion="real"):
     f = Expresion(funcion)
+    validar_condicion(condicion)
     d = derivada_simbolica(f)
     x = numero_real(x0, "El valor inicial")
     tol = numero_real(tolerancia, "La tolerancia")
@@ -57,14 +62,19 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
     pasos = [{"n": 0, "x": x, "fx": inicial["f_x0"], "dfx": inicial["df_x0"],
               "error_absoluto": None, "error_relativo": None}]
     avisos = []
+    escala_residuo = max(1., abs(inicial["f_x0"]))
 
     def resultado(motivo, convergio):
         p = pasos[-1]
+        if convergio and not raiz_admisible(p["x"], condicion):
+            motivo, convergio = "raiz_no_admisible", False
         valores = {"absoluto": p["error_absoluto"], "relativo": p["error_relativo"],
                    "residuo": abs(p["fx"])}
         clases = {k: clasificar(v, tol) for k, v in valores.items()}
         return {**preparar_funcion(f.texto), "x0": pasos[0]["x"], "raiz": p["x"],
                 "f_raiz": p["fx"], "residuo": abs(p["fx"]),
+                "condicion": condicion, "verificacion": verificar_raiz(f, p["x"], tol),
+                "escala_residuo": escala_residuo, "residuo_escalado": abs(p["fx"])/escala_residuo,
                 "error_absoluto": p["error_absoluto"], "error_relativo": p["error_relativo"],
                 "criterio": criterio, "tolerancia": tol,
                 "cumple": {k: c == "digitada" for k, c in clases.items()},
@@ -105,7 +115,9 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
             return resultado("ciclo", False)
         valor = {"absoluto": ea, "relativo": er, "residuo": abs(siguiente["f_x0"])}[criterio]
         # La tolerancia es aproximada: se acepta hasta MARGEN_TOLERANCIA por encima de ella.
-        if clasificar(valor, tol):
+        # Un paso diminuto por una pendiente enorme no demuestra convergencia.
+        residuo_compatible = abs(siguiente["f_x0"])/escala_residuo <= tol
+        if clasificar(valor, tol) and (criterio == "residuo" or residuo_compatible):
             return resultado("tolerancia", True)
         vistos.add(nuevo)
         x, actual = nuevo, siguiente
