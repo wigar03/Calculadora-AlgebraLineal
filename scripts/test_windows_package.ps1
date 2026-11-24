@@ -18,7 +18,11 @@ function Run-Checked([string]$Executable, [string[]]$Arguments) {
 
 function Test-Desktop([string]$Executable, [string]$Name) {
     $report = Join-Path $testRoot "$Name.json"
-    Run-Checked $Executable @('--diagnostico', ('"' + $report + '"'))
+    try { Run-Checked $Executable @('--diagnostico', ('"' + $report + '"')) }
+    catch {
+        if (Test-Path -LiteralPath $report) { Write-Output "Informe de ${Name}:"; Get-Content -LiteralPath $report -Raw }
+        throw
+    }
     $result = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
     if (-not $result.ok -or $result.version -ne $releaseVersion) { throw "Diagnóstico inválido: $report" }
     Write-Output "$Name OK: $($result.interfaz.modulos) módulos, $($result.interfaz.formulas) fórmulas, sin recursos externos"
