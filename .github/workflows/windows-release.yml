@@ -37,7 +37,8 @@ jobs:
   # Validación con herramientas externas reales: pdflatex (exportación LaTeX) y hojas de cálculo (CSV).
   externos:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    # La descarga de TeX Live depende del espejo de Ubuntu; el 2026-11-24 tardó más de 25 min dos veces.
+    timeout-minutes: 60
     env:
       REQUIERE_EXTERNOS: '1'
     steps:
@@ -51,7 +52,7 @@ jobs:
       - name: Instalar TeX Live, LibreOffice Calc y Gnumeric
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends texlive-latex-base texlive-latex-recommended \
+          sudo apt-get install -y -o Acquire::Retries=3 --no-install-recommends texlive-latex-base texlive-latex-recommended \
             texlive-latex-extra texlive-lang-spanish libreoffice-calc-nogui gnumeric
       - name: Exportaciones con herramientas reales
         run: python -m unittest discover tests -p "test_externo_*.py" -v
