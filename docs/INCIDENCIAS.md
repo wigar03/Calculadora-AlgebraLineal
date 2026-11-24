@@ -148,6 +148,11 @@ La CI de Linux falló una vez con `BrokenPipe`: ante un cuerpo mayor de 256 KB e
 leerlo, y el cliente que aún enviaba recibía un cierre abrupto en lugar del mensaje del límite (reproducido también
 en Windows). Ahora se lee y descarta hasta 4 MiB antes de responder; prueba `tests/test_cuerpo_excesivo.py`.
 
+### INC-031 · 2026-11-23 · CI Windows · REGISTRADA (2920c6c)
+En la CI 45292151638 el diagnóstico del portable salió con código 1 una vez; al repetir el trabajo pasó (portable,
+instalada y reinstalada: 11 módulos, 342 fórmulas). El script no mostraba la causa; ahora imprime el informe del
+diagnóstico si falla. Si se repite, se investigará con ese informe.
+
 ### INC-029 · 2026-11-23 · limitaciones externas · REGISTRADA
 - Excel no está disponible en ningún entorno autorizado: la compatibilidad se comprobó con LibreOffice Calc 26.2 y
   Gnumeric 1.12 (abrir, guardar y reabrir), no con Excel.
