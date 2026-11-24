@@ -154,7 +154,7 @@ instalada y reinstalada: 11 módulos, 342 fórmulas). El script no mostraba la c
 diagnóstico si falla. Si se repite, se investigará con ese informe.
 
 ### INC-029 · 2026-11-23 · limitaciones externas · REGISTRADA
-- Excel no está disponible en ningún entorno autorizado: la compatibilidad se comprobó con LibreOffice Calc 26.2 y
+- Excel (escritorio y web) no está disponible con medios autorizados (`docs/validacion/excel-web.md`); se comprobó con LibreOffice Calc 26.2 y
   Gnumeric 1.12 (abrir, guardar y reabrir), no con Excel.
 - Calc y Excel conservan 15 cifras significativas en números; el valor exacto viaja en la fracción cuando existe.
 - `ssconvert` no permite elegir el separador por línea de comandos; en Gnumeric se elige en el asistente.
