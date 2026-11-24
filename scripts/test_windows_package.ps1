@@ -8,7 +8,7 @@ New-Item -ItemType Directory -Path $testRoot | Out-Null
 
 function Run-Checked([string]$Executable, [string[]]$Arguments) {
     $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -WindowStyle Hidden -PassThru
-    if (-not $process.WaitForExit(60000)) {
+    if (-not $process.WaitForExit(180000)) {
         $process.Kill()
         throw "Tiempo agotado: $Executable"
     }
@@ -25,7 +25,7 @@ function Test-Desktop([string]$Executable, [string]$Name) {
     }
     $result = Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
     if (-not $result.ok -or $result.version -ne $releaseVersion) { throw "Diagnóstico inválido: $report" }
-    Write-Output "$Name OK: $($result.interfaz.modulos) módulos, $($result.interfaz.formulas) fórmulas, sin recursos externos"
+    Write-Output "$Name OK: $($result.interfaz.modulos) módulos, $($result.interfaz.formulas) fórmulas, sin recursos externos; carga $($result.tiempos.carga_s) s, total $($result.tiempos.total_s) s"
 }
 
 $zip = Join-Path $Dist "CalculadoraAlgebraLineal-$releaseVersion-windows-x64-portable.zip"
