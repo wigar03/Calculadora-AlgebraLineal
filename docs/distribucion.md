@@ -47,9 +47,13 @@ Los resultados aparecen en `dist/`:
 - `CalculadoraAlgebraLineal-<version>-windows-x64-portable.zip`: paquete portable.
 - `SHA256SUMS.txt`: sumas de los archivos descargables.
 
-La versión proviene de `src/core/version.py`. Para producir ejecutables de otro
-sistema operativo se necesita compilar y validar en ese sistema; esta candidata
-solo publica Windows x64.
+La versión proviene de `src/core/version.py`. La distribución de ejecutables de la versión estable está disponible
+para Windows x64. Para producir ejecutables de otro sistema operativo se necesita compilar y validar en ese sistema.
+
+Los ejecutables todavía no están firmados digitalmente: Windows puede mostrar advertencias de confianza o
+impedir su ejecución según las políticas del equipo. Descarga exclusivamente desde las publicaciones oficiales
+y comprueba las sumas SHA-256. La firma es una mejora prevista; consulta las
+[instrucciones y verificación de descargas del README](../README.md#ejecutables-sin-firma-digital).
 
 ## Validar el paquete
 
@@ -77,18 +81,18 @@ El diagnóstico no sustituye una revisión manual de los módulos ni una prueba 
 una computadora limpia. La rama de instalación de WebView2 debe probarse también
 en una máquina que todavía no tenga ese componente.
 
-## Publicar una candidata
+## Publicar una versión
 
 1. Actualiza versión y changelog en commits pequeños.
 2. Ejecuta las pruebas locales y revisa la interfaz en navegador y escritorio.
 3. Sube los commits y espera a que `Windows release checks` termine correctamente.
-4. Descarga sus artefactos y publica el tag correspondiente como **prerelease**,
-   adjuntando setup, portable y sumas. Usa exactamente los artefactos validados.
-5. Prueba la candidata con usuarios antes de promover una versión estable.
+4. Descarga sus artefactos y publica el tag correspondiente, adjuntando setup, portable y sumas.
+   Usa exactamente los artefactos validados; las candidatas se publican como **prerelease** y las estables como release normal.
+5. Comprueba los archivos publicados y sus sumas SHA-256 tras descargarlos de GitHub.
 
 El workflow construye y valida; no publica releases automáticamente.
 Conserva las notas en un archivo UTF-8 y pásalo mediante `gh release --notes-file`;
-las [notas de la candidata de robustez](notas-v1.0.0-rc.5.md) están versionadas para evitar
+las [notas de v1.0.0](notas-v1.0.0.md) están versionadas para evitar
 conversiones de caracteres al generarlas mediante tuberías de la terminal.
 
 ## Datos y diagnóstico de errores

@@ -4,7 +4,7 @@ Calculadora educativa con **11 módulos de álgebra lineal y métodos numéricos
 procedimientos paso a paso, gráficas y comprobación de resultados.
 La misma interfaz funciona en el navegador y en una aplicación de escritorio.
 
-[Descargar para Windows](https://github.com/wigar03/Calculadora-AlgebraLineal/releases)
+[Descargar para Windows](https://github.com/wigar03/Calculadora-AlgebraLineal/releases/latest)
 · [Guía matemática](docs/guia-matematica.md)
 · [Notas de versión](CHANGELOG.md)
 · [Reportar un problema](https://github.com/wigar03/Calculadora-AlgebraLineal/issues)
@@ -32,6 +32,8 @@ Los módulos de álgebra lineal trabajan con fracciones exactas sobre entradas
 racionales. Los métodos numéricos trabajan en punto flotante y muestran errores
 y residuo. Las gráficas son orientativas y no demuestran continuidad ni convergencia.
 
+Puedes copiar LaTeX, exportar CSV para hojas de cálculo en español e imprimir o guardar como PDF.
+
 ## Instalar en Windows
 
 1. Descarga el archivo terminado en `-windows-x64-setup.exe` desde la página de descargas.
@@ -45,11 +47,22 @@ Después, los cálculos, las fórmulas y las fuentes funcionan sin conexión.
 
 También se ofrece un ZIP **portable**: extrae toda la carpeta y ejecuta
 `CalculadoraAlgebraLineal.exe`. Requiere WebView2 ya instalado; conserva `_internal`
-junto al ejecutable. Los archivos `SHA256SUMS.txt` permiten comprobar las descargas.
+junto al ejecutable. Puedes desinstalar la aplicación instalada desde **Configuración → Aplicaciones** de Windows.
 
-Los ejecutables publicados no cuentan con firma digital del editor. Windows puede mostrar una
-advertencia de aplicación no reconocida. Descarga los archivos del release oficial.
-Puedes desinstalarla desde **Configuración → Aplicaciones** de Windows.
+### Ejecutables sin firma digital
+
+Los ejecutables todavía no están firmados digitalmente. Windows puede mostrar advertencias de confianza
+o impedir su ejecución según las políticas de seguridad del equipo. La firma digital es una mejora prevista.
+Descarga exclusivamente desde las [publicaciones del repositorio oficial en GitHub](https://github.com/wigar03/Calculadora-AlgebraLineal/releases/latest).
+
+Cada publicación incluye las sumas SHA-256 en `SHA256SUMS.txt`. Para comprobar una descarga en PowerShell:
+
+```powershell
+Get-FileHash .\archivo -Algorithm SHA256
+```
+
+Sustituye `archivo` por el nombre del setup o del ZIP y compara `Hash` con la línea correspondiente de
+`SHA256SUMS.txt` de esa publicación. Si no coincide, vuelve a descargarlo desde la publicación oficial.
 
 ## Usar en el navegador desde el código
 

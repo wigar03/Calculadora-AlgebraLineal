@@ -1,5 +1,18 @@
 # Historial de versiones
 
+## 1.0.0
+
+Primera versión estable; consolida el trabajo de las candidatas rc.1 a rc.7.
+
+- Once módulos de álgebra lineal y métodos numéricos con procedimientos paso a paso y verificación de resultados.
+- Aritmética exacta en álgebra lineal, certificación de raíces y análisis de convergencia de Jacobi y Gauss-Seidel.
+- Robustez: ejecución aislada, límites de recursos y diagnósticos de sintaxis, dominio y convergencia.
+- Exportación LaTeX/CSV e impresión o PDF; validada con pdflatex, LibreOffice Calc y Gnumeric reales.
+- Instalador por usuario y paquete portable para Windows x64, con recursos locales para trabajar sin conexión.
+- Límites: ejecutables sin firma digital; Excel de escritorio y Excel para la Web no verificados directamente.
+
+Consulta los requisitos, instalación, verificaciones y límites en las [notas de v1.0.0](docs/notas-v1.0.0.md).
+
 ## 1.0.0-rc.7
 
 Candidata de consolidación: exportaciones validadas con pdflatex, LibreOffice Calc y Gnumeric reales.
