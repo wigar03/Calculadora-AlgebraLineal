@@ -2,12 +2,17 @@
 
 import json
 import re
+import time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
 from src.core.version import VERSION
 
 INDICE = Path(__file__).resolve().parent / "web" / "index.html"
+# Primer arranque en frío (binarios recién copiados y perfil WebView2 nuevo): en la CI suele tardar 10-16 s y
+# excepcionalmente más de 30 s (INC-031). Se espera hasta ESPERA_CARGA_S y se informa si superó CARGA_LENTA_S.
+CARGA_LENTA_S = 30
+ESPERA_CARGA_S = 120
 
 
 def modulos_esperados(indice=INDICE):
@@ -17,11 +22,15 @@ def modulos_esperados(indice=INDICE):
     return len(pestañas)
 
 
-def comprobar_escritorio(ventana, cargada, url, destino):
-    resultado = {"ok": False, "version": VERSION}
+def comprobar_escritorio(ventana, cargada, url, destino, inicio=None, espera=ESPERA_CARGA_S):
+    inicio = time.monotonic() if inicio is None else inicio
+    tiempos = {"comprobacion_s": round(time.monotonic() - inicio, 3)}
+    resultado = {"ok": False, "version": VERSION, "tiempos": tiempos}
     try:
-        if not cargada.wait(timeout=30):
-            raise RuntimeError("La ventana no terminó de cargar en 30 segundos.")
+        if not cargada.wait(timeout=max(0.0, espera - (time.monotonic() - inicio))):
+            raise RuntimeError(f"La ventana no terminó de cargar en {espera} segundos desde el inicio.")
+        tiempos["carga_s"] = round(time.monotonic() - inicio, 3)
+        resultado["carga_lenta"] = tiempos["carga_s"] > CARGA_LENTA_S
         interfaz = ventana.evaluate_js("""(() => ({
           modulos: document.querySelectorAll('.home-module').length,
           formulas: document.querySelectorAll('.katex').length,
@@ -46,6 +55,7 @@ def comprobar_escritorio(ventana, cargada, url, destino):
         if not calculo["convergio"] or abs(calculo["raiz"] - 1.5213797068) > 1e-8:
             raise RuntimeError("Falló la comprobación del motor matemático.")
         resultado.update(ok=True, raiz=calculo["raiz"])
+        tiempos["total_s"] = round(time.monotonic() - inicio, 3)
     except Exception as exc:
         resultado["error"] = str(exc)
     finally:

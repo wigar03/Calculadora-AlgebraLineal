@@ -8,12 +8,14 @@ import os
 from pathlib import Path
 import sys
 import threading
+import time
 
 from src.core.version import APP_NAME, VERSION
 from src.ui.web_server import servidor_local
 
 
 def main():
+    inicio = time.monotonic()
     parser = argparse.ArgumentParser(description=APP_NAME)
     parser.add_argument("--version", action="version", version=VERSION)
     parser.add_argument("--diagnostico", type=Path, help="Guardar comprobación de escritorio en JSON y salir.")
@@ -34,7 +36,7 @@ def main():
             comprobar = None
             if args.diagnostico:
                 from src.ui.diagnostico import comprobar_escritorio
-                comprobar = lambda: comprobar_escritorio(ventana, cargada, url, args.diagnostico)
+                comprobar = lambda: comprobar_escritorio(ventana, cargada, url, args.diagnostico, inicio)
             webview.start(comprobar, gui="edgechromium" if sys.platform == "win32" else None,
                           storage_path=str(datos / "webview"), private_mode=False)
         if args.diagnostico:

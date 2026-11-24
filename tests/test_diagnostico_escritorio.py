@@ -2,6 +2,7 @@
 import json
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 
@@ -34,6 +35,29 @@ class TestDiagnosticoEscritorio(unittest.TestCase):
 
     def test_acepta_la_interfaz_completa(self):
         self.assertTrue(self.ejecutar(modulos_esperados())["ok"])
+
+    def ejecutar_con_carga(self, retraso, espera):
+        cargada = threading.Event()
+        inicio = time.monotonic()
+        if retraso is not None:
+            threading.Timer(retraso, cargada.set).start()
+        with tempfile.TemporaryDirectory() as carpeta, servidor_local() as url:
+            destino = Path(carpeta) / "diagnostico.json"
+            comprobar_escritorio(VentanaSimulada(modulos_esperados()), cargada, url, destino, inicio, espera=espera)
+            return json.loads(destino.read_text(encoding="utf-8"))
+
+    def test_carga_lenta_que_termina_se_acepta_con_tiempos(self):
+        resultado = self.ejecutar_con_carga(0.3, espera=5)
+        self.assertTrue(resultado["ok"], resultado)
+        self.assertGreaterEqual(resultado["tiempos"]["carga_s"], 0.25)
+        self.assertIn("total_s", resultado["tiempos"])
+        self.assertFalse(resultado["carga_lenta"])
+
+    def test_carga_que_nunca_termina_falla_con_motivo_y_tiempos(self):
+        resultado = self.ejecutar_con_carga(None, espera=0.3)
+        self.assertFalse(resultado["ok"])
+        self.assertIn("no terminó de cargar", resultado["error"])
+        self.assertNotIn("carga_s", resultado["tiempos"])
 
     def test_rechaza_una_interfaz_sin_todos_los_modulos(self):
         resultado = self.ejecutar(modulos_esperados() - 1)
