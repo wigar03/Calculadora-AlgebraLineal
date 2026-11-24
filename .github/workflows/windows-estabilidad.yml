@@ -1,0 +1,50 @@
+name: Windows estabilidad (INC-031)
+
+# Se lanza a mano: 5 máquinas limpias compilan y prueban el ciclo completo y repiten el diagnóstico del portable.
+on:
+  workflow_dispatch:
+    inputs:
+      repeticiones:
+        description: Diagnósticos repetidos por máquina
+        default: '10'
+
+permissions:
+  contents: read
+
+jobs:
+  ronda:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        ronda: [1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Install build dependencies
+        run: python -m pip install -r requirements-windows-lock.txt
+      - name: Entorno (Defender, WebView2, CPU)
+        shell: pwsh
+        run: |
+          Get-MpComputerStatus | Select-Object RealTimeProtectionEnabled, AntivirusEnabled | Format-List
+          Get-ItemProperty 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue | Select-Object pv
+          Get-CimInstance Win32_Processor | Select-Object Name, NumberOfLogicalProcessors | Format-List
+      - name: Build executable and setup
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: Ciclo completo (portable, instalación, reinstalación, desinstalación)
+        shell: pwsh
+        run: ./scripts/test_windows_package.ps1
+      - name: Repetir diagnóstico
+        shell: pwsh
+        run: ./scripts/repetir_diagnostico.ps1 -Repeticiones ${{ inputs.repeticiones }} -Salida diagnosticos
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnosticos-ronda-${{ matrix.ronda }}
+          path: diagnosticos/
