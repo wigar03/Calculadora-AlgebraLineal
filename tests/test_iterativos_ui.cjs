@@ -115,6 +115,8 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
       '<p class="subtitle" id="header-subtitle">Álgebra lineal y métodos numéricos con procedimientos paso a paso</p>',
       '<p class="subtitle" id="header-subtitle" data-math>Vectores en $\\mathbb{R}^n$, Combinación Lineal, Matrices, Inversa $A^{-1}$, Ecuaciones $Ax=b$, Determinante $|A|$, Bisección, Regla Falsa, Newton-Raphson y Secante</p>'
     )
+    // Índice de la portada actualizado a 11 módulos a petición del propietario (2026-11-24).
+    .replace('Índice<br><span>01—11</span>', 'Índice<br><span>01—10</span>')
     .replace(/\n      <button class="nav-tab" data-tab="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n<button class="home-module" type="button" data-open-module="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n\n      <section id="tab-iterativos"[\s\S]*?<\/section>/, '')
