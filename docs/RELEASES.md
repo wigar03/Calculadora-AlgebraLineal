@@ -9,6 +9,7 @@
 | v1.0.0-rc.5 | 2026-11-23 | **prerelease publicada** (CI 45254879718 en verde) | etapa 3: robustez (P1) y procedimientos comunes; ver abajo |
 | v1.0.0-rc.6 | 2026-11-23 | **prerelease publicada** (CI 45270508552 en verde) | etapa 4: exportación (P2) y Markdown público |
 | v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
+| v1.0.0 | 2026-11-24 | release estable (pendiente de CI del tag) | primera estable, sin firma y sin prueba en Excel (autorizado) |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -70,3 +71,11 @@
 - **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.7 (prerelease).
   CI del tag (45294856560) y de `main` (45294441756) en verde en Linux, Windows y `externos`; sumas SHA-256 de los tres
   archivos verificadas tras descargarlos de la release. También corrige INC-030 (413 con cierre abrupto).
+
+## v1.0.0 — primera versión estable
+- **Autorización del propietario:** publicar sin firma digital y sin prueba en Excel de escritorio; ambas
+  limitaciones documentadas en README, `docs/notas-v1.0.0.md` y `docs/validacion/excel-web.md`.
+- **Condición técnica:** INC-031 cerrada como incidencia del entorno de CI, con 15 máquinas limpias (15/15 ciclos,
+  110/110 diagnósticos); `docs/validacion/inc031-windows.md`.
+- **Sin cambios matemáticos** respecto a rc.7; cambian el diagnóstico del ejecutable y la documentación.
+- **Binarios reconstruidos** por la CI del tag `v1.0.0` (no se reutilizan los de rc.7). **Notas:** `docs/notas-v1.0.0.md`.

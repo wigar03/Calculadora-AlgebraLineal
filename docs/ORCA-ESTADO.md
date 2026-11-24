@@ -1,8 +1,10 @@
 # Estado operativo de Orca
 
-Última actualización: 2026-11-23, etapa 5 (integrador: Claude Business, Opus 5.5).
+Última actualización: 2026-11-24, etapa final v1.0.0 (integrador: Claude Business, Opus 5.5).
 
 ## Resumen para el propietario
+- **Etapa final:** v1.0.0 estable autorizada sin firma y sin Excel. INC-031 cerrada (entorno de CI; 15 máquinas
+  limpias, `docs/validacion/inc031-windows.md`). Excel para la Web no disponible (`docs/validacion/excel-web.md`).
 - **Etapa 5 (consolidación) completa:** exportaciones validadas con herramientas reales y auditoría visual en GitHub.
   Sin módulos nuevos ni cambios de UX. Hallazgos y limitaciones: INC-023 a INC-029 en `docs/INCIDENCIAS.md`.
 - **LaTeX:** 37 documentos reales compilados con pdflatex en dos pasadas, 0 desbordes > 1 pt, incluido un adversario
@@ -28,7 +30,7 @@
 Claude Pro individual: **no usado**. Ningún commit supera 100 líneas ni lleva coautores.
 Quien implementó `exportar.js` no modificó los oráculos: Codex 1 y Codex 2 revalidaron de forma independiente.
 
-## Pendiente para una versión estable
+## Pendiente tras v1.0.0
 - Firma digital de los ejecutables (decisión y gasto del propietario; ver `docs/firma-opciones.md`).
 - Prueba con Microsoft Excel real (no disponible en los entornos autorizados).
 - IV-2 e IV-5: limitación del enunciado original (INC-001), no bloquea.

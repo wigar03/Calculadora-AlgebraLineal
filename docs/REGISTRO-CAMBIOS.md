@@ -45,3 +45,10 @@ Todos los commits de agentes se integraron con `cherry-pick` (autoría del propi
 | `orca/consolidacion-csv` (Codex 1) | abrir/guardar/reabrir con Calc y Gnumeric; regla `<`/`>` en Markdown | `tests/test_externo_csv.py`, `scripts/verificar_markdown.py` |
 | `orca/consolidacion-chrome` (Antigravity) | diagnóstico Chrome; INC-024 a INC-027 en la exportación | `tests/test_p2_browser.cjs`, `src/ui/web/exportar.js`, `index.html` |
 | integrador | rutas personales sustituidas por `%TEMP%`; incidencias, estado y release | `docs/validacion/*`, `docs/INCIDENCIAS.md`, `docs/ORCA-ESTADO.md` |
+
+## 2026-11-24 — etapa final: v1.0.0
+| Origen | Motivo | Archivos principales |
+|---|---|---|
+| integrador | INC-031: tiempos del diagnóstico, espera 120 s, flujo de estabilidad en 5 máquinas limpias | `desktop.py`, `src/ui/diagnostico.py`, `scripts/*windows*.ps1`, `.github/workflows/windows-estabilidad.yml` |
+| `orca/consolidacion-csv` (Codex 1) | README, distribución, CHANGELOG y notas de v1.0.0 | `README.md`, `docs/distribucion.md`, `CHANGELOG.md`, `docs/notas-v1.0.0.md` |
+| integrador | versión 1.0.0; Excel para la Web; releases | `src/core/version.py`, `docs/validacion/excel-web.md`, `docs/RELEASES.md` |
