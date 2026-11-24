@@ -148,10 +148,10 @@ La CI de Linux falló una vez con `BrokenPipe`: ante un cuerpo mayor de 256 KB e
 leerlo, y el cliente que aún enviaba recibía un cierre abrupto en lugar del mensaje del límite (reproducido también
 en Windows). Ahora se lee y descarta hasta 4 MiB antes de responder; prueba `tests/test_cuerpo_excesivo.py`.
 
-### INC-031 · 2026-11-23 · CI Windows · REGISTRADA (2920c6c)
-En la CI 45292151638 el diagnóstico del portable salió con código 1 una vez; al repetir el trabajo pasó (portable,
-instalada y reinstalada: 11 módulos, 342 fórmulas). El script no mostraba la causa; ahora imprime el informe del
-diagnóstico si falla. Si se repite, se investigará con ese informe.
+### INC-031 · 2026-11-23 · CI Windows · CERRADA (dfbb8ba, 20cb849) — entorno, no aplicación
+El diagnóstico del portable superó una vez los 30 s de espera de carga. Causa: primer arranque en frío de cada runner
+(WebView2/.NET del sistema: 8,4-11,5 s; arranques posteriores ≤ 6 s). 15 máquinas limpias: 15/15 ciclos completos y
+110/110 diagnósticos repetidos. El diagnóstico mide fases y solo falla tras 120 s. Evidencia: `docs/validacion/inc031-windows.md`.
 
 ### INC-029 · 2026-11-23 · limitaciones externas · REGISTRADA
 - Excel (escritorio y web) no está disponible con medios autorizados (`docs/validacion/excel-web.md`); se comprobó con LibreOffice Calc 26.2 y
