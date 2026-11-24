@@ -9,7 +9,7 @@
 | v1.0.0-rc.5 | 2026-11-23 | **prerelease publicada** (CI 45254879718 en verde) | etapa 3: robustez (P1) y procedimientos comunes; ver abajo |
 | v1.0.0-rc.6 | 2026-11-23 | **prerelease publicada** (CI 45270508552 en verde) | etapa 4: exportación (P2) y Markdown público |
 | v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
-| v1.0.0 | 2026-11-24 | release estable (pendiente de CI del tag) | primera estable, sin firma y sin prueba en Excel (autorizado) |
+| v1.0.0 | 2026-11-24 | **release estable publicada** (CI 45309347449 en verde) | primera estable, sin firma y sin prueba en Excel (autorizado) |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -79,3 +79,8 @@
   110/110 diagnósticos); `docs/validacion/inc031-windows.md`.
 - **Sin cambios matemáticos** respecto a rc.7; cambian el diagnóstico del ejecutable y la documentación.
 - **Binarios reconstruidos** por la CI del tag `v1.0.0` (no se reutilizan los de rc.7). **Notas:** `docs/notas-v1.0.0.md`.
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0 (release normal, `latest`).
+  Etiqueta en d5871bb, cuya CI de `main` (45305331925) y del tag (45309347449) pasó en Linux, Windows y `externos`.
+  Binarios compilados por la CI del tag; sumas SHA-256 verificadas tras la CI y de nuevo tras descargarlos sin
+  autenticación por `/releases/latest/download/`. `/releases/latest` redirige a v1.0.0. Diagnóstico del portable
+  publicado en un Windows 11 real: versión 1.0.0, 11 módulos, 342 fórmulas, carga 2,3 s. `v1.0.0-rc.7` intacta.
