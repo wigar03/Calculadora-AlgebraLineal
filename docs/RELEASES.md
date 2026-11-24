@@ -8,7 +8,7 @@
 | v1.0.0-rc.4 | 2026-11-23 | **prerelease publicada** (CI 45225495488 en verde) | módulo 11 validado + diagnóstico corregido; ver abajo |
 | v1.0.0-rc.5 | 2026-11-23 | **prerelease publicada** (CI 45254879718 en verde) | etapa 3: robustez (P1) y procedimientos comunes; ver abajo |
 | v1.0.0-rc.6 | 2026-11-23 | **prerelease publicada** (CI 45270508552 en verde) | etapa 4: exportación (P2) y Markdown público |
-| v1.0.0-rc.7 | 2026-11-23 | prerelease (pendiente de CI del tag) | etapa 5: correcciones halladas con herramientas reales |
+| v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -67,3 +67,6 @@
   LaTeX (INC-024, INC-027) y fórmula de la guía en GitHub (INC-023).
 - **Evidencia:** pdflatex 37/37, Calc y Gnumeric 22/22 por perfil, rendimiento con 16 MiB; informes en `docs/validacion/`.
 - **No es estable:** ejecutables sin firma y sin prueba con Excel real. **Notas:** `docs/notas-v1.0.0-rc.7.md`.
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.0.0-rc.7 (prerelease).
+  CI del tag (45294856560) y de `main` (45294441756) en verde en Linux, Windows y `externos`; sumas SHA-256 de los tres
+  archivos verificadas tras descargarlos de la release. También corrige INC-030 (413 con cierre abrupto).
