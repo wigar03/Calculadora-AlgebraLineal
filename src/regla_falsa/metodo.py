@@ -8,6 +8,7 @@ el punto medio de la bisección por el corte con el eje X de la recta que une
 import math
 
 from ..biseccion.expresiones import numero_real
+from ..core.config import MARGEN_TOLERANCIA
 from .dominio import (
     ExpresionNumerica as Expresion, validar_continuidad, validar_condicion,
     raiz_admisible, verificar_raiz,
@@ -115,12 +116,33 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
 
     def resultado(xr, f_xr, motivo, convergio, error):
         cert = None
+        advertencias = []
         if convergio and not raiz_admisible(xr, condicion):
             motivo, convergio = "raiz_no_admisible", False
         elif convergio:
-            cert = certificar_raiz(f, xr, tolerancia, "relativo_porcentual", condicion)
+            radio_base = (tolerancia / 100.0) * max(1.0, abs(xr))
+            radio, lam_est, err_est = radio_base, None, None
+            if len(pasos) >= 2:
+                dx_k, dx_prev = pasos[-1]["error_absoluto"], pasos[-2]["error_absoluto"]
+                if dx_k is not None and dx_prev and 0.5 < (lam := dx_k / dx_prev) < 1.0:
+                    err_est = (lam / (1.0 - lam)) * dx_k
+                    radio = max(radio_base, (1.0 + MARGEN_TOLERANCIA) * err_est)
+                    lam_est = lam
+            cota_int = min(xr - inicial[0], inicial[1] - xr)
+            if cota_int > 0 and radio > cota_int:
+                radio = cota_int
+            while cota_int > 0 and radio > 0 and (xr - radio < inicial[0] or xr + radio > inicial[1]):
+                radio = math.nextafter(radio, 0.0)
+            cert = certificar_raiz(f, xr, tolerancia, "relativo_porcentual", condicion, radio=radio)
             if not cert["certificada"]:
                 motivo, convergio = "no_certificada", False
+            elif radio > radio_base and lam_est is not None and err_est is not None:
+                ea_txt = f"{error:.3g} %" if error is not None else "no definido"
+                advertencias.append(
+                    f"Estancamiento de un extremo: factor lineal estimado $\\lambda$ = {lam_est:.4g} y "
+                    f"error estimado {err_est:.3g}, que supera el cambio relativo $\\varepsilon_a$ = {ea_txt}; "
+                    f"la precisión certificada (±{radio:.3g}) es menor que la tolerancia pedida."
+                )
         estancamiento = None
         if racha["mayor"] >= UMBRAL_ESTANCAMIENTO:
             estancamiento = {"extremo": racha["extremo_mayor"], "iteraciones": racha["mayor"]}
@@ -131,7 +153,7 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
             "error_absoluto": pasos[-1]["error_absoluto"] if pasos else None,
             "criterio": "relativo_porcentual", "condicion": condicion,
             "verificacion": verificar_raiz(f, xr, tolerancia),
-            "certificacion": cert,
+            "certificacion": cert, "advertencias": advertencias,
             "escala_residuo": escala_residuo, "residuo_escalado": abs(f_xr)/escala_residuo,
             "tolerancia": tolerancia, "convergio": convergio, "motivo": motivo,
             "estancamiento": estancamiento,

@@ -9,8 +9,10 @@ from .dominio import puntos_excluidos, raiz_admisible
 from .intervalos import dominio_continuo
 
 
-def certificar_raiz(f, x, tolerancia, criterio, condicion):
-    radio = tolerancia if criterio in ("absoluto", "intervalo") else tolerancia*max(1., abs(x))
+def certificar_raiz(f, x, tolerancia, criterio, condicion, radio=None):
+    if radio is None:
+        escala = tolerancia / 100 if criterio == "relativo_porcentual" else tolerancia
+        radio = escala if criterio in ("absoluto", "intervalo") else escala*max(1., abs(x))
     a, b = x-radio, x+radio
     cert = {"certificada": False, "intervalo": None, "radio": radio if math.isfinite(radio) else None,
             "f_extremos": None, "tipo": "cambio_de_signo"}

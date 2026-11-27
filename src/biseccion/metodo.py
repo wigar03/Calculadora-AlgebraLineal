@@ -50,7 +50,8 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
         if convergio and not raiz_admisible(c, condicion, cota):
             motivo, convergio = "raiz_no_admisible", False
         elif convergio:
-            cert = certificar_raiz(f, c, tolerancia, criterio, condicion)
+            criterio_cert = "relativo_porcentual" if criterio == "relativo" else criterio
+            cert = certificar_raiz(f, c, tolerancia, criterio_cert, condicion)
             if not cert["certificada"]:
                 motivo, convergio = "no_certificada", False
         return {
