@@ -75,3 +75,21 @@ test('Regla Falsa muestra el aviso real incluso sin la señal de estancamiento',
   const avisos=buscar(nodos.get('rf-result'),n=>n.className==='rf-note');
   assert.ok(avisos.some(n=>n.textContent===res.advertencias[0]));
 });
+
+for(const [archivo,fn]of [['biseccion.js','renderizarResultado'],['newton-raphson.js','resultado'],['secante.js','result']]){
+  test(archivo+': presenta las advertencias textuales enviadas por la API',()=>{
+    const mensajes=['Precisión limitada por el redondeo.','La certificación necesita revisión.'];
+    const res={...muestra,intervalo_final:[0,3],cota_error:.1,tolerancia:20,
+      advertencias:[mensajes[0],{tipo:'precision',mensaje:mensajes[1]}]};
+    const {nodos,contenedor}=ejecutar(archivo,fn,res);
+    const raiz=archivo==='biseccion.js'?contenedor:nodos.get('result');
+    const avisos=buscar(raiz,n=>n.className==='rf-note').map(n=>n.textContent);
+    for(const mensaje of mensajes)assert.ok(avisos.includes(mensaje));
+  });
+}
+
+test('Secante conserva el aviso de denominador pequeño para índices en texto',()=>{
+  const {nodos}=ejecutar('secante.js','result',{...muestra,advertencias:['2','5']});
+  const avisos=buscar(nodos.get('result'),n=>n.className==='rf-note');
+  assert.ok(avisos.some(n=>n.textContent.includes('Denominador pequeño en las iteraciones $2,5$')));
+});

@@ -25,7 +25,7 @@ function ejecutar(archivo,nombre,res){
     MOTIVOS:util.MOTIVOS,tabla(){},estado:{base:[-10,10]},renderLatexElement:(n,s)=>{n.textContent=s;}};
   const fn=vm.runInNewContext('('+src.slice(inicio,fin).trim()+')',contexto);
   const contenedor=nodo('div');
-  if(nombre==='renderizarTabla'&&archivo==='biseccion.js')fn(contenedor,res);else fn(res);
+  if(archivo==='biseccion.js')fn(contenedor,res);else fn(res);
   return {nodos,contenedor};
 }
 function buscar(raiz,predicado){return [raiz,...raiz.children.flatMap(n=>buscar(n,predicado))].filter(predicado);}

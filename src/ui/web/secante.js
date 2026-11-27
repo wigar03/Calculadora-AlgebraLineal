@@ -74,7 +74,12 @@
       out.append(math(`f(x_n)=${num(d.f_raiz)}`));
       for(const [k,t]of Object.entries({absoluto:"E_a",relativo:"\\varepsilon_r",residuo:"|f(x_n)|"}))out.append(mix(`${G.simboloCriterio(d.cumple[k],d.cumple_cercana[k])} $${t}<\\varepsilon$${k===d.criterio?" (seleccionado)":""}`));
       out.append(mix(G.textoTolerancia(d.tolerancia_usada)));
-      if(d.advertencias.length)out.append(mix(`Denominador pequeño en las iteraciones $${d.advertencias.join(",")}$: puede causar saltos grandes.`));
+      const indices=(d.advertencias||[]).filter(a=>typeof a==="number"||(typeof a==="string"&&/^\d+$/.test(a)));
+      if(indices.length){const aviso=mix(`Denominador pequeño en las iteraciones $${indices.join(",")}$: puede causar saltos grandes.`);aviso.className="rf-note";out.append(aviso);}
+      for(const aviso of d.advertencias||[]){
+        const texto=typeof aviso==="string"&&!/^\d+$/.test(aviso)?aviso:aviso?.mensaje;
+        if(texto){const p=mix(texto);p.className="rf-note";out.append(p);}
+      }
       const t=node("table"),h=node("thead"),hr=node("tr"),body=node("tbody");const headers=["n","x_{n-1}","x_n","x_{n+1}","|f(x_{n+1})|","E_a","\\varepsilon_r"];
       const caption=node("caption",`Procedimiento de la secante: ${d.iteraciones} iteraciones.`);caption.className="sr-only";t.append(caption);
       headers.forEach(v=>{const th=node("th");th.scope="col";th.append(math(v,false));hr.append(th);});const detalle=node("th","Detalle");detalle.className="bis-detail-head";hr.append(detalle);h.append(hr);

@@ -261,10 +261,13 @@
       Object.entries(criterios).forEach(([k,v])=>out.append(mixto("p",`${G.simboloCriterio(r.cumple[k],r.cumple_cercana[k])} $${v}<\\varepsilon$${r.criterio===k?" (seleccionado)":""}${k!=="residuo"&&r[k==="absoluto"?"error_absoluto":"error_relativo"]===null?" · no definido":""}`,"bis-help")));
       out.append(mixto("p",G.textoTolerancia(r.tolerancia_usada),r.tolerancia_usada.usada==="cercana"?"rf-note":"bis-help"));
       out.append(mixto("p",compararErrores(r.error_absoluto,r.error_relativo,r.raiz),"bis-help"),math(`f(x_n)\\approx ${num(r.f_raiz)}`));
-      const grupos={}; r.advertencias.forEach(a=>(grupos[a.tipo]??=[]).push(a.n));
+      const grupos={}; (r.advertencias||[]).filter(a=>a&&typeof a==="object").forEach(a=>(grupos[a.tipo]??=[]).push(a.n));
       if(grupos.derivada_pequena)out.append(mixto("p",`Derivada pequeña en $n=${grupos.derivada_pequena.join(",")}$: puede producir saltos grandes.`,"rf-note"));
       if(grupos.paso_creciente)out.append(mixto("p",`El cambio aumentó en $n=${grupos.paso_creciente.join(",")}$: revise la convergencia.`,"rf-note"));
-      r.advertencias.filter(a=>a.tipo==="no_certificada").forEach(a=>out.append(mixto("p",a.mensaje||MOTIVOS.no_certificada,"rf-note")));
+      for(const aviso of r.advertencias||[]){
+        const texto=typeof aviso==="string"?aviso:aviso?.mensaje||(aviso?.tipo==="no_certificada"?MOTIVOS.no_certificada:null);
+        if(texto)out.append(mixto("p",texto,"rf-note"));
+      }
       if(r.raiz<estado.base[0] || r.raiz>estado.base[1])out.append(crear("p","La aproximación final está fuera de la región graficada inicialmente.","rf-note"));
       const ver=crear("button","Ver la raíz en la gráfica","btn-text"); ver.type="button"; ver.addEventListener("click",()=>el("graph-card").scrollIntoView({block:"start"})); out.append(ver);
       tabla(r); el("focus-root").disabled=false;
