@@ -3,11 +3,27 @@ from fractions import Fraction
 import unittest
 
 from src.vectores.combinacion_lineal import evaluar_combinacion_lineal
+from src.ui.web_server import servidor_local
+from tests.test_golden_api import consultar
 from tests.test_validacion_banco_final import REF
 from tests.validacion.banco_final import CONJUNTOS
 
 
 class TestIndependenciaLineal(unittest.TestCase):
+    def test_http_publica_analisis_solo_con_objetivo_cero(self):
+        with servidor_local() as url:
+            for clave, vs in CONJUNTOS.items():
+                with self.subTest(clave=clave):
+                    estado, r = consultar(url, "/api/vectores/combinacion", {"vectores": vs, "b": [0] * len(vs[0])})
+                    self.assertEqual(estado, 200)
+                    self.assertEqual(r["rango"], REF["independencia"][clave]["rango"])
+                    self.assertEqual(r["relacion"]["coeficientes"], REF["independencia"][clave]["nucleo"][0])
+                    self.assertEqual(r["independencia"], "dependiente")
+            estado, r = consultar(url, "/api/vectores/combinacion", {"vectores": [[1, 0], [0, 1]], "b": [0, 0]})
+            self.assertEqual((estado, r["independencia"], r["relacion"], r["despeje"]), (200, "independiente", None, None))
+            _, r = consultar(url, "/api/vectores/combinacion", {"vectores": [[1, 0], [0, 1]], "b": [1, 0]})
+            self.assertTrue({"independencia", "rango", "numero_vectores", "relacion", "despeje"}.isdisjoint(r))
+
     def test_banco_final_rango_relacion_y_despeje(self):
         for clave, vectores in CONJUNTOS.items():
             with self.subTest(clave=clave):

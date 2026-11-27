@@ -520,6 +520,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             "escalares_vector": [serialize_fraction_or_str(x) for x in resultado.escalares_vector],
             "comprobacion": resultado.comprobacion_sustitucion,
             "pasos": pasos_serializables,
+            **resultado.analisis_independencia,
         }
         self._send_json(data)
 
