@@ -39,6 +39,7 @@ function cambiarNotacionCombinacion(modo) {
   notacionCombinacion = modo;
   if (ultimoCalculoCombinacion) {
     renderizarResultadoCombinacionUI(ultimoCalculoCombinacion);
+    mostrarAvisoCasillasVacias(document.getElementById("comb-result-content"), ultimoCalculoCombinacion.vacias);
   }
 }
 
@@ -283,6 +284,21 @@ function restablecerResultadoLineal(prefijo, modulo) {
   if (prefijo === "mat") invalidarResultadoMatrices();
 }
 
+function valorCasillaLineal(el, vacias) {
+  const valor = el ? el.value.trim() : "0";
+  if (valor === "") vacias?.push(el.getAttribute("aria-label"));
+  return valor || "0";
+}
+
+function mostrarAvisoCasillasVacias(resultBox, vacias = []) {
+  if (!vacias.length) return;
+  const aviso = document.createElement("p");
+  aviso.className = "result-explanation";
+  aviso.setAttribute("role", "status");
+  aviso.textContent = `Se tomaron como 0 las casillas vacías: ${vacias.join(", ")}.`;
+  resultBox.prepend(aviso);
+}
+
 // =============================================================================
 // =============================================================================
 // APARTADO 1: OPERACIONES CON VECTORES EN R^n
@@ -350,11 +366,11 @@ function actualizarEntradasVectores() {
   }
 }
 
-function obtenerValoresVector(prefijo) {
+function obtenerValoresVector(prefijo, vacias) {
   const res = [];
   for (let i = 0; i < vectorDim; i++) {
     const el = document.getElementById(`vec-${prefijo}-${i}`);
-    res.push(el ? el.value.trim() || "0" : "0");
+    res.push(valorCasillaLineal(el, vacias));
   }
   return res;
 }
@@ -415,8 +431,9 @@ function cargarEjemploVector(tipo) {
 
 async function calcularOperacionVector(operacion) {
   restablecerResultadoLineal("vec", "vectores");
-  const u = obtenerValoresVector("u");
-  const v = obtenerValoresVector("v");
+  const vacias = [];
+  const u = obtenerValoresVector("u", vacias);
+  const v = obtenerValoresVector("v", operacion === "escalar_u" ? null : vacias);
   const c = document.getElementById("vec-scalar-c").value.trim() || "1";
 
   const badge = document.getElementById("vec-badge-status");
@@ -445,6 +462,8 @@ async function calcularOperacionVector(operacion) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error:", err.message);
+  } finally {
+    mostrarAvisoCasillasVacias(resultBox, vacias);
   }
 }
 
@@ -663,12 +682,13 @@ function cargarEjemploCombinacion(caso) {
 
 async function evaluarCombinacionLinealUI() {
   restablecerResultadoLineal("comb", "combinacion");
+  const vacias = [];
   const vectores = [];
   for (let j = 0; j < combK; j++) {
     const vec = [];
     for (let i = 0; i < combN; i++) {
       const el = document.getElementById(`comb-v-${j}-${i}`);
-      vec.push(el ? el.value.trim() || "0" : "0");
+      vec.push(valorCasillaLineal(el, vacias));
     }
     vectores.push(vec);
   }
@@ -676,7 +696,7 @@ async function evaluarCombinacionLinealUI() {
   const b = [];
   for (let i = 0; i < combN; i++) {
     const el = document.getElementById(`comb-b-${i}`);
-    b.push(el ? el.value.trim() || "0" : "0");
+    b.push(valorCasillaLineal(el, vacias));
   }
 
   const badge = document.getElementById("comb-badge-status");
@@ -702,7 +722,7 @@ async function evaluarCombinacionLinealUI() {
     }
 
     // Guardar estado para reactividad al alternar modo de notación
-    ultimoCalculoCombinacion = { data, vectores, b };
+    ultimoCalculoCombinacion = { data, vectores, b, vacias };
     renderizarResultadoCombinacionUI(ultimoCalculoCombinacion);
     window.ExportarUI?.registrar("tab-combinacion", data);
   } catch (err) {
@@ -710,6 +730,8 @@ async function evaluarCombinacionLinealUI() {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error:", err.message);
+  } finally {
+    mostrarAvisoCasillasVacias(resultBox, vacias);
   }
 }
 
@@ -953,13 +975,13 @@ function renderizarMatrizB() {
   }
 }
 
-function obtenerMatrizValores(prefijo, filas, cols) {
+function obtenerMatrizValores(prefijo, filas, cols, vacias) {
   const M = [];
   for (let i = 0; i < filas; i++) {
     const fila = [];
     for (let j = 0; j < cols; j++) {
       const el = document.getElementById(`mat-${prefijo}-${i}-${j}`);
-      fila.push(el ? el.value.trim() || "0" : "0");
+      fila.push(valorCasillaLineal(el, vacias));
     }
     M.push(fila);
   }
@@ -1031,8 +1053,9 @@ async function operarMatrices(operacion) {
   const r = parseInt(document.getElementById("mat-b-r").value, 10);
   const p = parseInt(document.getElementById("mat-b-r_col").value, 10);
 
-  const A = obtenerMatrizValores("a", m, n);
-  const B = obtenerMatrizValores("b", r, p);
+  const vacias = [];
+  const A = obtenerMatrizValores("a", m, n, operacion === "transpuesta_b" ? null : vacias);
+  const B = obtenerMatrizValores("b", r, p, ["escalar_a", "transpuesta_a"].includes(operacion) ? null : vacias);
   const k = document.getElementById("mat-scalar-k").value.trim() || "2";
 
   const badge = document.getElementById("mat-badge-status");
@@ -1160,6 +1183,8 @@ async function operarMatrices(operacion) {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error Dimensional:", err.message);
+  } finally {
+    mostrarAvisoCasillasVacias(resultBox, vacias);
   }
 }
 
@@ -1207,13 +1232,13 @@ function renderizarMatrizInversaInput() {
   }
 }
 
-function obtenerMatrizInversaValores() {
+function obtenerMatrizInversaValores(vacias) {
   const M = [];
   for (let i = 0; i < invN; i++) {
     const fila = [];
     for (let j = 0; j < invN; j++) {
       const el = document.getElementById(`inv-a-${i}-${j}`);
-      fila.push(el ? el.value.trim() || "0" : "0");
+      fila.push(valorCasillaLineal(el, vacias));
     }
     M.push(fila);
   }
@@ -1321,7 +1346,8 @@ async function calcularInversaUI() {
   badge.className = "badge badge-dim";
   badge.innerText = "Calculando...";
 
-  const A = obtenerMatrizInversaValores();
+  const vacias = [];
+  const A = obtenerMatrizInversaValores(vacias);
   const metodoInput = document.querySelector('input[name="inv-method"]:checked');
   const metodo = metodoInput ? metodoInput.value : "gauss_jordan";
 
@@ -1493,6 +1519,8 @@ async function calcularInversaUI() {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error en Cálculo:", err.message);
+  } finally {
+    mostrarAvisoCasillasVacias(resultBox, vacias);
   }
 }
 
@@ -1662,17 +1690,18 @@ function cargarEjemploEcuacion(caso) {
 
 async function resolverEcuacionMatricialUI() {
   restablecerResultadoLineal("eq", "ecuaciones");
+  const vacias = [];
   const A = [];
   const b = [];
   for (let i = 0; i < eqM; i++) {
     const fila = [];
     for (let j = 0; j < eqN; j++) {
       const el = document.getElementById(`eq-a-${i}-${j}`);
-      fila.push(el ? el.value.trim() || "0" : "0");
+      fila.push(valorCasillaLineal(el, vacias));
     }
     A.push(fila);
     const elB = document.getElementById(`eq-b-${i}`);
-    b.push(elB ? elB.value.trim() || "0" : "0");
+    b.push(valorCasillaLineal(elB, vacias));
   }
 
   const metodoEl = document.querySelector('input[name="eq-method"]:checked');
@@ -1804,6 +1833,8 @@ async function resolverEcuacionMatricialUI() {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error al resolver:", err.message);
+  } finally {
+    mostrarAvisoCasillasVacias(resultBox, vacias);
   }
 }
 
@@ -1858,7 +1889,7 @@ function renderizarMatrizDeterminante() {
   actualizarEficienciaDeterminanteUI();
 }
 
-function obtenerMatrizDeterminanteValores() {
+function obtenerMatrizDeterminanteValores(vacias) {
   const input = document.getElementById("det-order-n");
   const n = parseInt(input.value) || 3;
   const A = [];
@@ -1867,8 +1898,7 @@ function obtenerMatrizDeterminanteValores() {
     const fila = [];
     for (let c = 0; c < n; c++) {
       const el = document.getElementById(`det-a-${r}-${c}`);
-      const val = el ? el.value.trim() : "0";
-      fila.push(val === "" ? "0" : val);
+      fila.push(valorCasillaLineal(el, vacias));
     }
     A.push(fila);
   }
@@ -2084,7 +2114,8 @@ async function calcularDeterminanteUI() {
   badge.className = "badge badge-dim";
   badge.innerText = "Calculando...";
 
-  const A = obtenerMatrizDeterminanteValores();
+  const vacias = [];
+  const A = obtenerMatrizDeterminanteValores(vacias);
   const metodoInput = document.querySelector('input[name="det-method"]:checked');
   const metodo = metodoInput ? metodoInput.value : "lu";
 
@@ -2249,5 +2280,7 @@ async function calcularDeterminanteUI() {
     badge.className = "badge badge-error";
     badge.innerText = "Error";
     mostrarErrorResultado(resultBox, "Error al calcular:", err.message);
+  } finally {
+    mostrarAvisoCasillasVacias(resultBox, vacias);
   }
 }
