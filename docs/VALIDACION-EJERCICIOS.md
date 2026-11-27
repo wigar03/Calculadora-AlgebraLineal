@@ -85,3 +85,12 @@ Prueba: `tests/test_validacion_banco_final.py` (HTTP contra `referencias_final.j
 | VII-60…VII-64 independencia | 5/5 MOTOR OK | dictamen «dependiente», rango, relación entera igual al núcleo SymPy y despeje (63: v₄ = v₁ + v₂) |
 | 1–49 | sin cambios | mismos enunciados que el banco A; 46 y 49 INCOMPLETO (INC-001) |
 
+## Mejoras para el banco final — `main` d119a8e (2026-11-27, integrador)
+| Capacidad | Comprobación | Resultado |
+|---|---|---|
+| Forma A·X = B (Parte I, 50-54) | primer paso del procedimiento y exportación; `pasos` heredados sin cambios | correcto; golden intacto |
+| Verificación de dependencia (61) | sustitución Σcᵢvᵢ componente a componente con `Fraction` y despeje | 60-64 coinciden con SymPy |
+| Orden de convergencia observado (III) | x³−4x−9: bisección lineal, Newton p ≈ 2,00 (C ≈ 0,460 frente a f''/2f' ≈ 0,452); (x−1)²: Newton lineal; x³+x−1: secante p ≈ 1,59 | coherente con la teoría |
+| Condición de la raíz (31, 36, 38, 39) | 39 con x0 = 0,1: «real» acepta x ≈ 0; «positiva no nula» lo rechaza (`raiz_no_admisible`) | correcto; raíz positiva de referencia ≈ 2,0859346 |
+| Recomendación de método | x³−4x−9 en [2,3]; (x−1)²; ln(x+1)/(x²−4)+0,1 en [1,3] con polo en 2: no recomienda sin intervalo válido | prudente; no afirma convergencia |
+

@@ -52,3 +52,11 @@ Todos los commits de agentes se integraron con `cherry-pick` (autoría del propi
 | integrador | INC-031: tiempos del diagnóstico, espera 120 s, flujo de estabilidad en 5 máquinas limpias | `desktop.py`, `src/ui/diagnostico.py`, `scripts/*windows*.ps1`, `.github/workflows/windows-estabilidad.yml` |
 | `orca/consolidacion-csv` (Codex 1) | README, distribución, CHANGELOG y notas de v1.0.0 | `README.md`, `docs/distribucion.md`, `CHANGELOG.md`, `docs/notas-v1.0.0.md` |
 | integrador | versión 1.0.0; Excel para la Web; releases | `src/core/version.py`, `docs/validacion/excel-web.md`, `docs/RELEASES.md` |
+
+## 2026-11-27 — Dev-Carbon y mejoras para el banco final
+| Origen | Motivo | Archivos principales |
+|---|---|---|
+| Carbon, Codex 1, Codex 2 (`Dev-Carbon`) | auditoría de coherencia C-01…C-21, banco final 50-64, independencia lineal, «Usar resultado como A» (INC-032) | `docs/auditoria/carbon-coherencia.md`, `src/**`, `tests/validacion/banco_final.py` |
+| `orca/final-lineal` (Codex 1) | forma A·X = B y verificación algebraica de dependencia | `src/ecuaciones`, `src/vectores`, `src/procedimientos/lineal.py`, `app.js` |
+| `orca/final-numerico` (Codex 2) | orden de convergencia observado; selector de condición y recomendación de método (INC-033) | `src/raices/`, métodos de raíces, `web_server.py`, vistas 07-10 |
+
