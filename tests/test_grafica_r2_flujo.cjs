@@ -62,6 +62,9 @@ test('vía real API y vista: SVG accesible, relación y solución, limpieza y ca
     c[['actualizarEntradasVectores','actualizarEntradasCombinacion','renderizarEcuacionMatricial'][i]]();
     assert.equal(host.hidden,true);assert.equal(host.children.length,0);
     c.restablecerResultadoLineal(prefijo,'');assert.equal(host.hidden,true);
+    host.hidden=false;host.children.push({tag:'svg',children:[]});
+    c[['limpiarModuloVectores','limpiarModuloCombinacion','limpiarModuloEcuaciones'][i]]();
+    assert.equal(host.hidden,true);assert.equal(host.children.length,0);
   }
 });
 
@@ -70,4 +73,19 @@ test('renderizar null oculta; extremos no representables conservan el resultado 
   g.renderizar(host,R.vectores({u:['1e999','1'],v:['0','1'],operacion:'producto_punto',data:{}}));
   assert.ok(recorrer(host).some(n=>n.textContent?.includes('Consulte el resultado exacto')));
   g.renderizar(host,null);assert.equal(host.hidden,true);assert.equal(host.children.length,0);
+});
+
+test('recursos con huella, tres anfitriones ocultos e impresión sin ocultar la gráfica',()=>{
+  const html=fs.readFileSync(path.join(WEB,'index.html'),'utf8');
+  for(const prefijo of ['vec','comb','eq'])
+    assert.match(html,new RegExp(`id="${prefijo}-grafica-r2" class="r2-graph" hidden`));
+  for(const nombre of ['grafica-r2.js','grafica-r2.css']){
+    const hash=require('node:crypto').createHash('sha256')
+      .update(fs.readFileSync(path.join(WEB,nombre),'utf8').replace(/\r\n/g,'\n')).digest('hex').slice(0,12);
+    assert.ok(html.includes(nombre+'?v='+hash));
+  }
+  const css=fs.readFileSync(path.join(WEB,'grafica-r2.css'),'utf8');
+  assert.match(css,/@media print\s*\{[^}]*break-inside: avoid/);
+  const impresion=fs.readFileSync(path.join(WEB,'impresion.css'),'utf8');
+  assert.ok(!impresion.slice(impresion.indexOf('/* Ocultar'),impresion.indexOf('/* Flujo')).includes('r2-'));
 });
