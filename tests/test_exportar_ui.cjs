@@ -93,3 +93,16 @@ test('componente exportar-ui: 11 módulos, estado, teclado, ARIA, acciones e inv
   doc.getElementById('tab-vectores').querySelector('.card-input').dispatchEvent({ type: 'input', bubbles: true }); assert.equal(btnVec.disabled, true);
   win.ExportarUI.limpiar('tab-biseccion'); assert.equal(secBis.querySelector('.exp-trigger').disabled, true);
 });
+
+test('borrador de ecuaciones conserva Exportar; cambiar el sistema lo invalida', () => {
+  const { doc, win } = crearDOM();
+  const sec = doc.getElementById('tab-iterativos'), btn = sec.querySelector('.exp-trigger');
+  const entrada = sec.querySelector('.card-input');
+  for (const type of ['input', 'change']) {
+    win.ExportarUI.registrar('tab-iterativos', { procedimiento: { titulo: 'Sistema resuelto', tablas: [] } });
+    entrada.dispatchEvent({ type, target: { id: 'it-texto' } });
+    assert.equal(btn.disabled, false, type);
+    entrada.dispatchEvent({ type, target: { id: 'it-a-0-0' } });
+    assert.equal(btn.disabled, true, type);
+  }
+});

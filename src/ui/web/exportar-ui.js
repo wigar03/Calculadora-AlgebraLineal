@@ -202,7 +202,10 @@
     });
     items.forEach(b => b.addEventListener("click", () => ejecutarAccion(inst, b.dataset.expAction, doc)));
     const entradas = [sec.querySelector(".card-input"), moduloId === "tab-iterativos" ? doc.getElementById("it-card-1") : null, moduloId === "tab-iterativos" ? doc.getElementById("it-card-2") : null].filter(Boolean);
-    entradas.forEach(box => { ["input", "change"].forEach(t => box.addEventListener(t, () => limpiar(moduloId))); });
+    entradas.forEach(box => { ["input", "change"].forEach(t => box.addEventListener(t, ev => {
+      if (moduloId === "tab-iterativos" && ev.target?.id === "it-texto") return;
+      limpiar(moduloId);
+    })); });
     sincronizar(moduloId);
   }
 
