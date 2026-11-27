@@ -49,11 +49,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # Los .deb descargados se guardan en caché: evita depender del espejo de Ubuntu en cada ejecución.
+      - name: Caché de paquetes (TeX Live, LibreOffice Calc y Gnumeric)
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-cache
+          key: apt-externos-ubuntu-24.04-v1
       - name: Instalar TeX Live, LibreOffice Calc y Gnumeric
         run: |
+          mkdir -p ~/apt-cache/partial
           sudo apt-get update
-          sudo apt-get install -y -o Acquire::Retries=3 --no-install-recommends texlive-latex-base texlive-latex-recommended \
+          sudo apt-get install -y -o Acquire::Retries=3 -o Dir::Cache::Archives="$HOME/apt-cache" \
+            --no-install-recommends texlive-latex-base texlive-latex-recommended \
             texlive-latex-extra texlive-lang-spanish libreoffice-calc-nogui gnumeric
+          sudo rm -rf ~/apt-cache/partial ~/apt-cache/lock
+          sudo chown -R "$USER" ~/apt-cache
+          du -sh ~/apt-cache
       - name: Exportaciones con herramientas reales
         run: python -m unittest discover tests -p "test_externo_*.py" -v
       - name: Compilación del corpus y del adversario Unicode
