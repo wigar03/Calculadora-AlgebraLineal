@@ -34,6 +34,23 @@ test('los controles HTML permiten sistemas, inversas y determinantes de orden 5'
   }
 });
 
+test('Limpiar determinante borra el resultado y restablece la insignia', () => {
+  const { el, contexto: c } = pagina();
+  vm.runInContext('mostrarToast = () => {}; actualizarEficienciaDeterminanteUI = () => {};', c);
+  const limpiados = [];
+  c.window.ExportarUI = { limpiar: id => limpiados.push(id) };
+  el('det-order-n').value = '2';
+  el('det-result-content').innerHTML = 'Resultado anterior';
+  el('det-badge-status').innerText = 'Invertible';
+  c.limpiarModuloDeterminante();
+  assert.equal(el('det-a-0-0').value, '0');
+  assert.equal(el('det-badge-status').className, 'badge');
+  assert.equal(el('det-badge-status').innerText, 'Casillas limpias');
+  assert.match(el('det-result-content').innerHTML, /placeholder-text/);
+  assert.doesNotMatch(el('det-result-content').innerHTML, /Resultado anterior/);
+  assert.deepEqual(limpiados, ['tab-determinante']);
+});
+
 test('las grillas 5x5 conservan fracciones y decimales como texto', () => {
   const { el, contexto: c } = pagina();
   for (const id of ['eq-rows-m', 'eq-cols-n', 'inv-dim-n', 'det-order-n']) el(id).value = '5';

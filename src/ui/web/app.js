@@ -1974,6 +1974,15 @@ function limpiarModuloDeterminante() {
     }
   }
   actualizarEficienciaDeterminanteUI();
+  const badge = document.getElementById("det-badge-status");
+  const resultBox = document.getElementById("det-result-content");
+  if (badge) {
+    badge.className = "badge";
+    badge.innerText = "Casillas limpias";
+  }
+  if (resultBox) {
+    resultBox.innerHTML = '<p class="placeholder-text">Ingrese una matriz cuadrada y calcule su determinante.</p>';
+  }
   mostrarToast("Casillas de la matriz restablecidas a cero.");
 }
 
