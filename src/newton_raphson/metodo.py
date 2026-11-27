@@ -59,7 +59,7 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
         raise ValueError("Criterio desconocido: use absoluto, relativo o residuo.")
     inicial = _evaluar(f, d, x)
     if inicial["f_x0"] is None:
-        raise ValueError("La función no está definida en el valor inicial elegido.")
+        raise ValueError("Error de dominio: la función no está definida en el valor inicial elegido.")
     pasos = [{"n": 0, "x": x, "fx": inicial["f_x0"], "dfx": inicial["df_x0"],
               "error_absoluto": None, "error_relativo": None}]
     avisos = []

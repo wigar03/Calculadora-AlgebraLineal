@@ -27,6 +27,8 @@ def _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar):
     """Normaliza controles HTML: entero decimal y booleano true/false en texto."""
     if metodo not in ("jacobi", "gauss_seidel"):
         raise ValueError("Método inválido: elige jacobi o gauss_seidel.")
+    if isinstance(tolerancia, str) and "," in tolerancia:
+        raise ValueError(f"No se admite la coma ',' en '{tolerancia.strip()}'. Use punto decimal '.' (por ejemplo, 0.5).")
     try:
         tol = numero_real(tolerancia, "La tolerancia")
     except ValueError as exc:

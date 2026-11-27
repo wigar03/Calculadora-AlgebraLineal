@@ -68,6 +68,8 @@ def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
     s = str(val).strip().replace("−", "-").replace("–", "-")
     if not s:
         return Fraction(0, 1)
+    if "," in s:
+        raise ValueError(f"No se admite la coma ',' en '{s}'. Use punto decimal '.' (por ejemplo, 0.5).")
     _validar_literal_numerico(s)
     
     # Manejo de notación de división a/b
@@ -228,7 +230,12 @@ def validar_matriz_numerica(matriz: Any, *, max_filas=None, max_columnas=None) -
     matriz_normalizada: List[List[Fraction]] = []
     
     for i, fila in enumerate(matriz):
-        fila_norm = validar_vector_numerico(fila)
+        try:
+            fila_norm = validar_vector_numerico(fila)
+        except LimiteExcedido:
+            raise
+        except ValueError as exc:
+            raise ValueError(f"Fila {i + 1}, {exc}") from exc
         if num_columnas == -1:
             num_columnas = len(fila_norm)
         elif len(fila_norm) != num_columnas:
