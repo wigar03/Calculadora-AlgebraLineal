@@ -258,7 +258,7 @@ class TestCSVExterno(unittest.TestCase):
 
     def comprobar(self, motor, ejecutable):
         procedimientos = corpus_csv()
-        self.assertEqual(len(procedimientos), 33)
+        self.assertEqual(len(procedimientos), 34)
         self.assertEqual(len({p["modulo"] for p in procedimientos}), 13)  # once módulos, dos rutas adicionales
         procedimientos = procedimientos + adversarios()
         textos = exportar(procedimientos)

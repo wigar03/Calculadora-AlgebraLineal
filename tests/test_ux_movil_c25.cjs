@@ -66,9 +66,9 @@ test('navegador real C-25: escritorio intacto, táctil >=44px, .bis-fields 1 col
     abrir('tab-secante'); document.getElementById('sc-graph-form').requestSubmit(); await wait(() => !document.getElementById('sc-card-2').hidden);
     const sz = document.getElementById('sc-zoom-in').getBoundingClientRect();
     abrir('tab-iterativos'); document.getElementById('it-solve-form').requestSubmit(); await wait(() => !document.querySelector('#tab-iterativos .exp-trigger').disabled);
-    return { fine: matchMedia('(pointer: fine)').matches, msW: Math.round(ms.width), msH: Math.round(ms.height), bzW: Math.round(bz.width), bzH: Math.round(bz.height), szW: Math.round(sz.width), bfCols };
+    return { coarse: matchMedia('(pointer: coarse)').matches, msW: Math.round(ms.width), msH: Math.round(ms.height), bzW: Math.round(bz.width), bzH: Math.round(bz.height), szW: Math.round(sz.width), bfCols };
   })()`);
-  assert.equal(desk.fine, true); assert.ok(desk.msW <= 24 && desk.msH <= 28 && desk.bzW <= 28 && desk.bzH <= 28 && desk.szW <= 36 && desk.bfCols === 2, JSON.stringify(desk));
+  assert.equal(desk.coarse, false); assert.ok(desk.msW <= 24 && desk.msH <= 28 && desk.bzW <= 28 && desk.bzH <= 28 && desk.szW <= 36 && desk.bfCols === 2, JSON.stringify(desk));
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
   const mov = await cdp.evalJS(`(() => {

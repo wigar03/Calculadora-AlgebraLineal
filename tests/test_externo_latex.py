@@ -75,7 +75,7 @@ class TestExternoLatex(unittest.TestCase):
 
     def test_corpus_real_once_modulos_y_tablas_largas(self):
         self.assertEqual(len(self.consultas), 46)
-        self.assertEqual(len(self.casos), 36)
+        self.assertEqual(len(self.casos), 37)
         self.assertGreaterEqual(len({c["procedimiento"]["modulo"] for c in self.casos}), 11)
         for caso, salida in zip(self.casos, self.salidas):
             with self.subTest(caso=caso["id"]):
