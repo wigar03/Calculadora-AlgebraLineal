@@ -238,7 +238,7 @@ def adaptar_secante(res, _cuerpo):
     if res.get("advertencias"):
         avisos.append(f"Denominador pequeño en las iteraciones ${','.join(map(str, res['advertencias']))}$.")
     if not res.get("convergio"):
-        avisos.append("Sin convergencia.")
+        avisos.append(MOTIVOS_ABIERTO.get(res["motivo"], res["motivo"]))
     return procedimiento(
         "secante", "Método de la secante",
         entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},

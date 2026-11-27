@@ -19,9 +19,11 @@ class TestProcedimientosCarbon(unittest.TestCase):
         from src.biseccion.metodo import resolver_biseccion
         from src.regla_falsa.metodo import resolver_regla_falsa
         from src.newton_raphson.metodo import resolver_newton
+        from src.secante.metodo import resolver_secante
         casos = [("biseccion", resolver_biseccion("x^2", 0, 1)),
                  ("regla-falsa", resolver_regla_falsa("x^2", 0, 1)),
-                 ("newton-raphson", resolver_newton("x^2", 0))]
+                 ("newton-raphson", resolver_newton("x^2", 0)),
+                 ("secante", resolver_secante("x^2", 0, 1))]
         for modulo, respuesta in casos:
             with self.subTest(modulo=modulo):
                 self.assertEqual(respuesta["motivo"], "no_certificada")
