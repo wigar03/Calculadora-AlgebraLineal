@@ -88,7 +88,7 @@
   }
   if (typeof window !== "undefined") window.conectarVistaPreviaFuncion = conectarVistaPreviaFuncion;
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { formatear, numeroLatex, datosGrafica, EJEMPLOS, MOTIVOS, conectarVistaPreviaFuncion };
+    module.exports = { formatear, numeroLatex, datosGrafica, EJEMPLOS, MOTIVOS, conectarVistaPreviaFuncion, dibujarGrafica };
   }
   if (typeof document === "undefined") return;
 
@@ -138,6 +138,7 @@
     const zoomFocusBtn = document.getElementById("bis-zoom-focus");
     const zoomResetBtn = document.getElementById("bis-zoom-reset");
     const zoomLevelEl = document.getElementById("bis-zoom-level");
+    const lectura = document.getElementById("bis-readout");
 
     if (controles) {
       controles.hidden = false;
@@ -397,6 +398,10 @@
     }
 
     function onPointerMove(e) {
+      const rect = svg.getBoundingClientRect();
+      const t = Math.max(0, Math.min(1, ((e.clientX - rect.left) / rect.width * 600 - 60) / 510));
+      const x = xMin + t * (xMax - xMin), y = window.GraficaFunciones.interpolar(puntosActuales, x);
+      lectura.textContent = `x = ${formatear(x)} · f(x) ≈ ${y === null ? "—" : formatear(y)}`;
       if (!punteros.has(e.pointerId)) return;
       punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -440,6 +445,8 @@
 
     svg.addEventListener("pointerdown", onPointerDown);
     svg.addEventListener("pointermove", onPointerMove);
+    const borrarLectura = () => { lectura.textContent = ""; };
+    svg.addEventListener("pointerleave", borrarLectura);
     svg.addEventListener("pointerup", onPointerUp);
     svg.addEventListener("pointercancel", onPointerUp);
 
@@ -489,6 +496,7 @@
         svg.removeEventListener("wheel", onWheel);
         svg.removeEventListener("pointerdown", onPointerDown);
         svg.removeEventListener("pointermove", onPointerMove);
+        svg.removeEventListener("pointerleave", borrarLectura); borrarLectura();
         svg.removeEventListener("pointerup", onPointerUp);
         svg.removeEventListener("pointercancel", onPointerUp);
         svg.removeEventListener("dblclick", onDblClick);

@@ -137,14 +137,14 @@
     return tramos.map(t => `${t.abierto_izquierda ? "(" : "["}${numeroLatex(t.desde, 8)},\\; ${numeroLatex(t.hasta, 8)}${t.abierto_derecha ? ")" : "]"}`).join(" \\cup ");
   }
 
-  // Exporta solo las utilidades puras para verificarlas con el runner estándar de Node.
+  // Utilidades y controlador de gráfica verificables con el runner estándar de Node.
   if (typeof module !== "undefined" && module.exports) {
     module.exports = {
       leerNumero,
       MARCO, formatear, numeroLatex, marcas, rangoVertical, crearEscala, caminoCurva,
       interpolar, redondearSegunVista,
       describirDiscontinuidad, textoTramos,
-      EJEMPLOS, MOTIVOS,
+      EJEMPLOS, MOTIVOS, crearGrafica,
     };
   }
   if (typeof document === "undefined") return;
@@ -429,10 +429,18 @@
     botones.acercar.addEventListener("click", () => acercar(1.3));
     botones.alejar.addEventListener("click", () => acercar(1 / 1.3));
     botones.restablecer.addEventListener("click", restablecer);
+    botones.enfocar.disabled = true;
+    botones.enfocar.addEventListener("click", () => {
+      if (!g.resultado || !g.vista) return;
+      const r = g.resultado.raiz, margen = Math.max(Math.abs(r) * .03, .05);
+      g.vista.xMin = r - margen; g.vista.xMax = r + margen;
+      dibujar(); muestrear(true);
+    });
 
     return {
       /* Paso 1: muestra la curva en la región de interés. */
       mostrar(datos) {
+        botones.enfocar.disabled = true;
         const [a, b] = datos.intervalo;
         const [yMin, yMax] = rangoVertical(datos.grafica);
         Object.assign(g, { funcion: datos.funcion, puntos: datos.grafica, analisis: null, intervalo: null,
@@ -452,6 +460,7 @@
       },
       /* Paso 4: secantes y raíz; la vista se centra en el intervalo de partida. */
       fijarResultado(resultado) {
+        botones.enfocar.disabled = !resultado;
         g.resultado = resultado;
         if (resultado && g.vista) {
           const [xl, xu] = resultado.intervalo_inicial;
@@ -463,6 +472,7 @@
         dibujar();
       },
       limpiar() {
+        botones.enfocar.disabled = true;
         clearTimeout(temporizador);
         aborto?.abort();
         turno++;
@@ -514,7 +524,7 @@
     const grafica = crearGrafica({
       contenedor: el("rf-plot"), controles: el("rf-graph-controls"), lectura: el("rf-readout"),
       leyenda: el("rf-legend"), nivelZoom: el("rf-zoom-level"),
-      botones: { acercar: el("rf-zoom-in"), alejar: el("rf-zoom-out"), restablecer: el("rf-zoom-reset") },
+      botones: { acercar: el("rf-zoom-in"), alejar: el("rf-zoom-out"), restablecer: el("rf-zoom-reset"), enfocar: el("rf-zoom-focus") },
     }, {
       alElegir: indice => elegirIntervalo(estado.analisis.intervalos[indice]),
       alMarcar: (xl, xu) => { activarMarcado(false); elegirIntervalo({ xl, xu }); },
