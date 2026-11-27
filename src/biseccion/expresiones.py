@@ -3,6 +3,8 @@
 import ast
 import math
 import operator
+import re
+from ..core.limites import FUNCION_MAX_CARACTERES, FUNCION_MAX_NODOS
 
 from .diagnosticos import diagnosticar_sintaxis, sugerir_funcion
 from .dominio import evaluar_binaria, evaluar_funcion
@@ -23,10 +25,13 @@ OPERACIONES = {
     ast.Mult: operator.mul, ast.Div: operator.truediv,
     ast.Pow: operator.pow,
 }
+ERROR_COMA_DECIMAL = "No se admite la coma ','; use punto decimal '.' (por ejemplo, 0.5)."
 
 
 def numero_real(valor, nombre="valor"):
     """Admite números o decimales/fracciones textuales y exige un real finito."""
+    if isinstance(valor, str) and "," in valor:
+        raise ValueError(ERROR_COMA_DECIMAL)
     try:
         if isinstance(valor, bool) or not isinstance(valor, (int, float, str)):
             raise ValueError()
@@ -52,8 +57,10 @@ class Expresion:
     """
 
     def __init__(self, texto):
-        if not isinstance(texto, str) or not texto.strip() or len(texto) > 500:
-            raise ValueError("Error de sintaxis: ingrese una función de entre 1 y 500 caracteres.")
+        if not isinstance(texto, str) or not texto.strip() or len(texto) > FUNCION_MAX_CARACTERES:
+            raise ValueError(f"Error de sintaxis: ingrese una función de entre 1 y {FUNCION_MAX_CARACTERES} caracteres.")
+        if re.search(r"\d\s*,\s*\d", texto):
+            raise ValueError(ERROR_COMA_DECIMAL)
         self.texto = texto.strip()
         normalizado, mapa = normalizar_con_mapa(self.texto)
         izq, der, offset_der = separar_igualdad(normalizado)
@@ -66,7 +73,7 @@ class Expresion:
                 left=arbol_izq, op=ast.Sub(), right=arbol_der
             )
         self.arbol = normalizar_ast(arbol)
-        if sum(1 for _ in ast.walk(self.arbol)) > 120:
+        if sum(1 for _ in ast.walk(self.arbol)) > FUNCION_MAX_NODOS:
             raise ValueError("Error de sintaxis: la función es demasiado compleja.")
         self._validar(self.arbol)
 

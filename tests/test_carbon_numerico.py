@@ -10,6 +10,17 @@ from tests.test_golden_api import consultar
 
 
 class TestDiagnosticosCarbon(unittest.TestCase):
+    def test_coma_decimal_en_parametros_y_llamadas(self):
+        from src.biseccion.expresiones import Expresion, numero_real
+        mensaje = "No se admite la coma ','; use punto decimal '.' (por ejemplo, 0.5)."
+        for texto in ("0,5", "sin(0,5)", "cos(1,25)+x", "0,5+x"):
+            with self.subTest(texto=texto):
+                with self.assertRaises(ValueError) as ctx:
+                    (numero_real(texto) if texto == "0,5" else Expresion(texto))
+                self.assertEqual(str(ctx.exception), mensaje)
+        with self.assertRaisesRegex(ValueError, "exactamente un argumento"):
+            Expresion("sin(x,x)")
+
     def test_coma_decimal_en_racional_y_tolerancia_iterativa(self):
         mensaje = "No se admite la coma ',' en '0,5'. Use punto decimal '.' (por ejemplo, 0.5)."
         for llamada in (lambda: parse_number("0,5"),
