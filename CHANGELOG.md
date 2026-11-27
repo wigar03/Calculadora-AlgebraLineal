@@ -1,5 +1,23 @@
 # Historial de versiones
 
+## 1.3.0
+
+Añade apoyo gráfico en el plano y completa los controles de Newton-Raphson,
+sin cambiar los resultados matemáticos de los once módulos.
+
+- Gráficas en $`\mathbb{R}^2`$ en Vectores, Combinación lineal y Ecuaciones con dos incógnitas;
+  se muestran solo cuando la dimensión es 2.
+- Vectores: flechas de entrada y resultado, paralelogramo de la suma y ángulo en el producto punto.
+- Combinación lineal: descomposición punta-cola hasta el objetivo y relación de dependencia con objetivo cero.
+- Ecuaciones: rectas etiquetadas, intersección, paralelas y coincidentes, incluidas verticales y horizontales.
+- Gráficas orientativas y visibles al imprimir; las exportaciones LaTeX y CSV se conservan.
+- Newton-Raphson muestra el porcentaje de zoom y reescala el eje vertical al enfocar la raíz,
+  como Bisección y Regla Falsa; quedan completadas las mejoras aplazadas de la auditoría de coherencia.
+- Límites de v1.2.0 conservados: ejercicios 46 y 49 incompletos, ejecutables sin firma digital
+  que Windows puede bloquear según sus políticas y Excel no verificado directamente.
+
+Consulta las instrucciones de uso y los límites en las [notas de v1.3.0](docs/notas-v1.3.0.md).
+
 ## 1.2.0
 
 Mejora la entrada de datos, los controles de las gráficas y el uso táctil de los once módulos,
