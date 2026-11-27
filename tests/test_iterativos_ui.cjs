@@ -153,6 +153,8 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
     .replace(/ aria-label="(?:Reducir|Aumentar) (?:filas|columnas) de [AB]"(?= onclick="cambiarDimMat[AB]\()/g, '')
     .replace('id="notification-toast" role="status" aria-live="polite"', 'id="notification-toast"')
     .replaceAll('sin, cos, tan, asin, acos, atan, exp, ln (natural)', 'sin, cos, tan, exp, ln (natural)')
+    // Botón de encadenamiento de matrices aprobado por el propietario el 2026-11-27.
+    .replace(/\n                <button[^>]*id="mat-usar-resultado"[^>]*>Usar resultado como A<\/button>/, '')
     .replace(/\n      <button class="nav-tab" data-tab="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n<button class="home-module" type="button" data-open-module="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n\n      <section id="tab-iterativos"[\s\S]*?<\/section>/, '')

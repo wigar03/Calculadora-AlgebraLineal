@@ -98,6 +98,7 @@ El vector $`b`$ **no es combinación lineal** de los vectores de $`S`$ si el ran
 ### Módulo 3: Operaciones Matriciales Básicas
 
 Cada matriz de entrada admite hasta 8 filas y 8 columnas, con al menos una de cada una.
+Para expresiones compuestas como `2A+B` o `A+B+C`, calcule una operación, pulse «Usar resultado como A» y continúe con la siguiente; se conservan las fracciones exactas y los valores de B y del escalar.
 
 Para matrices $`A, B \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un escalar $`k \in \mathbb{R}`$:
 

@@ -461,6 +461,7 @@
               <div class="sample-actions">
                 <button type="button" class="btn-text" onclick="cargarEjemploMatrices(1)" data-math>Ejemplo 1: Mult. $A_{2\times3}\cdot B_{3\times2}$</button>
                 <button type="button" class="btn-text" onclick="cargarEjemploMatrices(2)" data-math>Ejemplo 2: Suma $A_{3\times3}+B_{3\times3}$</button>
+                <button type="button" class="btn-text" id="mat-usar-resultado" onclick="usarResultadoComoA()" aria-label="Usar el resultado matricial exacto como matriz A" hidden>Usar resultado como A</button>
               </div>
               <button type="button" class="btn-clear" onclick="limpiarModuloMatrices()" title="Limpiar todas las casillas">
                 <i data-lucide="trash-2" class="btn-icon"></i>
@@ -1312,7 +1313,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=1489d3c7b80d"></script>
+  <script src="app.js?v=8180c6dff6d9"></script>
   <script src="sidebar.js?v=1b48755f71be"></script>
   <script src="formula-keyboard.js?v=009d7a296017"></script>
   <script src="biseccion.js?v=01a15ee0da8c"></script>

@@ -280,6 +280,7 @@ function restablecerResultadoLineal(prefijo, modulo) {
   if (resultBox) resultBox.innerHTML = '<p class="placeholder-text">Pendiente de cálculo.</p>';
   if (prefijo === "vec") ultimoCalculoVector = null;
   if (prefijo === "comb") ultimoCalculoCombinacion = null;
+  if (prefijo === "mat") invalidarResultadoMatrices();
 }
 
 // =============================================================================
@@ -863,7 +864,29 @@ function renderizarResultadoCombinacionUI(calc) {
 // Multiplicación Matricial (A · B) y Transpuesta de Matrices (A^T, B^T)
 // =============================================================================
 // =============================================================================
+let resultadoMatrizReutilizable = null;
+
+function invalidarResultadoMatrices() {
+  resultadoMatrizReutilizable = null;
+  const boton = document.getElementById("mat-usar-resultado");
+  if (boton) boton.hidden = true;
+}
+
+function usarResultadoComoA() {
+  const matriz = resultadoMatrizReutilizable;
+  if (!matriz) return;
+  restablecerResultadoLineal("mat", "matrices");
+  document.getElementById("mat-a-m").value = matriz.length;
+  document.getElementById("mat-a-n").value = matriz[0].length;
+  renderizarMatrizA();
+  matriz.forEach((fila, i) => fila.forEach((valor, j) => {
+    document.getElementById(`mat-a-${i}-${j}`).value = valor;
+  }));
+}
+
 function inicializarModuloMatrices() {
+  const entradas = document.getElementById("tab-matrices")?.querySelector(".card-input");
+  ["input", "change"].forEach(tipo => entradas?.addEventListener(tipo, invalidarResultadoMatrices));
   renderizarMatrizA();
   renderizarMatrizB();
   cargarEjemploMatrices(1);
@@ -886,6 +909,7 @@ function cambiarDimMatB(dr, dp) {
 }
 
 function renderizarMatrizA() {
+  invalidarResultadoMatrices();
   window.ExportarUI?.limpiar("tab-matrices");
   const m = parseInt(document.getElementById("mat-a-m").value, 10) || 2;
   const n = parseInt(document.getElementById("mat-a-n").value, 10) || 3;
@@ -907,6 +931,7 @@ function renderizarMatrizA() {
 }
 
 function renderizarMatrizB() {
+  invalidarResultadoMatrices();
   window.ExportarUI?.limpiar("tab-matrices");
   const r = parseInt(document.getElementById("mat-b-r").value, 10) || 3;
   const p = parseInt(document.getElementById("mat-b-r_col").value, 10) || 2;
@@ -941,6 +966,7 @@ function obtenerMatrizValores(prefijo, filas, cols) {
 }
 
 function limpiarModuloMatrices() {
+  invalidarResultadoMatrices();
   window.ExportarUI?.limpiar("tab-matrices");
   const m = parseInt(document.getElementById("mat-a-m").value, 10) || 2;
   const n = parseInt(document.getElementById("mat-a-n").value, 10) || 3;
@@ -1124,6 +1150,9 @@ async function operarMatrices(operacion) {
       resultBox.appendChild(mapWrapper);
     }
     refrescarIconosLucide();
+    resultadoMatrizReutilizable = C.map(fila => fila.slice());
+    const boton = document.getElementById("mat-usar-resultado");
+    if (boton) boton.hidden = false;
     window.ExportarUI?.registrar("tab-matrices", data);
   } catch (err) {
     window.ExportarUI?.limpiar("tab-matrices");

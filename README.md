@@ -33,6 +33,7 @@ racionales. Los métodos numéricos trabajan en punto flotante y muestran errore
 y residuo. Las gráficas son orientativas y no demuestran continuidad ni convergencia.
 
 Puedes copiar LaTeX, exportar CSV para hojas de cálculo en español e imprimir o guardar como PDF.
+En Matrices, «Usar resultado como A» permite encadenar operaciones como `2A+B` o `A+B+C` conservando fracciones exactas.
 
 ## Instalar en Windows
 

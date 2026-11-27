@@ -7,12 +7,13 @@ const source = readFileSync(require.resolve('../src/ui/web/app.js'), 'utf8');
 
 function pagina() {
   const nodos = new Map();
-  const nodo = () => ({ style: {}, children: [], value: '', addEventListener() {},
+  const nodo = () => ({ style: {}, children: [], value: '', listeners: {},
+    addEventListener(t, fn) { (this.listeners[t] ||= []).push(fn); },
     setAttribute(k, v) { this[k] = v; },
     set innerHTML(v) { this.html = v; this.children = []; },
     get innerHTML() { return this.html || ''; },
     appendChild(hijo) { this.children.push(hijo); if (hijo.id) nodos.set(hijo.id, hijo); },
-    querySelector() { return nodo(); }, querySelectorAll() { return []; } });
+    querySelector(s) { return (this.selectores ||= {})[s] ||= nodo(); }, querySelectorAll() { return []; } });
   const el = id => { if (!nodos.has(id)) nodos.set(id, nodo()); return nodos.get(id); };
   const renderizados = [];
   const contexto = vm.createContext({ document: { addEventListener() {}, createElement: nodo,
@@ -115,6 +116,35 @@ test('combinación muestra independencia, relación concreta y despeje sin nuevo
   assert.ok(renderizados.some(t => t.includes('linealmente dependiente') && t.includes('Rango: 2')));
   assert.ok(renderizados.includes(relacion)); assert.ok(renderizados.includes(despeje));
   for (const tex of [relacion, despeje]) assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
+});
+
+test('VI-57: la interfaz encadena 2A+B reutilizando el resultado exacto como A', async () => {
+  const { execFileSync } = require('node:child_process');
+  const { el, contexto: c, renderizados } = pagina();
+  const ref = JSON.parse(readFileSync(require.resolve('./validacion/referencias_final.json'), 'utf8')).matrices['VI-57']['2A+B'];
+  const A = [[1, 0, -2, 3], [4, -1, 2, 0]], B = [[-2, 3, 1, 2], [0, 5, -3, 4]];
+  let respuesta;
+  c.fetch = async (_, opciones) => {
+    respuesta = JSON.parse(execFileSync('python', ['-c', 'import json,sys; from src.ui.web_server import calcular_respuesta; print(json.dumps(calcular_respuesta("/api/matrices/operar",json.load(sys.stdin))[0]))'], { input: opciones.body, encoding: 'utf8' }));
+    return { ok: true, json: async () => respuesta };
+  };
+  const limpiezas = []; c.window.ExportarUI = { limpiar: id => limpiezas.push(id), registrar() {} };
+  c.inicializarModuloMatrices(); el('mat-a-m').value = '2'; el('mat-a-n').value = '4'; c.renderizarMatrizA();
+  A.forEach((f, i) => f.forEach((v, j) => { el(`mat-a-${i}-${j}`).value = String(v); }));
+  el('mat-scalar-k').value = '2'; await c.operarMatrices('escalar_a');
+  assert.equal(el('mat-usar-resultado').hidden, false);
+  const bAnterior = JSON.stringify(c.obtenerMatrizValores('b', 3, 2));
+  c.usarResultadoComoA();
+  assert.deepEqual(JSON.parse(JSON.stringify(c.obtenerMatrizValores('a', 2, 4))), A.map(f => f.map(v => String(2 * v))));
+  assert.equal(JSON.stringify(c.obtenerMatrizValores('b', 3, 2)), bAnterior);
+  assert.equal(el('mat-scalar-k').value, '2'); assert.equal(el('mat-usar-resultado').hidden, true);
+  assert.match(el('mat-result-content').innerHTML, /placeholder/); assert.ok(limpiezas.includes('tab-matrices'));
+  el('mat-b-r').value = '2'; el('mat-b-r_col').value = '4'; c.renderizarMatrizB();
+  B.forEach((f, i) => f.forEach((v, j) => { el(`mat-b-${i}-${j}`).value = String(v); }));
+  await c.operarMatrices('suma'); assert.deepEqual(respuesta.matriz_resultado, ref);
+  assert.ok(renderizados.some(t => t.endsWith(c.matrixToLatex(ref))));
+  el('tab-matrices').querySelector('.card-input').listeners.input[0]({ target: el('mat-a-0-0') });
+  assert.equal(el('mat-usar-resultado').hidden, true);
 });
 
 test('las grillas 5x5 conservan fracciones y decimales como texto', () => {
