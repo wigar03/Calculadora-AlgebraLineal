@@ -887,6 +887,7 @@
       el(evento.currentTarget.dataset.rfGoto).scrollIntoView({ block: "start", behavior: "smooth" });
     }));
     panel.querySelectorAll("[data-rf-example]").forEach(boton => boton.addEventListener("click", () => {
+      revisionConsejo++; consejo.replaceChildren();
       const ejemplo = EJEMPLOS[boton.dataset.rfExample];
       for (const nombre of ["funcion", "a", "b"]) formFuncion.elements[nombre].value = ejemplo[nombre];
       formMetodo.elements.tolerancia.value = ejemplo.tolerancia;
@@ -897,6 +898,7 @@
       estado.alAnalizar = () => { estado.alAnalizar = null; elegirIntervalo(ejemplo); revelar(tarjetas[1]); };
     }));
     el("rf-clear").addEventListener("click", () => {
+      revisionConsejo++; consejo.replaceChildren();
       formFuncion.reset();
       formMetodo.reset();
       for (const nombre of ["funcion", "a", "b"]) formFuncion.elements[nombre].value = "";

@@ -678,6 +678,7 @@
     form.addEventListener("input", () => { limpiarResultado("Parámetros modificados. Calcule para actualizar el resultado."); ayuda(); });
     form.elements.funcion.addEventListener("input", actualizarPreview);
     document.getElementById("bis-clear").addEventListener("click", () => {
+      revisionConsejo++; consejo.replaceChildren();
       form.reset();
       for (const nombre of ["funcion", "a", "b"]) form.elements[nombre].value = "";
       limpiarResultado();
@@ -687,6 +688,7 @@
     });
     document.querySelectorAll("[data-bis-example]").forEach(botonEjemplo => {
       botonEjemplo.addEventListener("click", () => {
+        revisionConsejo++; consejo.replaceChildren();
         for (const [nombre, valor] of Object.entries(EJEMPLOS[botonEjemplo.dataset.bisExample])) form.elements[nombre].value = valor;
         form.elements.max_iteraciones.value = "100";
         limpiarResultado("Ejemplo cargado. Presione Calcular raíz por bisección.");

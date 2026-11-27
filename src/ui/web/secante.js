@@ -40,7 +40,7 @@
     function cancel(){version++;requests.forEach(c=>c.abort());requests.clear();clearTimeout(temporizador);}
     function error(s){el("error").textContent=s;el("error").hidden=!s;if(s)window.ExportarUI?.limpiar("tab-secante");}
     function clearResult(){window.ExportarUI?.limpiar("tab-secante");res=null;el("result").replaceChildren();el("table-card").hidden=true;el("focus-root").disabled=true;draw();}
-    function invalidate(level){cancel();navegacion.cancelar();error("");clearResult();if(level<=2){el("card-3").hidden=true;el("card-4").hidden=true;el("first").replaceChildren();}if(level===1){funcion=null;vista=null;vistaBase=null;base=null;puntos=[];marcar(null);el("graph-controls").hidden=true;el("readout").replaceChildren();el("card-2").hidden=true;el("plot").replaceChildren();el("hint").replaceChildren();}}
+    function invalidate(level){cancel();navegacion.cancelar();error("");clearResult();if(level<=2){revisionConsejo++;consejo.replaceChildren();el("card-3").hidden=true;el("card-4").hidden=true;el("first").replaceChildren();}if(level===1){funcion=null;vista=null;vistaBase=null;base=null;puntos=[];marcar(null);el("graph-controls").hidden=true;el("readout").replaceChildren();el("card-2").hidden=true;el("plot").replaceChildren();el("hint").replaceChildren();}}
     async function request(route,data){
       requests.get(route)?.abort();const c=new AbortController(),v=version;requests.set(route,c);
       try{const r=await fetch(`/api/secante/${route}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),signal:c.signal});const d=await r.json();if(v!==version||requests.get(route)!==c)return null;if(!r.ok||d.error)throw Error(d.error||"No se pudo completar el cálculo.");return d;}

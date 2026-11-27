@@ -130,6 +130,7 @@
       pasos(estado.preparado ? 2 : 1); dibujar();
     }
     function invalidarFuncion() {
+      revisionConsejo++; consejo.replaceChildren();
       cancelar(); estado.funcion = null; estado.preparado = null; estado.inicial = null;
       estado.vista = null; estado.base = null; limpiarResultado(); pasos(1);
       el("derivative").replaceChildren(); el("plot").hidden = true; el("graph-controls").hidden = true;
