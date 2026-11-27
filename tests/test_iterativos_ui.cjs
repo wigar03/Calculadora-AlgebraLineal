@@ -167,6 +167,8 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
     querySelectorAll: () => []
   };
   const rJ = respuestaSimulada(2, 'jacobi'), rG = respuestaSimulada(2, 'gauss_seidel');
+  rJ.analisis.garantia = 'no_asegurada'; rJ.analisis.razones = ['Sin garantía previa para Jacobi.'];
+  rG.analisis.razones = ['Matriz simétrica definida positiva: garantía para Gauss-Seidel.'];
   const ctx = vm.createContext({
     document: doc, window: { GraficaFunciones: G }, console, AbortController,
     renderLatexElement: (n, tex, disp) => { n.textContent = tex; latexs.push([tex, disp]); },
@@ -197,6 +199,13 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   assert.equal(el('it-table-card').hidden, false);
   assert.equal(el('it-plot-vars').children[0].tag, 'svg');
   assert.equal(el('it-plot-conv').children[0].tag, 'svg');
+  const recorrer = n => [n, ...n.children.flatMap(recorrer)];
+  const analisis = recorrer(el('it-analysis')).map(n => n.textContent).join(' ');
+  assert.match(analisis, /Jacobi/); assert.match(analisis, /Gauss-Seidel/);
+  assert.match(analisis, /Sin garantía previa/); assert.match(analisis, /simétrica definida positiva/);
+  const motivos = recorrer(el('it-result')).filter(n => n.tag === 'p'
+    && [it.MOTIVOS.tolerancia, rJ.mensaje, rG.mensaje].includes(n.textContent));
+  assert.equal(motivos.length, 2, 'Un solo motivo por método, sin su paráfrasis duplicada');
   assert.ok(latexs.length > 30);
   const textosLatex = latexs.map(([tex]) => tex);
   assert.ok(textosLatex.some(t => t.includes('0.4264366108') && t.includes('0.08982305839')));

@@ -266,13 +266,17 @@
       } finally { if (requests.get(route) === ctrl) requests.delete(route); }
     }
 
-    function renderAnalisis(a, nombres) {
+    function renderAnalisis(a, nombres, otro = null) {
       const box = el("analysis"); box.replaceChildren();
       if (!a) return;
-      const g = GARANTIAS[a.garantia] || GARANTIAS.no_asegurada;
-      box.append(node("span", g.texto, `it-badge ${g.clase}`));
-      if (Array.isArray(a.razones) && a.razones.length) {
-        const ul = node("ul", "", "rf-list"); a.razones.forEach(t => ul.append(node("li", t))); box.append(ul);
+      const garantias = otro ? [["Jacobi", a], ["Gauss-Seidel", otro]] : [["", a]];
+      for (const [nombre, analisis] of garantias) {
+        if (nombre) box.append(node("p", nombre));
+        const g = GARANTIAS[analisis.garantia] || GARANTIAS.no_asegurada;
+        box.append(node("span", g.texto, `it-badge ${g.clase}`));
+        if (Array.isArray(analisis.razones) && analisis.razones.length) {
+          const ul = node("ul", "", "rf-list"); analisis.razones.forEach(t => ul.append(node("li", t))); box.append(ul);
+        }
       }
       if (a.rango) box.append(math(`\\operatorname{rg}(A)=${a.rango.A},\\quad \\operatorname{rg}([A\\mid b])=${a.rango.aumentada}`));
       if (a.singular) box.append(node("p", "La matriz A es singular (rango deficiente).", "bis-help"));
@@ -311,7 +315,6 @@
       destino.append(head);
       const textoMotivo = MOTIVOS[r.motivo] || r.mensaje || "Proceso finalizado.";
       destino.append(node("p", textoMotivo));
-      if (r.mensaje && r.mensaje !== textoMotivo) destino.append(node("p", r.mensaje, "bis-help"));
       const kFin = r.iteraciones && r.iteraciones.length ? r.iteraciones[r.iteraciones.length - 1].k : 0;
       if (Array.isArray(r.solucion)) destino.append(math(`x^{(${kFin})} \\approx ${vectorLatex(r.solucion, 10)}`));
       if (r.iteraciones && r.iteraciones.length) destino.append(math(normasLatex(r.iteraciones[r.iteraciones.length - 1])));
@@ -460,7 +463,10 @@
       if (esComparacion) {
         ultimo = { comparacion: true, jacobi: payload.jacobi, gauss_seidel: payload.gauss_seidel };
         const base = payload.jacobi || payload.gauss_seidel;
-        renderAnalisis(base && base.analisis, base && base.nombres);
+        const otro = payload.jacobi && payload.gauss_seidel?.analisis;
+        const difieren = otro && JSON.stringify([base.analisis?.garantia, base.analisis?.razones])
+          !== JSON.stringify([otro.garantia, otro.razones]);
+        renderAnalisis(base && base.analisis, base && base.nombres, difieren ? otro : null);
         const grid = node("div", "", "it-compare-grid");
         const colJ = node("div", "", "it-compare-col"), colG = node("div", "", "it-compare-col");
         if (payload.jacobi) renderBloqueResultado(payload.jacobi, colJ, "Jacobi");
