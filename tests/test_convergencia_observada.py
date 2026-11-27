@@ -3,6 +3,7 @@ import json
 import math
 import unittest
 
+from src.secante.convergencia import estimar_convergencia
 from src.biseccion.metodo import resolver_biseccion
 from src.newton_raphson.metodo import resolver_newton
 from src.regla_falsa.metodo import resolver_regla_falsa
@@ -75,6 +76,62 @@ class TestConvergenciaObservada(unittest.TestCase):
                                           if a <= float(r) <= b)
                         self.assertLessEqual(abs(res["raiz"]-referencia), 1e-6)
                         obs = res["convergencia_observada"]
-                        self.assertIn(obs["clasificacion"], ("lineal", "superlineal", "cuadrática", "no concluyente"))
+                        clases = {"biseccion": ("lineal",), "regla_falsa": ("lineal",),
+                                  "newton": ("cuadrática", "no concluyente"),
+                                  "secante": ("superlineal", "no concluyente")}
+                        self.assertIn(obs["clasificacion"], clases[metodo])
+                        if obs["orden"] is not None:
+                            esperado = {"biseccion": 1, "regla_falsa": 1,
+                                        "newton": 2, "secante": (1+math.sqrt(5))/2}[metodo]
+                            self.assertAlmostEqual(obs["orden"], esperado, delta=.15)
+                        json.dumps(obs, allow_nan=False)
                         self.assertTrue(any(p["titulo"] == "Convergencia observada"
                                             for p in res["procedimiento"]["pasos"]))
+
+
+class TestEstimadorConvergencia(unittest.TestCase):
+    def test_sucesiones_con_orden_y_constante_conocidos(self):
+        for p, c, x0 in ((1, .5, 1), ((1+math.sqrt(5))/2, .7, .1), (2, 1, .5)):
+            xs = [x0]
+            for _ in range(8):
+                xs.append(c*xs[-1]**p)
+            obs = estimar_convergencia(xs)
+            with self.subTest(p=p):
+                self.assertAlmostEqual(obs["orden"], p, delta=.06)
+                self.assertAlmostEqual(obs["constante_asintotica"], c, delta=.15)
+
+    def test_no_finitos_y_sin_contraccion(self):
+        casos = [[], [1, 1, 1, 1, 1], [1, .5, .25], [1, 2, 4, 8, 16],
+                 [1, .5, float("nan"), .125], [1, .5, .25, float("inf")],
+                 [1e308, -1e308, 1, 2, 3]]
+        for xs in casos:
+            with self.subTest(xs=xs):
+                obs = estimar_convergencia(xs)
+                self.assertEqual(obs["clasificacion"], "no concluyente")
+                self.assertIsNone(obs["orden"])
+                json.dumps(obs, allow_nan=False)
+
+    def test_ruido_solo_no_basta_y_no_oculta_historial_util(self):
+        ruido = [1+i*math.ulp(1.) for i in (9, 5, 3, 2, 1, 0)]
+        self.assertEqual(estimar_convergencia(ruido)["clasificacion"], "no concluyente")
+        xs = [1+2.**(-i) for i in range(55)]
+        obs = estimar_convergencia(xs)
+        self.assertEqual(obs["clasificacion"], "lineal")
+        self.assertAlmostEqual(obs["orden"], 1)
+        self.assertIn("redondeo", obs["explicacion"])
+
+    def test_ordenes_oscilantes_y_contraccion_debil_no_se_clasifican(self):
+        for cambios in ((.5, .25, .1, .05, .01), (1, .9999, .9998, .9997)):
+            xs = [0]
+            for e in cambios:
+                xs.append(xs[-1]+e)
+            self.assertEqual(estimar_convergencia(xs)["clasificacion"], "no concluyente")
+
+    def test_constante_de_newton_contra_derivadas_independientes(self):
+        for f, ejercicio in (("x^3-4*x-9", "III-1"), ("x^3+x-1", "III-8")):
+            r = float(REFERENCIAS[ejercicio]["raices_en_[-10,10]"][-1])
+            df = 3*r*r + (-4 if ejercicio == "III-1" else 1)
+            constante = abs(3*r/df)  # |f''(r)/(2 f'(r))|.
+            res = resolver_newton(f, 3 if ejercicio == "III-1" else 1, tolerancia=1e-12)
+            self.assertAlmostEqual(res["convergencia_observada"]["constante_asintotica"],
+                                   constante, delta=.08)

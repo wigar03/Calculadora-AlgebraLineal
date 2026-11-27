@@ -7,6 +7,10 @@ p_k = ln(e_(k+1)/e_k) / ln(e_k/e_(k-1)); C_k = e_(k+1)/e_k**p.
 Se toman hasta cinco cambios finales decrecientes, anteriores al ruido de
 64 ulp de sus aproximaciones; hacen falta dos órdenes locales estables.
 La mediana de esos dos órdenes reduce la oscilación propia de la secante.
+Se admite una dispersión <= 0.3; las bandas son 1 +/- 0.12 y 2 +/- 0.2.
+C es la mediana de los dos últimos C_k calculados con el orden estimado;
+la razón informa e_(k+1)/e_k (solo coincide con C para orden uno).
+No se usa la tolerancia como error en x: puede ser relativa o de residuo.
 """
 import math
 from statistics import median
