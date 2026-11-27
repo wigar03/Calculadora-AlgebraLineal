@@ -28,6 +28,20 @@ def pasos_fuente(respuesta):
 
 
 class TestProcedimientosLineales(unittest.TestCase):
+    def test_entrada_exportada_conserva_los_datos_del_usuario(self):
+        for caso in casos_lineales():
+            if caso["ruta"] not in ("/api/vectores/operar", "/api/matrices/operar", "/api/vectores/combinacion"):
+                continue
+            with self.subTest(caso=caso["cuerpo"]):
+                p = ADAPTADORES[caso["ruta"]](caso["respuesta"], caso["cuerpo"])
+                self.assertTrue(p["entrada"])
+                for item in p["entrada"]:
+                    self.assertTrue(item["latex"])
+        caso = next(c for c in casos_lineales() if c["ruta"] == "/api/vectores/combinacion")
+        p = ADAPTADORES[caso["ruta"]](caso["respuesta"], {"vectores": [["1/7", "2"]], "b": ["3", "4"]})
+        self.assertEqual([i["etiqueta"] for i in p["entrada"]], ["v_1", "b"])
+        self.assertIn("1/7", p["entrada"][0]["latex"])
+
     def test_corpus_valido_mismos_pasos_y_sin_mutaciones(self):
         for caso in casos_lineales():
             with self.subTest(ruta=caso["ruta"], cuerpo=caso["cuerpo"]):

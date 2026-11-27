@@ -16,6 +16,13 @@ def _item(etiqueta, latex):
     return {"etiqueta": etiqueta, "latex": str(latex)}
 
 
+def _entradas(cuerpo, vectores=(), matrices=(), escalares=()):
+    salida = [_item(k, _matriz_latex([[v] for v in cuerpo[k]])) for k in vectores if k in cuerpo]
+    salida.extend(_item(k, _matriz_latex(cuerpo[k])) for k in matrices if k in cuerpo)
+    salida.extend(_item(k, cuerpo[k]) for k in escalares if k in cuerpo)
+    return salida
+
+
 def _pasos(respuesta):
     for clave in ("pasos", "desglose_componentes", "pasos_multiplicacion", "pasos_mapeo"):
         if clave not in respuesta:
@@ -42,6 +49,7 @@ def _base(respuesta, modulo, titulo):
 @registrar("/api/vectores/operar")
 def adaptar_vectores(respuesta, cuerpo):
     p = _base(respuesta, "vectores", "Vectores")
+    p["entrada"] = _entradas(cuerpo, vectores=("u", "v"), escalares=("c",))
     p["resultado"] = [_item("Resultado", respuesta["resultado_str"])]
     return p
 
@@ -49,6 +57,7 @@ def adaptar_vectores(respuesta, cuerpo):
 @registrar("/api/matrices/operar")
 def adaptar_matrices(respuesta, cuerpo):
     p = _base(respuesta, "matrices", "Matrices")
+    p["entrada"] = _entradas(cuerpo, matrices=("A", "B"), escalares=("k",))
     p["resultado"] = [_item("Resultado", _matriz_latex(respuesta["matriz_resultado"]))]
     p["verificacion"] = list(respuesta.get("propiedades", []))
     return p
@@ -57,6 +66,9 @@ def adaptar_matrices(respuesta, cuerpo):
 @registrar("/api/vectores/combinacion")
 def adaptar_combinacion(respuesta, cuerpo):
     p = _base(respuesta, "combinacion", "Combinación lineal")
+    p["entrada"] = [_item(f"v_{j}", _matriz_latex([[v] for v in vector]))
+                    for j, vector in enumerate(cuerpo.get("vectores", []), 1)]
+    p["entrada"].extend(_entradas(cuerpo, vectores=("b",)))
     p["resultado"] = [_item(nombre, valor) for nombre, valor in respuesta["escalares"].items()]
     p["verificacion"] = list(respuesta["comprobacion"])
     p["avisos"].extend(respuesta[k] for k in ("tipo_solucion", "expresion_algebraica") if respuesta.get(k))
