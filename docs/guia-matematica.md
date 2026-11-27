@@ -60,6 +60,12 @@ Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v =
 
 Se admiten $`1 \le n \le 15`$ componentes y $`1 \le k \le 10`$ vectores. Con objetivo cero, el resultado indica independencia, rango y, si hay dependencia, una relación no trivial y un vector despejado.
 
+Con $`b=0`$, la pertenencia por sí sola no demuestra dependencia: elija este objetivo para estudiar el sistema
+homogéneo. Si $`\mathrm{rg}(V)=k`$, solo existe la solución trivial y los vectores son independientes. Si
+$`\mathrm{rg}(V)\lt k`$, se muestra una relación $`\sum_{i=1}^k c_i v_i=0`$ con coeficientes no todos nulos.
+El procedimiento sustituye esos coeficientes componente a componente, obtiene el vector cero y comprueba el
+vector despejado con fracciones exactas. Así se verifica algebraicamente la conclusión de los ejercicios 60–64.
+
 Dado un conjunto de vectores $`S = \{v_1, v_2, \dots, v_k\} \subset \mathbb{R}^n`$ y un vector objetivo $`b \in \mathbb{R}^n`$, $`b`$ es combinación lineal de $`S`$ si existen escalares $`c_1, c_2, \dots, c_k \in \mathbb{R}`$ tales que:
 
 ```math
@@ -224,10 +230,11 @@ A \cdot x = b
 
 El proceso de análisis y resolución comprende:
 
-1. **Matriz Aumentada**: Se construye $`[A \mid b] \in \mathcal{M}_{m \times (n+1)}(\mathbb{R})`$.
-2. **Llamada Directa al Motor de la Semana #3**: Se invoca directamente el módulo de eliminación por renglones desarrollado en el proyecto anterior, obteniendo la matriz escalonada y reducida junto con el registro detallado de las operaciones elementales de fila (intercambio de filas, multiplicación por escalar y adición de múltiplos de otra fila).
-3. **Clasificación y Solución**: Aplicación rigurosa del Teorema de Rouché-Capelli para determinar si el sistema es Compatible Determinado (solución única), Compatible Indeterminado (infinitas soluciones con parámetros libres) o Incompatible (sin solución).
-4. **Comprobación Computacional del Residuo**: En sistemas consistentes con solución $`x_{\mathrm{sol}}`$, el programa comprueba computacionalmente que el vector residual sea exactamente cero:
+1. **Forma matricial explícita**: Se muestra $`A\cdot X=B`$ con la matriz de coeficientes, $`X=(x_1,\ldots,x_n)^T`$ y $`B=(b_1,\ldots,b_m)^T`$, también en la exportación LaTeX; no requiere que $`m=n`$ (ejercicios 50–54).
+2. **Matriz Aumentada**: Se construye $`[A \mid b] \in \mathcal{M}_{m \times (n+1)}(\mathbb{R})`$.
+3. **Llamada Directa al Motor de la Semana #3**: Se invoca directamente el módulo de eliminación por renglones desarrollado en el proyecto anterior, obteniendo la matriz escalonada y reducida junto con el registro detallado de las operaciones elementales de fila (intercambio de filas, multiplicación por escalar y adición de múltiplos de otra fila).
+4. **Clasificación y Solución**: Aplicación rigurosa del Teorema de Rouché-Capelli para determinar si el sistema es Compatible Determinado (solución única), Compatible Indeterminado (infinitas soluciones con parámetros libres) o Incompatible (sin solución).
+5. **Comprobación Computacional del Residuo**: En sistemas consistentes con solución $`x_{\mathrm{sol}}`$, el programa comprueba computacionalmente que el vector residual sea exactamente cero:
 
 ```math
 r = A \cdot x_{\mathrm{sol}} - b = 0
@@ -294,6 +301,40 @@ Cumpliendo la especificación requerida, la aplicación evalúa e informa **ante
 
 ---
 
+### Uso común de los cuatro métodos de raíces
+
+**Condición de la raíz.** El selector ofrece cualquier raíz real, positiva o positiva no nula. Las dos opciones
+positivas exigen $`x\gt0`$ y excluyen cero; no basta con acercarse a la raíz cero cuando el enunciado la excluye.
+Seleccione la condición antes de resolver y revise su comprobación en el resultado y el procedimiento exportado.
+
+**Recomendar método.** Después de escribir función e intervalo o puntos iniciales, este botón presenta una
+orientación razonada para Bisección, Regla Falsa, Newton-Raphson y Secante. Examina dominio, cambio de signo,
+derivada y primeros pasos evaluables según los datos disponibles. Si faltan datos útiles, indica qué revisar.
+El usuario conserva la elección del método y los puntos iniciales; la recomendación previa no garantiza
+convergencia ni una raíz admisible. Una gráfica tampoco sustituye el análisis de dominio.
+
+**Convergencia observada.** Los cuatro resultados y sus exportaciones informan una clasificación y, si hay
+historial útil suficiente, estimaciones del orden $`p`$ y la constante asintótica $`C`$. Se usan diferencias
+absolutas sucesivas, sin suponer conocida la raíz verdadera:
+
+```math
+e_k=|x_k-x_{k-1}|,\qquad
+p_k\approx\frac{\ln(e_{k+1}/e_k)}{\ln(e_k/e_{k-1})},\qquad
+C_k\approx\frac{e_{k+1}}{e_k^p}.
+```
+
+Se distinguen **lineal**, **superlineal**, **cuadrática** y **no concluyente**. La razón entre cambios solo
+coincide con $`C`$ para orden uno. Se descartan cambios dominados por redondeo y se exige estabilidad de los
+órdenes locales; pocas iteraciones o cambios irregulares dejan el diagnóstico no concluyente. En bisección
+describe la contracción de los cambios, no el orden del error verdadero. Este diagnóstico empírico no demuestra
+convergencia ni existencia de raíz y no sustituye el residuo, el criterio de parada ni la certificación.
+
+**API compartida.** Las cuatro rutas de resolución admiten `condicion`: `real` (predeterminada), `positiva`
+o `positiva_no_nula`. Devuelven el diagnóstico en `convergencia_observada`, con `clasificacion`, `orden`,
+`constante_asintotica` y su explicación; los valores no estimables son `null`.
+`POST /api/raices/recomendar` recibe `funcion` y, según lo disponible, `a`, `b`, `x0`, `x1` y `condicion`;
+devuelve `recomendado`, `metodos` con motivos y `justificacion`. Puede no recomendar ningún método.
+
 ### Módulo 7: Método de Bisección
 
 Abra la pestaña **Método de Bisección**. Ingrese una función continua en todo el intervalo $`[a,b]`$, con $`a < b`$ y valores $`f(a)`$ y $`f(b)`$ de signos opuestos. Si un extremo se evalúa como cero, se informa directamente sin iteraciones. El cambio de signo garantiza existencia de una raíz únicamente bajo la hipótesis de continuidad; no garantiza unicidad. La aplicación no demuestra automáticamente esa hipótesis.
@@ -321,6 +362,12 @@ La diferencia absoluta de la tabla mide el cambio entre dos aproximaciones, no e
 **Entradas admitidas:** use `x` como variable, multiplicación explícita (`2*x`), operadores `+`, `-`, `*`, `/`, potencias con `^` o `**`, paréntesis, constantes `pi` y `e`, y funciones `sin` (también `sen`), `cos`, `tan`, `asin`, `acos`, `atan`, `exp`, `ln` (natural), `log` (base 10), `sqrt` y `abs`. También se admiten igualdades como `ln(x) + sen(x) = 1.2`. Los ángulos están en radianes. Los extremos y la tolerancia aceptan decimales con punto, fracciones como `1/2` y notación científica como `1e-4`.
 
 El lenguaje compartido de los cuatro métodos acepta superíndices Unicode completos (`x¹⁰`, `x⁵`, `10⁻⁶`) y el signo menos Unicode `−`. Este signo también se admite en entradas numéricas; la tolerancia admite fracciones en los métodos de raíces y en Iterativos.
+
+En las entradas de raíces, la coma decimal se diagnostica y se pide usar punto: escriba `0.5`, no `0,5`.
+Esto no cambia el CSV exportado para hojas de cálculo en español, que utiliza coma decimal.
+La certificación distingue tolerancias porcentuales de fracciones y muestra avisos si no puede demostrar una
+raíz admisible cercana, incluso cuando se alcanza el criterio de parada. En Bisección y Regla Falsa el error
+relativo de parada es porcentual; en Newton-Raphson y Secante es una fracción sin porcentaje.
 
 **Límites y diagnósticos:** tolerancia finita mayor que cero, máximo entero de 1 a 1000 iteraciones, función de hasta 500 caracteres y 120 nodos de expresión, y exponentes de magnitud máxima 1000. Se rechazan sintaxis no permitida, entradas no finitas, intervalos sin cambio de signo y errores de dominio detectados durante la evaluación. Alcanzar el máximo de iteraciones o agotar la precisión se informa sin declarar que se alcanzó la tolerancia. Las evaluaciones usan punto flotante: un cero calculado puede deberse al redondeo o al subdesbordamiento, y la cota del intervalo no incluye los errores de evaluación de la función. Solo se redondea la presentación; el cursor sobre las cifras permite consultar el valor completo.
 
@@ -369,6 +416,8 @@ Si $`f(x_l)\cdot f(x_r) < 0`$, $`x_u \leftarrow x_r`$; si es $`> 0`$, $`x_l \lef
 El análisis de continuidad es numérico (401 muestras con refinamiento) y orientativo: no demuestra continuidad y puede pasar por alto discontinuidades más estrechas que la separación entre muestras. Cuando un extremo queda fijo durante 10 o más iteraciones seguidas se informa el estancamiento, como ocurre con $`x^{10}-1`$ en $`[0, 1.3]`$. Los valores de los ejemplos se recalculan desde la función ingresada; con $`x^4 - 5x^3 + 0.5x^2 - 11x + 10`$ en $`[4.95, 5.5]`$ y tolerancia $`0.01\%`$ se obtienen 5 iteraciones y $`x_r \approx 5.2360550811`$.
 
 Por diseño, además del error porcentual se exige que el residuo escalado $`|f(x_r)|/s`$, con $`s=\max(1,\min(|f(x_l^{(0)})|,|f(x_u^{(0)})|))`$, sea menor o igual que la tolerancia digitada. Esta guarda evita declarar convergencia por un cambio pequeño con residuo elevado; también se reconoce un cero evaluado de la función.
+
+La presentación de Regla Falsa usa hasta 10 cifras significativas; los cálculos conservan la precisión interna.
 
 #### API de regla falsa
 
