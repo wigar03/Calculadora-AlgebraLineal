@@ -13,7 +13,7 @@ function errorReal(expr) {
   return execFileSync('python', ['-c', py, expr], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
 }
 
-function crearEntorno(mensajeError) {
+function crearEntorno(mensajeError, responder) {
   const els = new Map(), ready = [], timers = [];
   const crearNodo = (tag = 'div', id = '') => {
     const evs = {};
@@ -44,7 +44,8 @@ function crearEntorno(mensajeError) {
     FormData: class { constructor() { return [['funcion', '2x']]; } },
     renderLatexElement(el, s) { el.textContent = s; }, renderMixedLatex(el, s) { el.textContent = s; },
     setTimeout(fn) { timers.push(fn); return timers.length; }, clearTimeout() {}, requestAnimationFrame() {},
-    fetch: async () => ({ ok: false, status: 400, json: async () => ({ error: mensajeError }) }),
+    fetch: async (...args) => responder ? responder(...args) :
+      ({ ok: false, status: 400, json: async () => ({ error: mensajeError }) }),
   };
   ctx.globalThis = ctx;
   return {
@@ -92,5 +93,49 @@ test('Newton-Raphson y secante muestran diagnósticos específicos en sus alerta
     env.doc.getElementById(formId).dispatch('submit');
     await esperar();
     assert.deepEqual([env.doc.getElementById(errId).hidden, env.doc.getElementById(errId).textContent], [false, msg]);
+  }
+});
+
+test('INC-033: selectores accesibles con condición real predeterminada', () => {
+  const html=fs.readFileSync(path.join(WEB,'index.html'),'utf8');
+  for(const id of ['bis-condicion','rf-condicion','nr-condition','sc-condition']){
+    const selector=html.match(new RegExp('<select id="'+id+'"[^>]*>(.*?)</select>'));
+    assert.ok(selector,id);
+    assert.match(html,new RegExp('<label[^>]*for="'+id+'"'));
+    assert.match(selector[0],/name="condicion"/);
+    assert.deepEqual([...selector[1].matchAll(/value="([^"]+)"/g)].map(m=>m[1]),
+      ['real','positiva','positiva_no_nula']);
+  }
+});
+
+test('INC-033: los cuatro botones envían los datos escritos y muestran la justificación', async () => {
+  for(const [archivo,prefijo,funcionId,condicionId] of [
+    ['biseccion.js','bis','bis-funcion','bis-condicion'],
+    ['regla-falsa.js','rf','rf-funcion','rf-condicion'],
+    ['newton-raphson.js','nr','nr-function','nr-condition'],
+    ['secante.js','sc','sc-function','sc-condition']]){
+    const llamadas=[], respuesta={recomendado:'biseccion',justificacion:'Intervalo validado; no garantiza convergencia.',
+      metodos:[{metodo:'biseccion',apto:true,motivos:['Dominio continuo.']}]};
+    const env=crearEntorno('',async(url,opciones)=>{
+      llamadas.push([url,JSON.parse(opciones.body)]);
+      return {ok:true,json:async()=>respuesta};
+    });
+    env.cargar(archivo);
+    env.doc.getElementById(funcionId).value='x^2-5*sin(x)';
+    env.doc.getElementById(condicionId).value='positiva_no_nula';
+    for(const k of ['a','b','x0','x1','xl','xu'])env.doc.getElementById(prefijo+'-'+k).value='2';
+    env.doc.getElementById(prefijo+'-b').value='3';
+    if(prefijo==='bis'){
+      const f=env.doc.getElementById('bis-form').elements;
+      f.funcion.value='x^2-5*sin(x)';f.a.value='2';f.b.value='3';
+    }
+    const boton=env.doc.getElementById(prefijo+'-recommend');boton.dispatch('click');
+    await esperar();
+    assert.equal(llamadas[0][0],'/api/raices/recomendar',archivo);
+    assert.equal(llamadas[0][1].condicion,'positiva_no_nula',archivo);
+    assert.equal(llamadas[0][1].funcion,'x^2-5*sin(x)',archivo);
+    const salida=env.doc.getElementById(prefijo+'-recommendation');
+    assert.ok(salida.children.some(p=>p.textContent.includes('no garantiza convergencia')),archivo);
+    assert.equal(boton.disabled,false,archivo);
   }
 });

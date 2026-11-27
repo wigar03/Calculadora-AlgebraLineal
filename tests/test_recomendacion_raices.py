@@ -1,6 +1,7 @@
 """INC-033: orientación previa con dominio y condiciones explícitas."""
 import unittest
 
+from src.raices.recomendacion import recomendar_metodo
 from src.ui.web_server import servidor_local
 from tests.test_golden_api import consultar
 from tests.test_banco_raices import REFERENCIAS
@@ -67,3 +68,41 @@ class TestRecomendacionRaices(unittest.TestCase):
                 else:
                     self.assertEqual(res["motivo"], "raiz_no_admisible")
                 self.assertTrue(any("positiva" in it["latex"] for it in res["procedimiento"]["entrada"]))
+
+    def test_entradas_invalidas_conservan_error_de_entrada(self):
+        for datos in ({}, {"funcion": "2x"}, {"funcion": "x", "condicion": "negativa"},
+                      {"funcion": "x", "a": "texto", "b": 1}):
+            estado, res = consultar(self.url, "/api/raices/recomendar", datos)
+            self.assertEqual(estado, 400, res)
+            self.assertIn("error", res)
+
+
+class TestMotorRecomendacion(unittest.TestCase):
+    def test_derivada_costosa_prefiere_secante_sin_intervalo(self):
+        f = "*".join(f"(x+{i})" for i in range(1, 11))+"-100"
+        res = recomendar_metodo(f, x0=.1, x1=.2)
+        self.assertEqual(res["recomendado"], "secante")
+        newton = next(m for m in res["metodos"] if m["metodo"] == "newton_raphson")
+        self.assertIn("costosa", " ".join(newton["motivos"]))
+
+    def test_consejo_no_depende_de_la_escala_de_la_funcion(self):
+        for f in ("x^3-4*x-9", "1e-100*(x^3-4*x-9)"):
+            res = recomendar_metodo(f, x0=3)
+            self.assertEqual(res["recomendado"], "newton_raphson")
+
+    def test_intervalo_positivo_no_recomienda_raiz_cero_excluida(self):
+        res = recomendar_metodo("x^2-5*sin(x)", a=0, b=1, x0=0, x1=1,
+                                condicion="positiva_no_nula")
+        self.assertIsNone(res["recomendado"])
+        self.assertFalse(any(m["apto"] for m in res["metodos"]))
+
+    def test_curvatura_no_se_presume_por_muestreo(self):
+        res = recomendar_metodo("sin(x)", a=-1, b=1)
+        rf = next(m for m in res["metodos"] if m["metodo"] == "regla_falsa")
+        self.assertNotIn("conserva signo", " ".join(rf["motivos"]))
+
+    def test_semilla_fuera_del_dominio_y_par_invalido(self):
+        for datos in (dict(a=-1, b=0, x0=0, x1=-1), dict(x0=0, x1=0)):
+            res = recomendar_metodo("ln(x)-1", **datos)
+            self.assertIsNone(res["recomendado"])
+            self.assertFalse(any(m["apto"] for m in res["metodos"]))
