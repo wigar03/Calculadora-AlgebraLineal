@@ -115,6 +115,40 @@
     const dx=unidad*G.MARCO.ancho*.7,dy=unidad*G.MARCO.alto*.7;
     return {xMin:(x0+x1)/2-dx,xMax:(x0+x1)/2+dx,yMin:(y0+y1)/2-dy,yMax:(y0+y1)/2+dy};
   }
+  function svgNodo(tag,atributos={},texto) {
+    const n=document.createElementNS('http://www.w3.org/2000/svg',tag);
+    for(const [k,v] of Object.entries(atributos))n.setAttribute(k,v);
+    if(texto!==undefined)n.textContent=texto;
+    return n;
+  }
+  function dibujarEjes(svg,v,e) {
+    const {x,y,ancho,alto}=G.MARCO;
+    const linea=(a,b,c,d,clase)=>svg.append(svgNodo('line',{x1:a,y1:b,x2:c,y2:d,class:clase}));
+    for(const t of G.marcas(v.xMin,v.xMax,5)) {
+      linea(e.x(t),y,e.x(t),y+alto,'r2-grid');
+      svg.append(svgNodo('text',{x:e.x(t),y:y+alto+20,'text-anchor':'middle',class:'r2-text'},G.formatear(t,4)));
+    }
+    for(const t of G.marcas(v.yMin,v.yMax,5)) {
+      linea(x,e.y(t),x+ancho,e.y(t),'r2-grid');
+      svg.append(svgNodo('text',{x:x-8,y:e.y(t)+4,'text-anchor':'end',class:'r2-text'},G.formatear(t,4)));
+    }
+    linea(x,e.y(0),x+ancho,e.y(0),'r2-axis');
+    linea(e.x(0),y,e.x(0),y+alto,'r2-axis');
+    svg.append(svgNodo('text',{x:x+ancho,y:y+alto+40,'text-anchor':'end',class:'r2-text'},'x₁'));
+    svg.append(svgNodo('text',{x:x-8,y:10,'text-anchor':'end',class:'r2-text'},'x₂'));
+  }
+  function dibujarFlecha(svg,f,e) {
+    const x=e.x(f.desde[0]),y=e.y(f.desde[1]),X=e.x(f.hasta[0]),Y=e.y(f.hasta[1]);
+    const dx=X-x,dy=Y-y,largo=Math.hypot(dx,dy),color=f.color;
+    svg.append(svgNodo('line',{x1:x,y1:y,x2:X,y2:Y,stroke:color,class:f.cadena?'r2-chain':'r2-vector'}));
+    if(largo>1) {
+      const ux=dx/largo,uy=dy/largo,t=Math.min(9,largo*.4),ancho=t*.45;
+      const puntos=`${X},${Y} ${X-t*ux-ancho*uy},${Y-t*uy+ancho*ux} ${X-t*ux+ancho*uy},${Y-t*uy-ancho*ux}`;
+      svg.append(svgNodo('polygon',{points:puntos,fill:color}));
+    } else svg.append(svgNodo('circle',{cx:X,cy:Y,r:3,fill:color}));
+    const px=f.cadena?(x+X)/2:X,py=f.cadena?(y+Y)/2:Y;
+    svg.append(svgNodo('text',{x:px+6,y:py-7,fill:color,class:'r2-label'},f.etiqueta));
+  }
   const api={numero,vectores,combinacion,ecuaciones,recortarRecta,vistaAutomatica};
   if(typeof module!=='undefined' && module.exports)module.exports=api;
   if(typeof window!=='undefined')window.GraficaR2=api;
