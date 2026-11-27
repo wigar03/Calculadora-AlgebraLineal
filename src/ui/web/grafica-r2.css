@@ -1,0 +1,16 @@
+/* INC-035: mismas variables de color y marco de las gráficas del cuaderno. */
+.r2-graph { border-top: 1px solid var(--notebook-rule); margin-top: 1.2rem; padding-top: 1rem; min-width: 0; }
+.r2-graph[hidden] { display: none; }
+.r2-plot svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.r2-grid { stroke: var(--notebook-rule); stroke-width: .6; }
+.r2-axis { stroke: var(--notebook-muted); stroke-width: 1; }
+.r2-text { fill: var(--notebook-muted); font: 12px 'JetBrains Mono', monospace; }
+.r2-label { fill: var(--notebook-ink); font: 12px 'JetBrains Mono', monospace; paint-order: stroke; stroke: var(--notebook-paper); stroke-width: 3px; stroke-linejoin: round; }
+.r2-vector { stroke-width: 2.5; }
+.r2-chain { stroke-width: 2; stroke-dasharray: 5 3; }
+.r2-guide { stroke: var(--notebook-muted); stroke-width: 1.2; stroke-dasharray: 4 4; }
+.r2-angle { stroke: var(--notebook-accent); stroke-width: 1.5; fill: none; }
+.r2-legend { list-style: none; display: flex; flex-wrap: wrap; gap: .35rem 1rem; padding: 0; font-size: .78rem; color: var(--notebook-muted); }
+.r2-legend li { display: flex; align-items: baseline; gap: .4rem; overflow-wrap: anywhere; min-width: 0; }
+.r2-swatch { width: 1rem; height: 2.5px; flex: none; }
+@media print { .r2-graph, .r2-plot { break-inside: avoid; page-break-inside: avoid; } }

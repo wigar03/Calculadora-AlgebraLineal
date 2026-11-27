@@ -149,7 +149,57 @@
     const px=f.cadena?(x+X)/2:X,py=f.cadena?(y+Y)/2:Y;
     svg.append(svgNodo('text',{x:px+6,y:py-7,fill:color,class:'r2-label'},f.etiqueta));
   }
-  const api={numero,vectores,combinacion,ecuaciones,recortarRecta,vistaAutomatica};
+  function limpiar(host) {
+    if(!host)return;
+    host.replaceChildren();host.hidden=true;
+  }
+  function renderizar(host,m) {
+    limpiar(host);
+    if(!host || !m)return;
+    host.hidden=false;
+    const html=(tag,clase,texto)=>{const n=document.createElement(tag);n.className=clase;n.textContent=texto;return n;};
+    host.append(html('h4','latex-header',m.titulo));
+    const v=vistaAutomatica(m);
+    if(!Object.values(v).every(Number.isFinite) || !(v.xMax>v.xMin && v.yMax>v.yMin)) {
+      host.append(html('p','result-explanation','La magnitud de los datos excede la escala de la gráfica. Consulte el resultado exacto.'));
+      return;
+    }
+    const e=G.crearEscala(v),detalles=[...m.flechas.map(f=>f.detalle),...(m.rectas||[]).map(r=>r.etiqueta)];
+    const desc=[m.descripcion,...detalles,m.puntoExacto?`Intersección: ${m.puntoExacto}`:''].filter(Boolean).join(' ');
+    const svg=svgNodo('svg',{viewBox:'0 0 600 330',role:'img','aria-label':`${m.titulo}. ${desc}`});
+    svg.append(svgNodo('title',{},m.titulo),svgNodo('desc',{},desc));
+    dibujarEjes(svg,v,e);
+    for(const s of m.segmentos)svg.append(svgNodo('line',{x1:e.x(s.desde[0]),y1:e.y(s.desde[1]),
+      x2:e.x(s.hasta[0]),y2:e.y(s.hasta[1]),class:'r2-guide'}));
+    (m.rectas||[]).forEach((r,i)=>{
+      const extremos=recortarRecta(r,v);
+      if(extremos.length!==2)return;
+      const [[x,y],[X,Y]]=extremos;
+      svg.append(svgNodo('line',{x1:e.x(x),y1:e.y(y),x2:e.x(X),y2:e.y(Y),stroke:r.color,
+        'stroke-dasharray':i?'8 4':'none',class:'r2-vector'}));
+      const t=.12+.7*(i+1)/(m.rectas.length+1);
+      svg.append(svgNodo('text',{x:e.x(x+(X-x)*t)+5,y:e.y(y+(Y-y)*t)-5,fill:r.color,class:'r2-label'},`E${i+1}`));
+    });
+    m.flechas.forEach(f=>dibujarFlecha(svg,f,e));
+    if(m.angulo) {
+      const {inicio,giro}=m.angulo,r=26;
+      const p=a=>[e.x(0)+r*Math.cos(a),e.y(0)-r*Math.sin(a)];
+      svg.append(svgNodo('path',{d:`M${p(inicio)} A${r},${r} 0 0 ${giro<0?1:0} ${p(inicio+giro)}`,class:'r2-angle'}));
+    }
+    if(m.punto) {
+      svg.append(svgNodo('circle',{cx:e.x(m.punto[0]),cy:e.y(m.punto[1]),r:5,fill:COLORES[2]}));
+      svg.append(svgNodo('text',{x:e.x(m.punto[0])+8,y:e.y(m.punto[1])-10,class:'r2-label'},m.puntoExacto));
+    }
+    const plot=html('div','bis-plot r2-plot','');plot.append(svg);host.append(plot);
+    host.append(html('p','result-explanation',m.descripcion));
+    const leyenda=html('ul','r2-legend','');
+    for(const f of [...m.flechas,...(m.rectas||[])]) {
+      const li=html('li','',f.detalle||f.etiqueta),marca=html('span','r2-swatch','');
+      marca.style.background=f.color;marca.setAttribute('aria-hidden','true');li.prepend(marca);leyenda.append(li);
+    }
+    host.append(leyenda,html('p','result-explanation','Gráfica orientativa; no sustituye el procedimiento ni la verificación exacta.'));
+  }
+  const api={numero,vectores,combinacion,ecuaciones,recortarRecta,vistaAutomatica,renderizar,limpiar};
   if(typeof module!=='undefined' && module.exports)module.exports=api;
   if(typeof window!=='undefined')window.GraficaR2=api;
 })();
