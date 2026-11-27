@@ -46,7 +46,7 @@ body {
 .exp-control, .exp-menu, .rf-steps, .card-footer-actions, .sample-actions, .action-grid,
 .notation-toggle-group, .it-actions-row, .it-text-box, .bis-keyboard, .bis-keyboard-toolbar,
 .bis-syntax-reference, .bis-graph-controls, .nr-controls, .rf-readout, #nr-readout, #sc-readout,
-.bis-detail-cell, .rf-link, .rf-candidates-block, .solver-method-selector, .nr-criteria, .it-checkbox,
+.biseccion-pane .bis-detail-cell, .biseccion-pane .bis-detail-head, .rf-link, .rf-candidates-block, .solver-method-selector, .nr-criteria, .it-checkbox,
 .efficiency-panel, .bis-theory, .btn-step, .mini-stepper button, button {
   display: none !important;
 }

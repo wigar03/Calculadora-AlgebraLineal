@@ -2,7 +2,7 @@
 const fs=require('node:fs'), path=require('node:path'), vm=require('node:vm');
 const WEB=path.join(__dirname,'../../src/ui/web');
 function nodo(tag,text='',clase=''){
-  return {tag,children:[],attrs:{},className:clase,_text:text??'',hidden:false,
+  return {tag,children:[],attrs:{},dataset:{},className:clase,_text:text??'',hidden:false,
     get textContent(){return this._text+this.children.map(n=>n.textContent??String(n)).join('');},
     set textContent(s){this._text=s;this.children=[];},
     append(...ns){this.children.push(...ns);},

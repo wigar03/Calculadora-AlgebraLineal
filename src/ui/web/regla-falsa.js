@@ -847,9 +847,10 @@
           celda.append(crearMixto("span", nombre || etiqueta, "bis-cell-label"), cifra);
           fila.append(celda);
         }
-        const accion = crear("td", undefined, "bis-detail-cell rf-action-cell");
-        if (paso.decision === "Finalizar") accion.textContent = "Finalizar";
-        else renderLatexElement(accion, paso.decision === "x_u ← x_r" ? "x_u \\leftarrow x_r" : "x_l \\leftarrow x_r", false);
+        const accion = crear("td", undefined, "bis-cell rf-action-cell"), valorAccion = crear("span");
+        if (paso.decision === "Finalizar") valorAccion.textContent = "Finalizar";
+        else renderLatexElement(valorAccion, paso.decision === "x_u ← x_r" ? "x_u \\leftarrow x_r" : "x_l \\leftarrow x_r", false);
+        accion.append(crear("span", "Acción", "bis-cell-label"), valorAccion);
         accion.title = `Signo de f(x_l)·f(x_r): ${paso.signo_producto}`;
         fila.append(accion);
         cuerpo.append(fila);

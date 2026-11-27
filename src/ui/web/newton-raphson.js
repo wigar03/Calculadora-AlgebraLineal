@@ -237,7 +237,7 @@
     function tabla(r) {
       const headers=["n","x_n","f(x_n)","f'(x_n)","E_a","\\varepsilon_r"];
       const t=crear("table"), head=crear("thead"), hr=crear("tr"), body=crear("tbody");
-      headers.forEach(h=>{const th=crear("th"); th.scope="col"; th.append(math(h,false)); hr.append(th);}); hr.append(crear("th","Detalle")); head.append(hr);
+      headers.forEach(h=>{const th=crear("th"); th.scope="col"; th.append(math(h,false)); hr.append(th);}); hr.append(crear("th","Detalle","bis-detail-head")); head.append(hr);
       r.pasos.forEach((p,i)=>{
         const tr=crear("tr"); [p.n,p.x,p.fx,p.dfx,p.error_absoluto,p.error_relativo].forEach((v,j)=>{
           const td=crear("td",undefined,"bis-cell"); td.title=String(v??"No definido");

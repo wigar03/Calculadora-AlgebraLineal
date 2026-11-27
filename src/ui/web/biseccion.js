@@ -516,6 +516,7 @@
     for (const texto of ["$i$", "$a$", "$b$", "$c$", "$f(c)$", "$\\varepsilon_a\\;(\\%)$", "Detalle"]) {
       const celda = crearMixto("th", texto);
       celda.scope = "col";
+      if (texto === "Detalle") celda.className = "bis-detail-head";
       fila.append(celda);
     }
     cabecera.append(fila);

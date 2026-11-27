@@ -74,7 +74,7 @@
       out.append(mix(G.textoTolerancia(d.tolerancia_usada)));
       if(d.advertencias.length)out.append(mix(`Denominador pequeño en las iteraciones $${d.advertencias.join(",")}$: puede causar saltos grandes.`));
       const t=node("table"),h=node("thead"),hr=node("tr"),body=node("tbody");const headers=["n","x_{n-1}","x_n","x_{n+1}","|f(x_{n+1})|","E_a","\\varepsilon_r"];
-      headers.forEach(v=>{const th=node("th");th.scope="col";th.append(math(v,false));hr.append(th);});hr.append(node("th","Detalle"));h.append(hr);
+      headers.forEach(v=>{const th=node("th");th.scope="col";th.append(math(v,false));hr.append(th);});const detalle=node("th","Detalle");detalle.className="bis-detail-head";hr.append(detalle);h.append(hr);
       d.pasos.forEach(p=>{const row=node("tr");[p.n,p.a,p.b,p.c,Math.abs(p.fc),p.error_absoluto,p.error_relativo].forEach((v,i)=>{const td=node("td");td.className="bis-cell";td.title=String(v??"No definido");const l=node("span");l.className="bis-cell-label";l.append(math(headers[i],false));td.append(l,math(num(v),false));row.append(td);});const td=node("td"),details=node("details");td.className="bis-detail-cell";details.append(node("summary","Ver detalle"),math(sustitucion(p)));td.append(details);row.append(td);body.append(row);});
       t.append(h,body);el("table").replaceChildren(t);el("table-card").hidden=false;
     }
