@@ -11,6 +11,7 @@
 | v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
 | v1.0.0 | 2026-11-24 | **release estable publicada** (CI 45309347449 en verde) | primera estable, sin firma y sin prueba en Excel (autorizado) |
 | v1.1.0 | 2026-11-27 | **release estable publicada** (CI 46053742806 en verde) | banco final 50-64, auditoría de coherencia, orden observado, condición y recomendación |
+| v1.2.0 | 2026-11-27 | release estable (pendiente de CI del tag) | propuestas de UX C-22…C-28 aprobadas (INC-034) |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -99,3 +100,12 @@
   del tag; SHA-256 verificadas tras la CI y tras descargarlos sin autenticación por `/releases/latest/download/`.
   Portable en Windows 11 real: versión 1.1.0, 11 módulos, carga 3,2 s. En la CI, el primer arranque en frío del
   portable tardó 47,9 s (INC-031, dentro del margen de 120 s); instalada y reinstalada ≈ 2 s.
+
+## v1.2.0 — coherencia de la interfaz (INC-034)
+- **Motivo:** cambios de UX aprobados por el propietario (C-22, C-23 parcial, C-24, C-25, C-26, C-27, C-28a), sin
+  cambios en resultados matemáticos (43 respuestas doradas iguales; 49 + 15 ejercicios validados).
+- **Corrección antes de publicar:** la CI de 71c4f60 falló en Linux (la prueba de C-25 exigía `pointer: fine`, que
+  Chrome sin ventana en Linux no informa) y en `externos` (recuentos fijos del corpus sin el análisis exportable de
+  C-28a). Corregidas ambas pruebas; las herramientas reales compilan e importan el documento nuevo.
+- **Sigue sin firma digital y sin prueba en Excel.** **Notas:** `docs/notas-v1.2.0.md`.
+
