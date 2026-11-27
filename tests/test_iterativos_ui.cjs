@@ -99,6 +99,23 @@ test('series de gráficas de evolución y convergencia log10 reutilizan grafica-
   for (const s of conv.series) assert.ok(s.puntos.every(p => Number.isFinite(p.y)));
 });
 
+test('gráficas estáticas permiten scroll vertical y trazos con contraste en oscuro', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'src/ui/web/iterativos.css'), 'utf8');
+  assert.match(css, /#it-plot-vars svg,\s*#it-plot-conv svg\s*\{[^}]*touch-action:\s*pan-y;[^}]*cursor:\s*default;/);
+  const oscuro = css.match(/\[data-theme="dark"\] \.iterativos-pane\s*\{([^}]+)\}/)?.[1] || '';
+  const luminancia = hex => {
+    const canales = hex.match(/\w\w/g).map(x => parseInt(x, 16) / 255)
+      .map(c => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    return canales.reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
+  };
+  for (let i = 0; i < it.PALETA.length; i++) {
+    assert.match(it.PALETA[i], new RegExp(`^var\\(--it-color-${i}, #[0-9a-f]{6}\\)$`));
+    const color = oscuro.match(new RegExp(`--it-color-${i}:\\s*#([0-9a-f]{6})`))?.[1];
+    assert.ok(color, `Falta color oscuro ${i}`);
+    assert.ok((luminancia(color) + 0.05) / (luminancia('111827') + 0.05) >= 3);
+  }
+});
+
 const { execFileSync } = require('node:child_process');
 const vm = require('node:vm');
 

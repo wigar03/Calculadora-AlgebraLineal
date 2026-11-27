@@ -51,3 +51,9 @@
   .iterativos-pane .it-compare-grid { grid-template-columns: minmax(0, 1fr); }
 }
 .iterativos-pane [hidden] { display: none; }
+#it-plot-vars svg, #it-plot-conv svg { touch-action: pan-y; cursor: default; }
+[data-theme="dark"] .iterativos-pane {
+  --it-color-0: #7db5da; --it-color-1: #f2938c; --it-color-2: #72c49d;
+  --it-color-3: #e0b772; --it-color-4: #bfa2df; --it-color-5: #75c9c6;
+  --it-color-6: #f2aa7c; --it-color-7: #b0c87b; --it-color-8: #a3aff0; --it-color-9: #eaa0c0;
+}

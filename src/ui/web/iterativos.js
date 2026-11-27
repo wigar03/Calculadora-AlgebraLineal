@@ -24,7 +24,8 @@
     no_asegurada: { texto: "Convergencia no asegurada", clase: "it-badge-warn" }
   };
 
-  const PALETA = ["#426c89", "#8d342e", "#39705a", "#8a6024", "#7a5a9a", "#2f7a78", "#b35c2e", "#5b6d2e", "#4b558a", "#9c4767"];
+  const PALETA = ["#426c89", "#8d342e", "#39705a", "#8a6024", "#7a5a9a", "#2f7a78", "#b35c2e", "#5b6d2e", "#4b558a", "#9c4767"]
+    .map((color, i) => `var(--it-color-${i}, ${color})`);
 
   function nombreVarLatex(nombre, idx = 0) {
     const raw = typeof nombre === "string" && nombre.trim() ? nombre.trim() : `x_${idx + 1}`;
@@ -438,8 +439,8 @@
     function renderGraficas() {
       if (!ultimo) return;
       const entradas = ultimo.comparacion
-        ? [{ etiqueta: "Jacobi", datos: ultimo.jacobi, color: "#426c89", esTexto: true }, { etiqueta: "Gauss-Seidel", datos: ultimo.gauss_seidel, color: "#8d342e", guion: "6 3", esTexto: true }]
-        : [{ etiqueta: ultimo.datos.metodo === "gauss_seidel" ? "Gauss-Seidel" : "Jacobi", datos: ultimo.datos, color: "#426c89", esTexto: true }];
+        ? [{ etiqueta: "Jacobi", datos: ultimo.jacobi, color: PALETA[0], esTexto: true }, { etiqueta: "Gauss-Seidel", datos: ultimo.gauss_seidel, color: PALETA[1], guion: "6 3", esTexto: true }]
+        : [{ etiqueta: ultimo.datos.metodo === "gauss_seidel" ? "Gauss-Seidel" : "Jacobi", datos: ultimo.datos, color: PALETA[0], esTexto: true }];
       const hayIter = entradas.some(x => x.datos && Array.isArray(x.datos.iteraciones) && x.datos.iteraciones.length);
       el("charts-card").hidden = !hayIter;
       if (!hayIter) return;
