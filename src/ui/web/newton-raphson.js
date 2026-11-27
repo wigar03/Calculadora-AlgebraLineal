@@ -155,6 +155,7 @@
     function dibujar() {
       if (!estado.vista) return;
       const v=estado.vista, e=crearEscala(v), der=M.x+M.ancho, abajo=M.y+M.alto;
+      el("zoom-level").textContent=`${Math.round((estado.baseVista.xMax-estado.baseVista.xMin)/(v.xMax-v.xMin)*100)}%`;
       grid.replaceChildren(); trazos.replaceChildren(); etiquetas.replaceChildren();
       const usados=[];
       function label(x,y,texto) {
@@ -194,22 +195,24 @@
         label(e.x(res.raiz),M.y+35,`x_n\\approx ${num(res.raiz)}`);
       }
     }
-    async function muestrear() {
+    async function muestrear(ajustarVertical = false) {
       if(!estado.vista || !estado.funcion) return;
       const v=estado.vista;
       try {
         const d=await pedir("graficar",{funcion:estado.funcion,a:v.xMin,b:v.xMax},"grafica");
         if(!d) return;
-        estado.puntos=d.grafica; dibujar();
+        estado.puntos=d.grafica;
+        if(ajustarVertical) [estado.vista.yMin,estado.vista.yMax]=rangoVertical(d.grafica);
+        dibujar();
       } catch(e) { if(e.name!=="AbortError") mensajeError(e.message); }
     }
-    function cambiarVista(a,b) {
+    function cambiarVista(a,b,ajustarVertical = false) {
       const nueva=typeof a === "object" ? {...a} : {...estado.vista,xMin:a,xMax:b};
       a=nueva.xMin;b=nueva.xMax;
       if(!Number.isFinite(a) || !Number.isFinite(b) || b-a<1e-12 || b-a>1e12 || !estado.vista) return;
       // Cancelar el muestreo anterior en el momento del cambio, antes del debounce.
       solicitudes.get("grafica")?.abort(); solicitudes.delete("grafica");
-      estado.vista=nueva; dibujar(); clearTimeout(temporizador); temporizador=setTimeout(muestrear,140);
+      estado.vista=nueva; dibujar(); clearTimeout(temporizador); temporizador=setTimeout(()=>muestrear(ajustarVertical),140);
     }
     const navegacion=G.crearNavegacionGrafica({
       contenedor:el("plot"), obtenerVista:()=>estado.vista,
@@ -221,10 +224,15 @@
     el("zoom-in").addEventListener("click",()=>navegacion.zoom(.7));
     el("zoom-out").addEventListener("click",()=>navegacion.zoom(1/.7));
     el("reset-view").addEventListener("click",()=>{if(estado.baseVista)cambiarVista(estado.baseVista);});
+    el("plot").addEventListener("keydown",e=>{
+      if(!estado.vista)return;
+      if(e.key==="0" || e.key.toLowerCase()==="r") {e.preventDefault();cambiarVista(estado.baseVista);}
+      else if(e.key==="_") {e.preventDefault();navegacion.zoom(1/.7);}
+    });
     el("mark").addEventListener("click",()=>marcar(!estado.marcado));
     el("focus-root").addEventListener("click",()=>{
       const r=estado.resultado;if(!r)return;
-      const margen=Math.max(Math.abs(r.raiz)*.03,.05);cambiarVista(r.raiz-margen,r.raiz+margen);
+      const margen=Math.max(Math.abs(r.raiz)*.03,.05);cambiarVista(r.raiz-margen,r.raiz+margen,true);
     });
 
     el("function-form").addEventListener("submit",e=>{

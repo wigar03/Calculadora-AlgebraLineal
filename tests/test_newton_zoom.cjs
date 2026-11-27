@@ -60,3 +60,53 @@ test('la preparación de Newton reutiliza el rango vertical y la curva de Regla 
   assert.equal(nr.el('nr-focus-root').disabled,true);
   await resolver(nr);assert.equal(nr.el('nr-focus-root').disabled,false);
 });
+
+test('INC-035: los tres métodos muestran porcentaje accesible y relativo al ancho inicial',async()=>{
+  const html=fs.readFileSync(web+'index.html','utf8');
+  for(const p of ['bis','rf','nr'])assert.ok(new RegExp(`<span id="${p}-zoom-level" class="bis-zoom-level" aria-live="polite" title="Nivel de zoom actual">100%</span>`).test(html),p);
+  const nr=await newton(),rf=regla(),bis=biseccion();
+  for(const [e,boton,nivel,reset] of [[nr,nr.el('nr-zoom-in'),nr.el('nr-zoom-level'),nr.el('nr-reset-view')],
+    [rf,rf.botones.acercar,rf.nivel,rf.botones.restablecer],[bis,bis.el('bis-zoom-in'),bis.el('bis-zoom-level'),bis.el('bis-zoom-reset')]]){
+    await e.fire(boton,'click');await e.tick();const {a,b}=e.requests.at(-1).body;
+    assert.equal(nivel.textContent,`${Math.round(200/(b-a))}%`);
+    await e.fire(reset,'click');assert.equal(nivel.textContent,'100%');
+  }
+});
+
+test('INC-035: enfocar Newton remuestrea y ajusta Y como Regla falsa',async()=>{
+  const nr=await newton(),rf=regla();await resolver(nr);
+  rf.g.fijarResultado({raiz:1,f_raiz:0,intervalo_inicial:[0,2],pasos:[]});
+  for(const [e,boton,host] of [[nr,nr.el('nr-focus-root'),nr.el('nr-plot')],[rf,rf.botones.enfocar,rf.host]]){
+    await e.fire(boton,'click');await e.tick();const {a,b}=e.requests.at(-1).body;
+    assert.equal(a,.95);assert.equal(b,1.05);const muestras=puntos(a,b);
+    await e.reply({grafica:muestras});const [yMin,yMax]=G.rangoVertical(muestras);
+    assert.equal(curva(host).attrs.d,G.caminoCurva(muestras,G.crearEscala({xMin:a,xMax:b,yMin,yMax})));
+  }
+  assert.equal(nr.el('nr-zoom-level').textContent,rf.nivel.textContent);
+});
+
+test('INC-035: Newton conserva Inicio y admite 0 y r de Bisección y Regla falsa',async()=>{
+  const nr=await newton(),rf=regla(),bis=biseccion();
+  for(const [e,host,zoom,nivel,keys] of [[bis,bis.host.children[0],bis.el('bis-zoom-in'),bis.el('bis-zoom-level'),['0','r']],
+    [rf,rf.host.children[0],rf.botones.acercar,rf.nivel,['0']],
+    [nr,nr.el('nr-plot'),nr.el('nr-zoom-in'),nr.el('nr-zoom-level'),['0','r','R','Home']]]){
+    for(const key of keys){await e.fire(zoom,'click');await e.fire(host,'keydown',{key});assert.equal(nivel.textContent,'100%',key);}
+  }
+});
+
+test('un muestreo de enfoque tardío no altera la vista restablecida',async()=>{
+  const nr=await newton();await resolver(nr);
+  const inicial=curva(nr.el('nr-plot')).attrs.d;
+  await nr.fire(nr.el('nr-focus-root'),'click');await nr.tick();const vieja=nr.requests.length-1;
+  await nr.fire(nr.el('nr-reset-view'),'click');assert.equal(nr.requests[vieja].o.signal.aborted,true);
+  await nr.reply({grafica:puntos(.95,1.05)},vieja);
+  assert.equal(curva(nr.el('nr-plot')).attrs.d,inicial);assert.equal(nr.el('nr-zoom-level').textContent,'100%');
+});
+
+test('el porcentaje de Newton sigue la rueda, el teclado y el doble clic',async()=>{
+  const nr=await newton(),host=nr.el('nr-plot'),nivel=nr.el('nr-zoom-level');
+  await nr.fire(host,'wheel',{clientX:322,clientY:149,deltaY:-1});assert.equal(nivel.textContent,'120%');
+  await nr.fire(host,'keydown',{key:'ArrowRight'});assert.equal(nivel.textContent,'120%');
+  await nr.fire(host,'keydown',{key:'_'});assert.equal(nivel.textContent,'84%');
+  await nr.fire(host,'dblclick');assert.equal(nivel.textContent,'100%');
+});
