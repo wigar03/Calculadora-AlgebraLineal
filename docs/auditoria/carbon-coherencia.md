@@ -182,3 +182,88 @@ Leyenda: `✔` cumple de forma coherente · `parcial` cumple con asimetrías o l
 
 ---
 
+### Hallazgos en código interno y documentación
+
+#### C-19 · Constantes de límites repetidas como literales fuera de `src/core/limites.py` y código muerto heredado
+- **Módulos afectados:** Transversal (`src/biseccion`, `src/regla_falsa`, `src/newton_raphson`, `src/secante`, `src/derivadas`, `src/iterativos`, `src/solver/anterior_programa.py`).
+- **Evidencia:** Pese a `src/core/limites.py:3`, se repiten literales (`500`, `120`, `1000`, `2000`, `4000`, `12`, `20`, `10000`) en `expresiones.py:53,67`, `derivadas/motor.py:106`, `biseccion/metodo.py:38`, `regla_falsa/metodo.py:106`, `newton_raphson/metodo.py:56`, `secante/metodo.py:20`, `iterativos/convergencia.py:12` y `web_server.py:762,792,818`. Además, `src/solver/anterior_programa.py:22-74` conserva funciones nunca invocadas, y `app.js:1790-1900` recalcula en JS la eficiencia de determinantes sin llamar a `/api/matrices/eficiencia-determinante`.
+- **Impacto para el usuario:** Riesgo de desalineación futura entre validaciones previas del servidor y motores.
+- **Propuesta:** Centralizar en `src/core/limites.py` las constantes compartidas manteniendo idéntico el comportamiento externo; conservar sin tocar la duplicación de motores Gauss y rutas congeladas en `golden` para no introducir riesgo de regresión.
+- **Esfuerzo:** Bajo.
+- **Cambia la UX:** no.
+
+#### C-20 · `main.py` omite por completo el Módulo 11 (Jacobi y Gauss-Seidel)
+- **Módulos afectados:** Punto de entrada `main.py` y Módulo 11.
+- **Evidencia:** `main.py:12-24, 50, 90-101` enumera únicamente los módulos 1 a 10 tanto en su docstring como en el cartel de arranque en terminal.
+- **Impacto para el usuario:** Al iniciar `python main.py`, la consola informa solo 10 módulos activos en lugar de los 11 reales.
+- **Propuesta:** Incorporar el Módulo 11 (Jacobi y Gauss-Seidel) en el docstring, la descripción CLI y el encabezado de consola de `main.py`.
+- **Esfuerzo:** Bajo.
+- **Cambia la UX:** no.
+
+#### C-21 · Desajustes entre `README.md`, `docs/guia-matematica.md` y el comportamiento real de `v1.0.0`
+- **Módulos afectados:** Todos (01–11).
+- **Evidencia:** `README.md:19,29` no menciona el tope $n \le 20$ en vectores ni $n \le 12$ en el polinomio espectral general. `docs/guia-matematica.md` omite cotas de dimensión en módulos 2–5 (`:59-226`), omite `asin`/`acos`/`atan` en Bisección (`:310`, igual que `index.html:820,975`), afirma que `/api/biseccion/muestrear` hace *«muestreo dinámico adaptativo»* cuando es equiespaciado (`:337` vs `biseccion/metodo.py:127-129`), afirma desigualdad estricta $< \varepsilon$ en Newton (`:387`) cuando rige `MARGEN_TOLERANCIA = 0.10` (`tolerancia.py:18`), conserva una nota interna de revisión en `:431` y carece de tabla API para el Módulo 11 (`:433-466`).
+- **Impacto para el usuario:** La documentación pública contradice detalles verificables de entradas admitidas, muestreo, márgenes de parada y límites.
+- **Propuesta:** Sincronizar `README.md`, `docs/guia-matematica.md` y los textos de ayuda de sintaxis de `index.html:820,975` sin alterar los desarrollos matemáticos y verificando con `scripts/verificar_markdown.py`.
+- **Esfuerzo:** Medio.
+- **Cambia la UX:** no.
+
+---
+
+### Propuestas de mejora con impacto en UX (documentadas; requieren aprobación del propietario)
+
+#### C-22 · Vista previa matemática KaTeX en vivo ausente en Newton-Raphson y Secante
+- **Módulos afectados:** 09 Newton-Raphson y 10 Secante.
+- **Evidencia:** Bisección (`index.html:808-811`) y Regla falsa (`:964-967`) muestran vista previa en vivo de $f(x)$ a los 200 ms; Newton-Raphson (`:1139-1142`) y Secante (`:1211`) no la incluyen (además el teclado inicia desplegado en Bisección `:814` y plegado en 08–10).
+- **Impacto para el usuario:** En métodos abiertos no se previsualiza la fracción o potencia antes de enviar el formulario.
+- **Propuesta:** Incorporar el bloque `.bis-preview` debounced en los formularios de función de Newton-Raphson y Secante y unificar el estado inicial del teclado matemático.
+- **Esfuerzo:** Bajo.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
+
+#### C-23 · Controles asimétricos entre gráficas de raíces («Enfocar raíz», zoom `%` y lectura de cursor)
+- **Módulos afectados:** 07 Bisección, 08 Regla falsa, 09 Newton-Raphson y 10 Secante.
+- **Evidencia:** Regla falsa carece del botón «Enfocar raíz» (`index.html:1088-1099`); Newton-Raphson carece del indicador de porcentaje de zoom (`:1189-1193`) y no reescala el eje $Y$ al enfocar la raíz (`newton-raphson.js:206-209`); Bisección carece de lectura de coordenadas bajo el cursor y solo muestra la gráfica tras resolver (`biseccion.js:88-480`).
+- **Impacto para el usuario:** Controles y atajos distintos (`0`/`r` frente a `Inicio`) al pasar de un método de raíces a otro.
+- **Propuesta:** Añadir «Enfocar raíz» en Regla falsa, porcentaje de zoom y reescalado vertical opcional en Newton-Raphson y lectura de coordenadas en Bisección.
+- **Esfuerzo:** Medio.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
+
+#### C-24 · Tres estilos visuales distintos en las barras de herramientas de gráficas y botones «Limpiar»
+- **Módulos afectados:** 07–11.
+- **Evidencia:** Bisección y Regla falsa usan botones cuadrados con iconos Lucide (`zoom-in`/`zoom-out`), Newton usa `btn-text` con signos `+`/`−` y Secante mezcla `btn-bis-zoom` con texto (`index.html:895, 1091, 1191, 1225`). Asimismo, «Limpiar» incluye icono `trash-2` en 01–08 pero no en 09–11 (`:1155, 1214, 1257`), y `#sc-plot` carece de placeholder inicial (`:1227`).
+- **Impacto para el usuario:** Inconsistencia visual menor en controles equivalentes.
+- **Propuesta:** Unificar iconografía y clases de botones de zoom y limpieza en los módulos 07–11 e incluir placeholder inicial en Secante.
+- **Esfuerzo:** Bajo.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
+
+#### C-25 · Áreas táctiles menores de 44 px y campos en dos columnas a 390 px de ancho
+- **Módulos afectados:** 01–11 en vista móvil (`390 px`).
+- **Evidencia:** `.mini-stepper button` mide `22×26 px` (`styles.css:671`), `.btn-bis-zoom` `26×26 px` (`biseccion.css:113`), `.cell-input` `52×34 px` (`styles.css:606`), `det-matrix-grid` fija `62px` por columna (`app.js:1755`) y `.bis-fields` mantiene 2 columnas en $\le 480\text{ px}$ (`biseccion.css:90,174`).
+- **Impacto para el usuario:** Aunque no hay desbordamiento horizontal de documento a 390 px, algunos botones requieren mayor precisión táctil y las etiquetas largas se parten en dos líneas.
+- **Propuesta:** Colapsar `.bis-fields` a `1fr` bajo `480 px` y ampliar `min-height: 44px` en botones interactivos bajo `@media (pointer: coarse)`.
+- **Esfuerzo:** Medio.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
+
+#### C-26 · Límite inferior $n \ge 2$ en la interfaz de Inversa frente a $n \ge 1$ en API y Determinante
+- **Módulos afectados:** 04 Inversa.
+- **Evidencia:** `src/ui/web/index.html:511` fija `min="2" max="6"` en `#inv-dim-n`, mientras `src/matrices/inversa.py:118`, `src/core/limites.py:11` y Determinante (`index.html:693`) admiten $n = 1$, y en Determinante el radio «Cofactores» sigue seleccionable para $n = 7, 8$ aunque el servidor lo rechaza (`COFACTORES_MAX = 6`).
+- **Impacto para el usuario:** No se puede invertir $[a]$ desde la interfaz y en Determinante $7\times 7$ se permite pulsar «Cofactores» para recibir error de límite.
+- **Propuesta:** Permitir `min="1"` en `#inv-dim-n` y deshabilitar con aviso explicativo el radio «Cofactores» cuando $n > 6$.
+- **Esfuerzo:** Bajo.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
+
+#### C-27 · Celdas vacías convertidas silenciosamente a `0` en la interfaz de rejillas
+- **Módulos afectados:** 01–06 y 11.
+- **Evidencia:** `src/ui/web/app.js:340, 648, 901, 1148, 1597, 1783` y `src/ui/web/iterativos.js:216-219` reemplazan `""` por `"0"` antes de enviar la petición, anulando en el Módulo 11 el rechazo explícito de `src/iterativos/entrada.py:23-24`.
+- **Impacto para el usuario:** Una casilla olvidada en blanco se interpreta como cero sin confirmación, aunque también agiliza la captura de matrices dispersas.
+- **Propuesta:** Mantener el comportamiento actual salvo que el propietario decida exigir celdas explícitas o resaltar visualmente los ceros asumidos.
+- **Esfuerzo:** Bajo.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
+
+#### C-28 · Ausencia de apoyo gráfico en módulos geométricos de $\mathbb{R}^2$ y exportación de «Solo analizar matriz»
+- **Módulos afectados:** 01 Vectores, 02 Combinación lineal, 05 Sistemas $Ax=b$ (caso $2\times 2$) y 11 Iterativos (`#it-analizar`).
+- **Evidencia:** Ninguno de los módulos lineales incluye representación en el plano para $n=2$, y en Módulo 11 el botón «Solo analizar matriz» (`iterativos.js:508-511`, `/api/iterativos/analizar`) no genera `procedimiento`, dejando «Exportar» deshabilitado cuando solo se consulta el análisis espectral.
+- **Impacto para el usuario:** Menor apoyo visual en $\mathbb{R}^2$ y necesidad de pulsar «Resolver» para exportar el análisis de convergencia.
+- **Propuesta:** Evaluar en una etapa futura un lienzo SVG opcional para $n=2$ y un adaptador `procedimiento` para `/api/iterativos/analizar`.
+- **Esfuerzo:** Alto.
+- **Cambia la UX:** sí (requiere aprobación del propietario).
