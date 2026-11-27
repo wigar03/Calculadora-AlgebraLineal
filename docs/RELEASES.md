@@ -12,7 +12,7 @@
 | v1.0.0 | 2026-11-24 | **release estable publicada** (CI 45309347449 en verde) | primera estable, sin firma y sin prueba en Excel (autorizado) |
 | v1.1.0 | 2026-11-27 | **release estable publicada** (CI 46053742806 en verde) | banco final 50-64, auditoría de coherencia, orden observado, condición y recomendación |
 | v1.2.0 | 2026-11-27 | **release estable publicada** (CI 46068086321 en verde) | propuestas de UX C-22…C-28 aprobadas (INC-034) |
-| v1.3.0 | 2026-11-27 | release estable (pendiente de CI del tag) | gráficas en R² y zoom de Newton (INC-035) |
+| v1.3.0 | 2026-11-27 | **release estable publicada** (CI 46071870459 en verde) | gráficas en R² y zoom de Newton (INC-035) |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -125,3 +125,7 @@
   comparar el marcado final con las dos ramas.
 - **Sigue sin firma digital y sin prueba en Excel.** **Notas:** `docs/notas-v1.3.0.md`.
 
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.3.0 (release normal, `latest`).
+  Etiqueta en 456bbd8; CI de `main` (46071479130) y del tag (46071870459) en verde en Linux, Windows y `externos`.
+  SHA-256 verificadas tras la CI y tras la descarga pública. En la CI: 11 módulos; primer arranque en frío del
+  portable 8,8 s (los 35-48 s de v1.1.0 y v1.2.0 fueron variación del runner); instalada y reinstalada ≈ 2 s.
