@@ -10,6 +10,8 @@ function pagina() {
   const nodo = () => ({ style: {}, children: [], value: '', listeners: {},
     addEventListener(t, fn) { (this.listeners[t] ||= []).push(fn); },
     setAttribute(k, v) { this[k] = v; },
+    getAttribute(k) { return this[k]; },
+    prepend(hijo) { this.children.unshift(hijo); },
     set innerHTML(v) { this.html = v; this.children = []; },
     get innerHTML() { return this.html || ''; },
     appendChild(hijo) { this.children.push(hijo); if (hijo.id) nodos.set(hijo.id, hijo); },
@@ -28,6 +30,43 @@ function pagina() {
     renderMixedLatex = (el, tex) => { el.innerText = tex; renderizados.push(tex); };`, contexto);
   return { el, contexto, renderizados };
 }
+
+test('INC-034 C-27: 01–06 avisan de ceros asumidos y limpian el aviso con cada acción', async () => {
+  const casos = [
+    ['vec', 'calcularOperacionVector', 'cargarEjemploVector', 'limpiarModuloVectores', ['vec-u-1', 'vec-v-0'], ['u[2]', 'v[1]']],
+    ['comb', 'evaluarCombinacionLinealUI', 'cargarEjemploCombinacion', 'limpiarModuloCombinacion', ['comb-v-1-0', 'comb-b-0'], ['v_2[1]', 'b[1]']],
+    ['mat', 'operarMatrices', 'cargarEjemploMatrices', 'limpiarModuloMatrices', ['mat-a-1-0', 'mat-b-0-1'], ['A[2,1]', 'B[1,2]']],
+    ['inv', 'calcularInversaUI', 'cargarEjemploInversa', 'limpiarModuloInversa', ['inv-a-0-1', 'inv-a-1-0'], ['A[1,2]', 'A[2,1]']],
+    ['eq', 'resolverEcuacionMatricialUI', 'cargarEjemploEcuacion', 'limpiarModuloEcuaciones', ['eq-a-1-2', 'eq-b-0'], ['A[2,3]', 'b[1]']],
+    ['det', 'calcularDeterminanteUI', 'cargarEjemploDeterminante', 'limpiarModuloDeterminante', ['det-a-1-2', 'det-a-0-1'], ['A[2,3]', 'A[1,2]']]
+  ];
+  for (const [prefijo, calcular, ejemplo, limpiar, ids, etiquetas] of casos) {
+    const { el, contexto: c } = pagina();
+    vm.runInContext('mostrarToast = () => {};', c);
+    c.respuesta = { resultado_str: '(0, 0, 0)', matriz_resultado: [['0']],
+      es_combinacion: false, tipo_sistema: 'SI', orden_n: 3, es_invertible: false,
+      determinante: '0', determinante_decimal: '0' };
+    const caja = el(`${prefijo}-result-content`);
+    const avisos = () => caja.children.filter(n => n.textContent?.startsWith('Se tomaron como 0'));
+    for (const accion of ['recalcular', 'limpiar', 'ejemplo']) {
+      c[ejemplo](prefijo === 'det' ? 3 : 1);
+      ids.forEach(id => { el(id).value = '   '; });
+      await c[calcular]('suma');
+      assert.equal(avisos().length, 1, `${prefijo}: falta aviso`);
+      for (const etiqueta of etiquetas) assert.ok(avisos()[0].textContent.includes(etiqueta));
+      assert.equal(avisos()[0].role, 'status');
+      assert.ok(JSON.stringify(c.enviado.datos).includes('"0"'));
+      ids.forEach(id => assert.equal(el(id).value, '   ', 'No modifica las entradas'));
+      if (prefijo === 'comb') { c.cambiarNotacionCombinacion('columna'); assert.equal(avisos().length, 1); }
+      if (accion === 'recalcular') {
+        ids.forEach(id => { el(id).value = '0'; });
+        await c[calcular]('suma');
+      } else if (accion === 'limpiar') c[limpiar]();
+      else c[ejemplo](prefijo === 'det' ? 3 : 1);
+      assert.equal(avisos().length, 0, `${prefijo}: aviso obsoleto tras ${accion}`);
+    }
+  }
+});
 
 test('los controles HTML permiten sistemas, inversas y determinantes de orden 5', () => {
   const html = readFileSync(require.resolve('../src/ui/web/index.html'), 'utf8');
