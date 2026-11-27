@@ -123,6 +123,12 @@
   .regla-falsa-pane .rf-step:nth-child(n+3) { border-top: 1px solid var(--bis-rule); }
   .regla-falsa-pane .rf-action { justify-self: stretch; }
 }
+@media (pointer: coarse) {
+  .regla-falsa-pane .rf-step button,
+  .regla-falsa-pane .rf-candidate,
+  .regla-falsa-pane .rf-mark-toggle,
+  .regla-falsa-pane .rf-link { min-width: 44px; min-height: 44px; }
+}
 
 /* Debe ir al final: las reglas de arriba fijan display y anularían el atributo hidden. */
 .regla-falsa-pane [hidden] { display: none; }

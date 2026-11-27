@@ -49,3 +49,7 @@
   .newton-pane #nr-error { order: 6; }
 }
 @media(max-width:680px) { .newton-pane .nr-summary { grid-template-columns: minmax(0,1fr); } .newton-pane .nr-plot-label { font-size: .55rem; } }
+@media (pointer: coarse) {
+  .newton-pane .btn-bis-zoom { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+  .newton-pane .nr-criteria label { min-height: 44px; }
+}

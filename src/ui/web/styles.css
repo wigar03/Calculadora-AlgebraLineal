@@ -1211,3 +1211,15 @@ input[type="number"] {
   border-radius: 6px;
   padding: 0.55rem 0.7rem;
 }
+
+/* Áreas táctiles mínimas (44×44 px) en pantallas táctiles (C-25, INC-034). */
+@media (pointer: coarse) {
+  .btn-theme, .nav-tab, .btn-primary, .btn-secondary, .btn-clear, .btn-text, .btn-not-toggle { min-width: 44px; min-height: 44px; }
+  .stepper-box { height: auto; min-height: 44px; width: auto; }
+  .stepper-box input { min-height: 44px; }
+  .btn-step { width: 44px; min-width: 44px; min-height: 44px; }
+  .mini-stepper { height: auto; min-height: 44px; }
+  .mini-stepper button { width: 44px; min-width: 44px; min-height: 44px; }
+  .mini-stepper input { min-width: 34px; min-height: 44px; }
+  .cell-input { min-height: 44px; }
+}

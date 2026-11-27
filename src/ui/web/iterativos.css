@@ -57,3 +57,6 @@
   --it-color-3: #e0b772; --it-color-4: #bfa2df; --it-color-5: #75c9c6;
   --it-color-6: #f2aa7c; --it-color-7: #b0c87b; --it-color-8: #a3aff0; --it-color-9: #eaa0c0;
 }
+@media (pointer: coarse) {
+  .iterativos-pane .it-cell { min-height: 44px; }
+}

@@ -173,10 +173,19 @@
 }
 @media (max-width: 480px) {
   .biseccion-pane .bis-parameters { grid-template-columns: minmax(0, 1fr); }
+  .biseccion-pane .bis-fields { grid-template-columns: minmax(0, 1fr); }
+  .biseccion-pane .bis-graph-controls { flex-wrap: wrap; }
   .biseccion-pane .bis-stop-group { grid-row: auto; }
   .biseccion-pane .bis-notebook-heading { gap: .5rem; }
   .biseccion-pane .bis-eyebrow { max-width: 17rem; }
   .biseccion-pane #bis-submit { justify-self: stretch; }
   .biseccion-pane tbody > tr:not(.bis-detail-row) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .biseccion-pane .bis-iteration-values { grid-template-columns: minmax(0, 1fr); }
+}
+@media (pointer: coarse) {
+  .biseccion-pane .btn-bis-zoom { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+  .biseccion-pane .bis-graph-controls { flex-wrap: wrap; }
+  .biseccion-pane .bis-key { min-width: 44px; min-height: 44px; }
+  .biseccion-pane .bis-key-edit { flex-wrap: wrap; }
+  .biseccion-pane .bis-keyboard-toolbar .btn-text { min-width: 44px; min-height: 44px; }
 }
