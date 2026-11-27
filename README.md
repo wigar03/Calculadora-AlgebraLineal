@@ -19,7 +19,7 @@ La misma interfaz funciona en el navegador y en una aplicación de escritorio.
 | Vectores | Suma, resta, escalar y producto punto; $`1 \le n \le 20`$. |
 | Combinación lineal | Pertenencia e independencia mediante rangos, relación, despeje y verificación algebraica; hasta 10 vectores de dimensión 15. |
 | Matrices | Suma, resta, escalar, producto y transpuesta; hasta 8 filas y 8 columnas. |
-| Inversa | Gauss y Gauss-Jordan, singularidad y verificación; hasta orden 6. |
+| Inversa | Gauss y Gauss-Jordan, singularidad y verificación; orden 1–6. |
 | Sistemas $`Ax = b`$ | Forma $`A\cdot X=B`$, solución única, infinitas soluciones o incompatibilidad; hasta 10 ecuaciones y 10 incógnitas. |
 | Determinantes | Cofactores hasta orden 6 y LU hasta orden 8, con comparación de eficiencia. |
 | Bisección | Intervalos, validaciones, errores e historial de iteraciones. |
@@ -35,7 +35,11 @@ y residuo. Las gráficas son orientativas y no demuestran continuidad ni converg
 Puedes copiar LaTeX, exportar CSV para hojas de cálculo en español e imprimir o guardar como PDF.
 En Matrices, «Usar resultado como A» permite encadenar operaciones como `2A+B` o `A+B+C` conservando fracciones exactas.
 
-La [versión 1.1.0](docs/notas-v1.1.0.md) cubre los ejercicios 50–64 del banco final. Los cuatro métodos de raíces
+La [versión 1.2.0](docs/notas-v1.2.0.md) añade avisos de ceros en rejillas, vista previa de funciones en Newton y
+Secante, controles de gráficas y mejoras táctiles. También permite exportar «Solo analizar matriz» en Jacobi y
+Gauss-Seidel, sin cambiar los resultados matemáticos.
+
+Conserva la cobertura de los ejercicios 50–64 incorporada en [v1.1.0](docs/notas-v1.1.0.md). Los cuatro métodos de raíces
 añaden condición de la raíz, orientación con «Recomendar método» y estimación del orden observado y la constante
 asintótica. La recomendación y la estimación son orientativas; no garantizan convergencia.
 Los ejercicios 46 y 49 conservan enunciados incompletos. Excel de escritorio y para la Web no se han verificado directamente.

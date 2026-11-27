@@ -46,6 +46,15 @@ Estas restricciones didácticas corresponden a los módulos originales de álgeb
 
 ## 3. Fundamentos Algebraicos por Módulo
 
+**Entradas por rejilla.** En los módulos 1–6 y 11, las casillas vacías se toman como cero y el resultado
+indica sus nombres, por ejemplo `A[2,3]` o `b[1]`. El aviso se limpia al recalcular, limpiar o cargar un ejemplo.
+Los ceros escritos explícitamente no generan ese aviso.
+
+**Uso táctil.** Los botones y controles ajustados tienen áreas de al menos 44 píxeles en dispositivos táctiles;
+las celdas de las rejillas alcanzan esa altura mínima. En los métodos numéricos, los campos se muestran en una
+columna cuando el ancho de la pantalla es de 480 píxeles o menos. Los módulos 07–11 unifican la iconografía
+de los controles de zoom y de los botones de limpieza.
+
 ### Módulo 1: Operaciones Vectoriales en $`\mathbb{R}^n`$
 
 Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v = (v_1, v_2, \dots, v_n)`$. La calculadora admite $`1 \le n \le 20`$:
@@ -167,7 +176,8 @@ El programa analiza exhaustivamente sus propiedades teóricas:
 
 Este módulo implementa el cálculo y análisis formal de la inversa de una matriz:
 
-La interfaz admite matrices de orden 2 a 6; la API admite también orden 1.
+La interfaz y la API admiten matrices de orden 1 a 6. Para una matriz de un solo elemento no nulo,
+la inversa contiene su recíproco; si el elemento es cero, la matriz es singular.
 
 #### 1. Definición Formal
 Sea $`A`$ una matriz cuadrada de orden $`n \times n`$. Se dice que $`A`$ es **invertible** (o no singular) si existe una matriz $`C`$ de orden $`n \times n`$ tal que:
@@ -243,6 +253,8 @@ r = A \cdot x_{\mathrm{sol}} - b = 0
 ### Módulo 6: Determinante de Matrices Cuadradas $`|A|`$ (Cofactores vs Descomposición LU)
 
 El orden admitido es de 1 a 8 para LU y de 1 a 6 para cofactores.
+Al elegir un orden mayor que 6, la interfaz desactiva **Cofactores**, selecciona **LU** y explica el límite
+junto al control. Cofactores se reactiva al volver a orden 6 o inferior.
 
 Este módulo implementa el cálculo exacto del determinante $`|A|`$ o $`\det(A)`$ para cualquier matriz cuadrada $`A \in \mathcal{M}_{n \times n}(\mathbb{R})`$ mediante una pestaña interactiva dedicada dentro del servidor web de la aplicación, desarrollada 100% en Python estándar (sin librerías prohibidas como NumPy, SciPy o rutinas de `math`):
 
@@ -303,6 +315,10 @@ Cumpliendo la especificación requerida, la aplicación evalúa e informa **ante
 
 ### Uso común de los cuatro métodos de raíces
 
+**Vista previa de la función.** Bisección, Regla Falsa, Newton-Raphson y Secante muestran la representación
+matemática mientras escribe, sin cambiar la entrada. La vista ayuda a revisar la notación, pero no evalúa
+el dominio ni certifica continuidad.
+
 **Condición de la raíz.** El selector ofrece cualquier raíz real, positiva o positiva no nula. Las dos opciones
 positivas exigen $`x\gt0`$ y excluyen cero; no basta con acercarse a la raíz cero cuando el enunciado la excluye.
 Seleccione la condición antes de resolver y revise su comprobación en el resultado y el procedimiento exportado.
@@ -358,6 +374,8 @@ Seleccione uno de los siguientes criterios; el proceso también termina si $`f(c
 | Residuo | $`\lvert f(c)\rvert \leq \varepsilon`$ | Unidades de $`f(x)`$; un residuo pequeño no garantiza por sí solo un error pequeño en $`x`$. |
 
 La diferencia absoluta de la tabla mide el cambio entre dos aproximaciones, no el error verdadero respecto de una raíz desconocida. El resultado incluye la sustitución en la función original, el intervalo final y la cota obtenida a partir de sus extremos. La gráfica interactiva permite realizar zoom in, zoom out, enfocar la raíz aproximada, restablecer la vista completa al 100% y desplazarse (pan) mediante controles en pantalla, rueda del ratón o arrastre táctil; toma muestras orientativas para el intervalo visualizado y no demuestra continuidad ni permite descartar singularidades entre muestras.
+
+Al mover el cursor sobre la gráfica se muestran las coordenadas de su posición.
 
 **Entradas admitidas:** use `x` como variable, multiplicación explícita (`2*x`), operadores `+`, `-`, `*`, `/`, potencias con `^` o `**`, paréntesis, constantes `pi` y `e`, y funciones `sin` (también `sen`), `cos`, `tan`, `asin`, `acos`, `atan`, `exp`, `ln` (natural), `log` (base 10), `sqrt` y `abs`. También se admiten igualdades como `ln(x) + sen(x) = 1.2`. Los ángulos están en radianes. Los extremos y la tolerancia aceptan decimales con punto, fracciones como `1/2` y notación científica como `1e-4`.
 
@@ -418,6 +436,7 @@ El análisis de continuidad es numérico (401 muestras con refinamiento) y orien
 Por diseño, además del error porcentual se exige que el residuo escalado $`|f(x_r)|/s`$, con $`s=\max(1,\min(|f(x_l^{(0)})|,|f(x_u^{(0)})|))`$, sea menor o igual que la tolerancia digitada. Esta guarda evita declarar convergencia por un cambio pequeño con residuo elevado; también se reconoce un cero evaluado de la función.
 
 La presentación de Regla Falsa usa hasta 10 cifras significativas; los cálculos conservan la precisión interna.
+Después de obtener una aproximación, **Enfocar raíz** centra la gráfica en ella.
 
 #### API de regla falsa
 
@@ -527,6 +546,9 @@ El residuo relativo se exige en cada parada por tolerancia, incluso con el crite
 
 La interfaz admite sistemas de orden 2 a 10 y la API hasta 20. El análisis espectral exacto general llega a orden 12;
 los casos triangulares o nilpotentes pueden demostrarse hasta orden 20.
+
+**Solo analizar matriz** permite revisar la convergencia antes de iterar. Tras obtener el análisis, **Exportar**
+ofrece copiar LaTeX, descargar CSV o imprimir y guardar como PDF, sin tener que resolver el sistema.
 
 **Nota sobre la presentación de clase.** Las tablas de las diapositivas 16 y 22 son correctas; los desarrollos de las diapositivas 15, 20 y 21 contienen errores aritméticos (ver [INCIDENCIAS.md](INCIDENCIAS.md), INC-012).
 

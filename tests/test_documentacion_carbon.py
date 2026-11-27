@@ -10,7 +10,7 @@ class TestDocumentacionCarbon(unittest.TestCase):
         guia = (RAIZ / "docs/guia-matematica.md").read_text(encoding="utf-8")
         for inicio, fin, limite in (("Módulo 2:", "Módulo 3:", "1 \\le k \\le 10"),
                                    ("Módulo 3:", "Módulo 4:", "8 filas y 8 columnas"),
-                                   ("Módulo 4:", "Módulo 5:", "orden 2 a 6"),
+                                   ("Módulo 4:", "Módulo 5:", "orden 1 a 6"),
                                    ("Módulo 5:", "Módulo 6:", "10 ecuaciones y 10 incógnitas")):
             self.assertIn(limite, guia.split(inicio)[1].split(fin)[0])
         readme = (RAIZ / "README.md").read_text(encoding="utf-8")
