@@ -83,6 +83,7 @@ python tests/validacion/generar_referencias.py   # regenera referencias (requier
 ## Versiones estables (v1.0.0 en adelante)
 - Estable publicada: v1.3.0. Versión menor si hay funciones nuevas; parche si solo hay correcciones. Release solo con
   CI en verde (Linux, Windows, `externos`), binarios de la CI del tag y SHA-256 verificadas tras la descarga pública.
+  Texto de la release: `python scripts/notas_release.py docs/notas-vX.md vX` (enlaces absolutos, sin `<br>`).
 - Banco final (64 ejercicios): `tests/validacion/banco_final.py` y `referencias_final.json` (SymPy); 46 y 49 sin
   igualdad completa en la fuente, igual que IV-2/IV-5: no se inventan.
 - Auditoría de coherencia: `docs/auditoria/carbon-coherencia.md` (C-01…C-28 cerrados). Cambios de UX aprobados por el

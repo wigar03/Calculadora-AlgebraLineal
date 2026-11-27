@@ -129,3 +129,10 @@
   Etiqueta en 456bbd8; CI de `main` (46071479130) y del tag (46071870459) en verde en Linux, Windows y `externos`.
   SHA-256 verificadas tras la CI y tras la descarga pública. En la CI: 11 módulos; primer arranque en frío del
   portable 8,8 s (los 35-48 s de v1.1.0 y v1.2.0 fueron variación del runner); instalada y reinstalada ≈ 2 s.
+
+## Corrección del texto de las releases (2026-11-27)
+La auditoría visual en github.com detectó que, en las páginas de release, los enlaces relativos de las notas se
+resolvían desde la raíz del tag (404) y cada salto de línea se convertía en `<br>`. Se reescribió el texto de v1.0.0,
+v1.1.0, v1.2.0 y v1.3.0 con `scripts/notas_release.py` (enlaces absolutos al tag, un párrafo por línea); etiquetas,
+archivos adjuntos y estado `latest` sin cambios. Comprobado: 0 enlaces relativos, 0 `<br>`, enlaces con HTTP 200.
+
