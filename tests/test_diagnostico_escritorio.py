@@ -59,6 +59,30 @@ class TestDiagnosticoEscritorio(unittest.TestCase):
         self.assertIn("no terminó de cargar", resultado["error"])
         self.assertNotIn("carga_s", resultado["tiempos"])
 
+    def test_cuenta_formulas_cuando_el_renderizado_se_estabiliza(self):
+        # KaTeX sigue renderizando tras el evento «loaded»: el recuento no debe depender del momento de lectura.
+        class VentanaProgresiva(VentanaSimulada):
+            def __init__(self, modulos, recuentos):
+                super().__init__(modulos)
+                self.recuentos, self.lecturas = list(recuentos), 0
+
+            def evaluate_js(self, _codigo):
+                datos = super().evaluate_js(_codigo)
+                datos["formulas"] = self.recuentos[min(self.lecturas, len(self.recuentos) - 1)]
+                self.lecturas += 1
+                return datos
+
+        ventana = VentanaProgresiva(modulos_esperados(), [300, 330, 342, 344, 344, 344])
+        cargada = threading.Event()
+        cargada.set()
+        with tempfile.TemporaryDirectory() as carpeta, servidor_local() as url:
+            destino = Path(carpeta) / "diagnostico.json"
+            comprobar_escritorio(ventana, cargada, url, destino)
+            resultado = json.loads(destino.read_text(encoding="utf-8"))
+        self.assertTrue(resultado["ok"], resultado)
+        self.assertEqual(resultado["interfaz"]["formulas"], 344)
+        self.assertGreaterEqual(ventana.lecturas, 6)
+
     def test_rechaza_una_interfaz_sin_todos_los_modulos(self):
         resultado = self.ejecutar(modulos_esperados() - 1)
         self.assertFalse(resultado["ok"])

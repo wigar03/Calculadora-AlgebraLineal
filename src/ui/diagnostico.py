@@ -13,6 +13,32 @@ INDICE = Path(__file__).resolve().parent / "web" / "index.html"
 # excepcionalmente más de 30 s (INC-031). Se espera hasta ESPERA_CARGA_S y se informa si superó CARGA_LENTA_S.
 CARGA_LENTA_S = 30
 ESPERA_CARGA_S = 120
+# KaTeX sigue renderizando tras el evento «loaded»; se relee hasta que el recuento de fórmulas no cambia.
+LECTURAS_IGUALES = 3
+PAUSA_LECTURA_S = 0.15
+ESPERA_FORMULAS_S = 10
+
+LEER_INTERFAZ = """(() => ({
+  modulos: document.querySelectorAll('.home-module').length,
+  formulas: document.querySelectorAll('.katex').length,
+  katex: typeof katex !== 'undefined',
+  fuentes: document.fonts.check('16px Outfit'),
+  externos: performance.getEntriesByType('resource')
+    .filter(r => /^https?:/.test(r.name) && new URL(r.name).origin !== location.origin)
+    .map(r => r.name)
+}))()"""
+
+
+def leer_interfaz_estable(ventana, iguales=LECTURAS_IGUALES, pausa=PAUSA_LECTURA_S, limite=ESPERA_FORMULAS_S):
+    """Lee la interfaz hasta obtener `iguales` recuentos de fórmulas consecutivos idénticos (o agotar `limite`)."""
+    fin, previo, racha = time.monotonic() + limite, None, 0
+    while True:
+        actual = ventana.evaluate_js(LEER_INTERFAZ)
+        racha = racha + 1 if previo is not None and actual["formulas"] == previo["formulas"] else 1
+        previo = actual
+        if racha >= iguales or time.monotonic() >= fin:
+            return actual
+        time.sleep(pausa)
 
 
 def modulos_esperados(indice=INDICE):
@@ -31,15 +57,7 @@ def comprobar_escritorio(ventana, cargada, url, destino, inicio=None, espera=ESP
             raise RuntimeError(f"La ventana no terminó de cargar en {espera} segundos desde el inicio.")
         tiempos["carga_s"] = round(time.monotonic() - inicio, 3)
         resultado["carga_lenta"] = tiempos["carga_s"] > CARGA_LENTA_S
-        interfaz = ventana.evaluate_js("""(() => ({
-          modulos: document.querySelectorAll('.home-module').length,
-          formulas: document.querySelectorAll('.katex').length,
-          katex: typeof katex !== 'undefined',
-          fuentes: document.fonts.check('16px Outfit'),
-          externos: performance.getEntriesByType('resource')
-            .filter(r => /^https?:/.test(r.name) && new URL(r.name).origin !== location.origin)
-            .map(r => r.name)
-        }))()""")
+        interfaz = leer_interfaz_estable(ventana)
         resultado["interfaz"] = interfaz
         esperados = modulos_esperados()
         if (esperados < 11 or interfaz["modulos"] != esperados or not interfaz["katex"]
