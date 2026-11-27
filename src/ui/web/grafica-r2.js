@@ -62,7 +62,7 @@
       let punta=cero;
       vs.forEach((v,i)=>{
         const fin=sumar(punta,coordenadas(v).map(x=>numero(cs[i])*x));
-        m.flechas.push({...flecha(punta,fin,`c${i+1}v${i+1}`,i,`c${i+1} = ${cs[i]}; c${i+1}v${i+1}`),cadena:true});
+        m.flechas.push({...flecha(punta,fin,`c${i+1}v${i+1}`,i,`c${i+1} = ${cs[i]}; c${i+1}v${i+1}`),cadena:true,orden:i});
         punta=fin;
       });
       m.descripcion=relacion?'Relación de dependencia: la cadena punta-cola regresa al origen.'
@@ -151,7 +151,7 @@
       svg.append(svgNodo('polygon',{points:puntos,fill:color}));
     } else svg.append(svgNodo('circle',{cx:X,cy:Y,r:3,fill:color}));
     const px=f.cadena?(x+X)/2:X,py=f.cadena?(y+Y)/2:Y;
-    svg.append(svgNodo('text',{x:px+6,y:py-7,fill:color,class:'r2-label'},f.etiqueta));
+    svg.append(svgNodo('text',{x:px+6,y:py+(f.cadena && f.orden%2?14:-7),fill:color,class:'r2-label'},f.etiqueta));
   }
   function limpiar(host) {
     if(!host)return;

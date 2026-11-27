@@ -57,6 +57,8 @@ test('vía real API y vista: SVG accesible, relación y solución, limpieza y ca
     assert.equal(svg.attrs.role,'img');assert.ok(svg.children.some(n=>n.tag==='title'));
     assert.ok(svg.children.some(n=>n.tag==='desc'));
     assert.match(svg.attrs['aria-label'],[/1\/2/,/dependencia/,/Intersección: \(1, 2\)/][i]);
+    if(i===1){const etiquetas=recorrer(svg).filter(n=>n.tag==='text' && /^c[12]v/.test(n.textContent));
+      assert.equal(etiquetas.length,2);assert.notEqual(etiquetas[0].attrs.y,etiquetas[1].attrs.y);}
     assert.equal(JSON.stringify(c.respuesta),original,'Ni API ni CSV se modifican al dibujar');
     const dimension=['vec-dim','comb-dim-n','eq-cols-n'][i];el(dimension).value='3';
     c[['actualizarEntradasVectores','actualizarEntradasCombinacion','renderizarEcuacionMatricial'][i]]();
