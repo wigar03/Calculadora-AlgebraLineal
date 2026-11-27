@@ -10,7 +10,7 @@
 | v1.0.0-rc.6 | 2026-11-23 | **prerelease publicada** (CI 45270508552 en verde) | etapa 4: exportación (P2) y Markdown público |
 | v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
 | v1.0.0 | 2026-11-24 | **release estable publicada** (CI 45309347449 en verde) | primera estable, sin firma y sin prueba en Excel (autorizado) |
-| v1.1.0 | 2026-11-27 | release estable (pendiente de CI del tag) | banco final 50-64, auditoría de coherencia, orden observado, condición y recomendación |
+| v1.1.0 | 2026-11-27 | **release estable publicada** (CI 46053742806 en verde) | banco final 50-64, auditoría de coherencia, orden observado, condición y recomendación |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -94,3 +94,8 @@
   aprobados (C-01); 49 ejercicios del banco A y 15 del banco final validados contra SymPy.
 - **Sigue sin firma digital y sin prueba en Excel.** **Notas:** `docs/notas-v1.1.0.md`.
 
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.1.0 (release normal, `latest`).
+  Etiqueta en 73ce71e; CI de `main` y del tag (46053742806) en verde en Linux, Windows y `externos`. Binarios de la CI
+  del tag; SHA-256 verificadas tras la CI y tras descargarlos sin autenticación por `/releases/latest/download/`.
+  Portable en Windows 11 real: versión 1.1.0, 11 módulos, carga 3,2 s. En la CI, el primer arranque en frío del
+  portable tardó 47,9 s (INC-031, dentro del margen de 120 s); instalada y reinstalada ≈ 2 s.
