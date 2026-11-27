@@ -214,11 +214,11 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   };
   const el = id => { if (!nodos.has(id)) nodos.set(id, crearNodo()); return nodos.get(id); };
   el('it-tolerance').value = '1e-6'; el('it-max-iter').value = '100'; el('it-texto').value = '4x1 + x2 = 1\n2x1 + 3x2 = 2';
-  const envios = [], latexs = [];
+  const envios = [], latexs = []; let metodoUI = 'comparar';
   const doc = {
     addEventListener(t, fn) { (listeners[t] ||= []).push(fn); },
     getElementById: el, createElement: crearNodo, createElementNS: (_, tag) => crearNodo(tag),
-    querySelector: sel => ({ value: sel.includes('it-method') ? 'comparar' : 'ambos' }),
+    querySelector: sel => ({ value: sel.includes('it-method') ? metodoUI : 'ambos' }),
     querySelectorAll: () => []
   };
   const rJ = respuestaSimulada(2, 'jacobi'), rG = respuestaSimulada(2, 'gauss_seidel');
@@ -231,6 +231,7 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
     fetch: async (url, opts) => {
       envios.push({ url, body: JSON.parse(opts.body) });
       if (url.endsWith('/texto')) return { ok: true, json: async () => ({ A: [['4', '1'], ['2', '3']], b: ['1', '2'], nombres: ['x_1', 'x_2'] }) };
+      if (url.endsWith('/resolver')) return { ok: true, json: async () => rG };
       return { ok: true, json: async () => ({ jacobi: rJ, gauss_seidel: rG, resumen: 'Gauss-Seidel convergió antes.' }) };
     }
   });
@@ -243,10 +244,14 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   assert.equal(envios[0].url, '/api/iterativos/texto');
   assert.equal(el('it-dim-n').value, '2');
   assert.equal(el('it-a-0-0').value, '4'); assert.equal(el('it-b-1').value, '2');
+  // INC-034 C-27: los blancos conservan la captura rápida, con aviso de sus posiciones.
+  for (const id of ['it-a-0-1', 'it-b-1', 'it-x0-0']) el(id).value = '  ';
 
   el('it-solve-form').listeners.submit[0]({ preventDefault() {}, currentTarget: el('it-solve-form') });
   await new Promise(r => setImmediate(r));
   assert.equal(envios[1].url, '/api/iterativos/comparar');
+  assert.equal(envios[1].body.A[0][1], '0'); assert.equal(envios[1].body.b[1], '0'); assert.equal(envios[1].body.x0[0], '0');
+  assert.ok(!('vacias' in envios[1].body), 'Las posiciones asumidas se muestran en la vista, sin cambiar la API');
   assert.equal(el('it-analysis-card').hidden, false);
   assert.equal(el('it-result-card').hidden, false);
   assert.equal(el('it-charts-card').hidden, false);
@@ -256,6 +261,7 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   assert.equal(el('it-plot-conv').children[0].tag, 'svg');
   const recorrer = n => [n, ...n.children.flatMap(recorrer)];
   const analisis = recorrer(el('it-analysis')).map(n => n.textContent).join(' ');
+  assert.match(recorrer(el('it-result')).map(n => n.textContent).join(' '), /Casillas vacías tomadas como 0: A\[1,2\], x0\[1\], b\[2\]/);
   assert.match(analisis, /Jacobi/); assert.match(analisis, /Gauss-Seidel/);
   assert.match(analisis, /Sin garantía previa/); assert.match(analisis, /simétrica definida positiva/);
   const motivos = recorrer(el('it-result')).filter(n => n.tag === 'p'
@@ -267,6 +273,16 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   assert.ok(textosLatex.some(t => t.includes('-0.6666666667')));
   assert.ok(textosLatex.some(t => t.includes('2.5 \\times 10^{-8}')));
   for (const [tex, disp] of latexs) renderEstricto(tex, Boolean(disp));
+  metodoUI = 'gauss_seidel';
+  el('it-solve-form').listeners.submit[0]({ preventDefault() {}, currentTarget: el('it-solve-form') });
+  await new Promise(r => setImmediate(r));
+  assert.match(recorrer(el('it-result')).map(n => n.textContent).join(' '), /Casillas vacías tomadas como 0/);
+  for (const id of ['it-a-0-1', 'it-b-1', 'it-x0-0']) el(id).value = '0';
+  el('it-solve-form').listeners.submit[0]({ preventDefault() {}, currentTarget: el('it-solve-form') });
+  await new Promise(r => setImmediate(r));
+  assert.ok(!recorrer(el('it-result')).some(n => n.textContent.includes('Casillas vacías')));
+  el('it-a-0-1').value = ''; el('it-dim-inc').listeners.click[0]();
+  assert.equal(el('it-a-0-1').value, '', 'Cambiar dimensión conserva los blancos para poder avisarlos');
 });
 
 test('precisión: tabla, radios espectrales y vector solución usan 10 cifras significativas y notación científica', () => {

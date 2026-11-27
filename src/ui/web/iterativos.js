@@ -210,21 +210,30 @@
       ["analysis", "result", "plot-vars", "plot-conv", "steps", "table"].forEach(id => el(id).replaceChildren());
     }
 
-    function leerSistemaUI() {
-      const A = [], b = [], x0 = [];
+    function leerSistemaUI(asumirCeros = true) {
+      const A = [], b = [], x0 = [], vacias = [];
+      const leer = (id, nombre) => {
+        const valor = el(id)?.value.trim() || "";
+        if (!valor) vacias.push(nombre);
+        return valor || (asumirCeros ? "0" : "");
+      };
       for (let i = 0; i < dimN; i++) {
         const fila = [];
-        for (let j = 0; j < dimN; j++) fila.push(el(`a-${i}-${j}`)?.value.trim() || "0");
+        for (let j = 0; j < dimN; j++) fila.push(leer(`a-${i}-${j}`, `A[${i + 1},${j + 1}]`));
         A.push(fila);
-        b.push(el(`b-${i}`)?.value.trim() || "0");
-        x0.push(el(`x0-${i}`)?.value.trim() || "0");
+        b.push(leer(`b-${i}`, `b[${i + 1}]`));
+        x0.push(leer(`x0-${i}`, `x0[${i + 1}]`));
       }
-      return { A, b, x0 };
+      return { A, b, x0, vacias };
+    }
+
+    function avisarVacias(box, vacias) {
+      if (vacias.length) box.append(node("p", `Casillas vacías tomadas como 0: ${vacias.join(", ")}.`, "rf-note"));
     }
 
     function renderGrid(n, A = null, b = null, x0 = null) {
       window.ExportarUI?.limpiar("tab-iterativos");
-      const prev = !A ? leerSistemaUI() : null;
+      const prev = !A ? leerSistemaUI(false) : null;
       dimN = Math.max(2, Math.min(10, parseInt(n, 10) || 4));
       el("dim-n").value = String(dimN);
       const grid = el("augmented-grid");
@@ -507,14 +516,18 @@
       ev.preventDefault(); limpiarResultados();
       const metodo = document.querySelector('[name="it-method"]:checked').value;
       ejecutar(ev.currentTarget.querySelector('[type="submit"]'), async () => {
-        const d = metodo === "comparar" ? await request("comparar", cuerpoBase()) : await request("resolver", { ...cuerpoBase(), metodo });
-        if (d) mostrarResultado(d, metodo === "comparar");
+        const { vacias, ...cuerpo } = cuerpoBase();
+        const d = metodo === "comparar" ? await request("comparar", cuerpo) : await request("resolver", { ...cuerpo, metodo });
+        if (d) { mostrarResultado(d, metodo === "comparar"); avisarVacias(el("result"), vacias); }
       });
     });
 
     el("analizar").addEventListener("click", ev => {
       limpiarResultados();
-      ejecutar(ev.currentTarget, async () => { const d = await request("analizar", cuerpoBase()); if (d) renderAnalisis(d.analisis || d, d.nombres); });
+      ejecutar(ev.currentTarget, async () => {
+        const { vacias, ...cuerpo } = cuerpoBase(), d = await request("analizar", cuerpo);
+        if (d) { renderAnalisis(d.analisis || d, d.nombres); avisarVacias(el("analysis"), vacias); }
+      });
     });
 
     el("cargar-texto").addEventListener("click", ev => {
