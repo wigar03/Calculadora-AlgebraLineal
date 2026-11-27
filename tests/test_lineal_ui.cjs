@@ -42,6 +42,7 @@ test('INC-034 C-27: 01–06 avisan de ceros asumidos y limpian el aviso con cada
   ];
   for (const [prefijo, calcular, ejemplo, limpiar, ids, etiquetas] of casos) {
     const { el, contexto: c } = pagina();
+    const operacion = prefijo === 'mat' ? 'multiplicacion' : 'suma';
     vm.runInContext('mostrarToast = () => {};', c);
     c.respuesta = { resultado_str: '(0, 0, 0)', matriz_resultado: [['0']],
       es_combinacion: false, tipo_sistema: 'SI', orden_n: 3, es_invertible: false,
@@ -51,7 +52,7 @@ test('INC-034 C-27: 01–06 avisan de ceros asumidos y limpian el aviso con cada
     for (const accion of ['recalcular', 'limpiar', 'ejemplo', 'pendiente']) {
       c[ejemplo](prefijo === 'det' ? 3 : 1);
       ids.forEach(id => { el(id).value = '   '; });
-      await c[calcular]('suma');
+      await c[calcular](operacion);
       assert.equal(avisos().length, 1, `${prefijo}: falta aviso`);
       for (const etiqueta of etiquetas) assert.ok(avisos()[0].textContent.includes(etiqueta));
       assert.equal(avisos()[0].role, 'status');
@@ -60,9 +61,9 @@ test('INC-034 C-27: 01–06 avisan de ceros asumidos y limpian el aviso con cada
       if (prefijo === 'comb') { c.cambiarNotacionCombinacion('columna'); assert.equal(avisos().length, 1); }
       if (accion === 'recalcular') {
         ids.forEach(id => { el(id).value = '0'; });
-        await c[calcular]('suma');
+        await c[calcular](operacion);
       } else if (accion === 'pendiente') {
-        c.fetch = () => new Promise(() => {}); c[calcular]('suma');
+        c.fetch = () => new Promise(() => {}); c[calcular](operacion);
       } else if (accion === 'limpiar') c[limpiar]();
       else c[ejemplo](prefijo === 'det' ? 3 : 1);
       assert.equal(avisos().length, 0, `${prefijo}: aviso obsoleto tras ${accion}`);
