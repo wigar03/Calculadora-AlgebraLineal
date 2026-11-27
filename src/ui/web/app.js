@@ -272,6 +272,7 @@ function mostrarErrorResultado(resultBox, titulo, mensaje) {
 
 function restablecerResultadoLineal(prefijo, modulo) {
   window.ExportarUI?.limpiar(`tab-${modulo}`);
+  window.GraficaR2?.limpiar(document.getElementById(`${prefijo}-grafica-r2`));
   const badge = document.getElementById(`${prefijo}-badge-status`);
   const resultBox = document.getElementById(`${prefijo}-result-content`);
   if (badge) {
@@ -323,6 +324,7 @@ function cambiarDimVector(delta) {
 
 function actualizarEntradasVectores() {
   window.ExportarUI?.limpiar("tab-vectores");
+  window.GraficaR2?.limpiar(document.getElementById("vec-grafica-r2"));
   const input = document.getElementById("vec-dim");
   vectorDim = parseInt(input.value, 10) || 3;
 
@@ -377,6 +379,7 @@ function obtenerValoresVector(prefijo, vacias) {
 
 function limpiarModuloVectores() {
   window.ExportarUI?.limpiar("tab-vectores");
+  window.GraficaR2?.limpiar(document.getElementById("vec-grafica-r2"));
   for (let i = 0; i < vectorDim; i++) {
     const elU = document.getElementById(`vec-u-${i}`);
     const elV = document.getElementById(`vec-v-${i}`);
@@ -522,6 +525,8 @@ function renderizarResultadoVectorUI(calc) {
     });
     resultBox.appendChild(stepsWrapper);
   }
+  window.GraficaR2?.renderizar(document.getElementById("vec-grafica-r2"),
+    vectorDim === 2 ? window.GraficaR2.vectores(calc) : null);
   refrescarIconosLucide();
 }
 
@@ -556,6 +561,7 @@ function cambiarDimCombK(delta) {
 
 function actualizarEntradasCombinacion() {
   window.ExportarUI?.limpiar("tab-combinacion");
+  window.GraficaR2?.limpiar(document.getElementById("comb-grafica-r2"));
   combN = parseInt(document.getElementById("comb-dim-n").value, 10) || 2;
   combK = parseInt(document.getElementById("comb-num-k").value, 10) || 2;
 
@@ -618,6 +624,7 @@ function actualizarEntradasCombinacion() {
 
 function limpiarModuloCombinacion() {
   window.ExportarUI?.limpiar("tab-combinacion");
+  window.GraficaR2?.limpiar(document.getElementById("comb-grafica-r2"));
   for (let j = 0; j < combK; j++) {
     for (let i = 0; i < combN; i++) {
       const el = document.getElementById(`comb-v-${j}-${i}`);
@@ -877,6 +884,8 @@ function renderizarResultadoCombinacionUI(calc) {
     });
     resultBox.appendChild(stepsWrapper);
   }
+  window.GraficaR2?.renderizar(document.getElementById("comb-grafica-r2"),
+    combN === 2 ? window.GraficaR2.combinacion(calc) : null);
   refrescarIconosLucide();
 }
 
@@ -1592,6 +1601,7 @@ function cambiarDimEqN(delta) {
 
 function renderizarEcuacionMatricial() {
   window.ExportarUI?.limpiar("tab-ecuaciones");
+  window.GraficaR2?.limpiar(document.getElementById("eq-grafica-r2"));
   eqM = parseInt(document.getElementById("eq-rows-m").value, 10) || 3;
   eqN = parseInt(document.getElementById("eq-cols-n").value, 10) || 3;
 
@@ -1630,6 +1640,7 @@ function renderizarEcuacionMatricial() {
 
 function limpiarModuloEcuaciones() {
   window.ExportarUI?.limpiar("tab-ecuaciones");
+  window.GraficaR2?.limpiar(document.getElementById("eq-grafica-r2"));
   for (let i = 0; i < eqM; i++) {
     for (let j = 0; j < eqN; j++) {
       const elA = document.getElementById(`eq-a-${i}-${j}`);
@@ -1827,6 +1838,8 @@ async function resolverEcuacionMatricialUI() {
       resultBox.appendChild(stepsWrapper);
     }
     refrescarIconosLucide();
+    window.GraficaR2?.renderizar(document.getElementById("eq-grafica-r2"),
+      eqN === 2 ? window.GraficaR2.ecuaciones({ A, b, data }) : null);
     window.ExportarUI?.registrar("tab-ecuaciones", data);
   } catch (err) {
     window.ExportarUI?.limpiar("tab-ecuaciones");

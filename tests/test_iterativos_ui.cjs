@@ -143,6 +143,8 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
   const sinModulo11 = actual
     // INC-035 C-23: solo el porcentaje de zoom aprobado para Newton-Raphson.
     .replace(/<!-- INC-035 C-23 --><span[^>]*id="nr-zoom-level"[^>]*>100%<\/span><!-- \/INC-035 C-23 -->/, '')
+    // INC-035 C-28b: solo los tres contenedores R², su CSS y su script aprobados.
+    .replace(/^ +<!-- INC-035 R2 -->.*<!-- \/INC-035 R2 -->\n/gm, '')
     // INC-034 C-23 parcial: solo lectura del cursor en Bisección y enfoque en Regla falsa.
     .replace(/^ +<!-- INC-034 C-23 -->.*<!-- \/INC-034 C-23 -->\n/gm, '')
     // INC-034 C-24: solo iconos, grupos de zoom y placeholder inicial de Secante.
