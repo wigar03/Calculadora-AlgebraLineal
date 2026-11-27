@@ -21,6 +21,7 @@ MÓDULOS INTEGRADOS:
 8. Regla Falsa (Regula Falsi): gráfica, continuidad, validación del intervalo e iteraciones.
 9. Newton-Raphson: derivada simbólica, gráfica, valor inicial elegido por el usuario e iteraciones.
 10. Secante: dos valores iniciales elegidos por el usuario e iteraciones sin derivada explícita.
+11. Jacobi y Gauss-Seidel: sistemas Ax = b por matriz o texto, análisis de convergencia e iteraciones.
 ================================================================================
 """
 
@@ -98,6 +99,7 @@ def main():
     print("    • Módulo 8: Método de la Regla Falsa (Regula Falsi)")
     print("    • Módulo 9: Método de Newton-Raphson")
     print("    • Módulo 10: Método de la secante")
+    print("    • Módulo 11: Jacobi y Gauss-Seidel")
     print("=" * 76)
 
     # Iniciar el servidor web interactivo
