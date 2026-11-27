@@ -526,7 +526,7 @@
       limpiarResultados();
       ejecutar(ev.currentTarget, async () => {
         const { vacias, ...cuerpo } = cuerpoBase(), d = await request("analizar", cuerpo);
-        if (d) { renderAnalisis(d.analisis || d, d.nombres); avisarVacias(el("analysis"), vacias); }
+        if (d) { renderAnalisis(d.analisis || d, d.nombres); avisarVacias(el("analysis"), vacias); window.ExportarUI?.registrar("tab-iterativos", d); }
       });
     });
 

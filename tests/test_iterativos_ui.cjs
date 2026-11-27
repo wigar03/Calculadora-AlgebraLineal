@@ -214,7 +214,7 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   };
   const el = id => { if (!nodos.has(id)) nodos.set(id, crearNodo()); return nodos.get(id); };
   el('it-tolerance').value = '1e-6'; el('it-max-iter').value = '100'; el('it-texto').value = '4x1 + x2 = 1\n2x1 + 3x2 = 2';
-  const envios = [], latexs = []; let metodoUI = 'comparar';
+  const envios = [], latexs = [], registrados = []; let metodoUI = 'comparar';
   const doc = {
     addEventListener(t, fn) { (listeners[t] ||= []).push(fn); },
     getElementById: el, createElement: crearNodo, createElementNS: (_, tag) => crearNodo(tag),
@@ -225,13 +225,14 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   rJ.analisis.garantia = 'no_asegurada'; rJ.analisis.razones = ['Sin garantía previa para Jacobi.'];
   rG.analisis.razones = ['Matriz simétrica definida positiva: garantía para Gauss-Seidel.'];
   const ctx = vm.createContext({
-    document: doc, window: { GraficaFunciones: G }, console, AbortController,
+    document: doc, window: { GraficaFunciones: G, ExportarUI: { limpiar() {}, registrar: (mod, d) => registrados.push([mod, d]) } }, console, AbortController,
     renderLatexElement: (n, tex, disp) => { n.textContent = tex; latexs.push([tex, disp]); },
     renderMixedLatex: (n, txt) => { n.textContent = txt; for (const m of txt.matchAll(/\$([^$]+)\$/g)) latexs.push([m[1], false]); },
     fetch: async (url, opts) => {
       envios.push({ url, body: JSON.parse(opts.body) });
       if (url.endsWith('/texto')) return { ok: true, json: async () => ({ A: [['4', '1'], ['2', '3']], b: ['1', '2'], nombres: ['x_1', 'x_2'] }) };
       if (url.endsWith('/resolver')) return { ok: true, json: async () => rG };
+      if (url.endsWith('/analizar')) return { ok: true, json: async () => ({ ...rJ.analisis, procedimiento: { titulo: 'Análisis exportable' } }) };
       return { ok: true, json: async () => ({ jacobi: rJ, gauss_seidel: rG, resumen: 'Gauss-Seidel convergió antes.' }) };
     }
   });
@@ -283,6 +284,10 @@ test('flujo DOM simulado: cargar texto y comparar Jacobi vs Gauss-Seidel renderi
   assert.ok(!recorrer(el('it-result')).some(n => n.textContent.includes('Casillas vacías')));
   el('it-a-0-1').value = ''; el('it-dim-inc').listeners.click[0]();
   assert.equal(el('it-a-0-1').value, '', 'Cambiar dimensión conserva los blancos para poder avisarlos');
+  el('it-analizar').listeners.click[0]({ currentTarget: el('it-analizar') });
+  await new Promise(r => setImmediate(r));
+  assert.equal(registrados.at(-1)[1].procedimiento.titulo, 'Análisis exportable');
+  assert.match(recorrer(el('it-analysis')).map(n => n.textContent).join(' '), /Casillas vacías tomadas como 0: A\[1,2\]/);
 });
 
 test('precisión: tabla, radios espectrales y vector solución usan 10 cifras significativas y notación científica', () => {

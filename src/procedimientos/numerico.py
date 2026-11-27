@@ -317,6 +317,30 @@ def _pasos_iter(res, prefijo=""):
     return out
 
 
+@registrar("/api/iterativos/analizar")
+def adaptar_analisis_iterativos(res, cuerpo):
+    from src.iterativos.entrada import leer_sistema
+    A, b, _ = leer_sistema(cuerpo["A"], cuerpo["b"], cuerpo.get("x0"))
+    analisis = _paso_analisis(res)
+    orden = res.get("reordenamiento") or {}
+    if orden.get("aplicado"):
+        perm = orden["permutacion"]
+        analisis["latex"][:0] = [f"A_{{\\text{{reordenada}}}} = {_mat([A[i] for i in perm])}",
+                                 f"b_{{\\text{{reordenado}}}} = {_vec([b[i] for i in perm])}"]
+    if res.get("diagonal_nula"):
+        analisis["detalles"].append("Filas con diagonal nula: " + ", ".join(str(i + 1) for i in res["diagonal_nula"]) + ".")
+    filas = (res.get("dominancia") or {}).get("filas") or []
+    return procedimiento(
+        "iterativos", "Análisis del sistema y convergencia",
+        entrada=[{"etiqueta": "A", "latex": _mat(A)}, {"etiqueta": "b", "latex": _vec(b)}],
+        pasos=[analisis],
+        resultado=[{"etiqueta": r"\text{Garantía}", "latex": r"\text{" + res.get("garantia", "no_asegurada").replace("_", " ") + "}"}],
+        verificacion=["Análisis previo de la matriz; no se han calculado iteraciones ni verificado una solución."],
+        tablas=[tabla("Dominancia diagonal por filas", ["i", "|a_{ii}|", r"\sum_{j\ne i}|a_{ij}|", r"\text{Dominancia estricta}"],
+                      [[f["i"] + 1, f["diagonal"], f["suma"], "Sí" if f["cumple"] else "No"] for f in filas])],
+    )
+
+
 def _tabla_iter(res, titulo):
     nombres = res.get("nombres") or [f"x_{i + 1}" for i in range(res.get("n", 0))]
     cols = ["k", *[f"{_var(nb, i)}^{{(k)}}" for i, nb in enumerate(nombres)],

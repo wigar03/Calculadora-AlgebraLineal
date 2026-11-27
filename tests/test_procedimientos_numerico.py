@@ -49,6 +49,25 @@ def _casos_golden():
 
 
 class TestProcedimientosNumerico(unittest.TestCase):
+    def test_analizar_iterativos_exporta_sin_modificar_el_analisis(self):
+        from src.iterativos.resolver import analizar_sistema
+        latex = []
+        for A, reordenar in (([[0, 2], [3, 1]], False), ([[0, 2], [3, 1]], True),
+                             ([[4, 1], [2, 3]], False), ([[1, 2], [2, 4]], False)):
+            cuerpo = {"A": A, "b": ["1/3", "1e-3"], "reordenar": reordenar}
+            res = analizar_sistema(**cuerpo)
+            salida = adjuntar("/api/iterativos/analizar", res, cuerpo)
+            self.assertEqual({k: v for k, v in salida.items() if k != "procedimiento"}, res)
+            proc = validar(salida["procedimiento"])
+            self.assertEqual(proc["modulo"], "iterativos")
+            self.assertEqual(len(proc["tablas"][0]["filas"]), 2)
+            self.assertIn("Diagonal nula:", " ".join(proc["pasos"][0]["detalles"]))
+            self.assertIn("Reordenamiento:", " ".join(proc["pasos"][0]["detalles"]))
+            self.assertTrue(any(r"\rho" in s for s in proc["pasos"][0]["latex"]))
+            self.assertIn(r"\frac{1}{1000}", proc["entrada"][1]["latex"])
+            latex.extend(_extraer_latex(proc))
+        _validar_katex_estricto(latex)
+
     def test_todas_las_rutas_registradas(self):
         for ruta in RUTAS:
             self.assertIn(ruta, ADAPTADORES, f"Falta adaptador para {ruta}")

@@ -75,7 +75,8 @@ class APIIterativos(unittest.TestCase):
     def test_analizar_devuelve_solo_analisis_y_garantia_del_metodo(self):
         for metodo, garantia in (("jacobi", "no_asegurada"), ("gauss_seidel", "demostrada")):
             r = self.post("analizar", {**CASOS["spd_no_dominante"], "metodo": metodo})
-            self.assertEqual(set(r), CLAVES_ANALISIS)
+            self.assertEqual(set(r) - {"procedimiento"}, CLAVES_ANALISIS)
+            validar_procedimiento(r["procedimiento"])
             self.assertEqual(r["garantia"], garantia)
             self.assertFalse(r["dominancia"]["estricta"])
             self.assertEqual(r["rango"], {"A": 3, "aumentada": 3})
@@ -142,7 +143,8 @@ class APIIterativos(unittest.TestCase):
                     with self.subTest(ruta=ruta, tol=tolerancia, metodo=metodo):
                         r = self.post(ruta, cuerpo)
                         if ruta == "analizar":
-                            self.assertEqual(set(r), CLAVES_ANALISIS)
+                            self.assertEqual(set(r) - {"procedimiento"}, CLAVES_ANALISIS)
+                            validar_procedimiento(r["procedimiento"])
                             self.assertEqual(r["rango"], {"A": 2, "aumentada": 2})
                             continue
                         resultados = [r] if ruta == "resolver" else [r["jacobi"], r["gauss_seidel"]]
