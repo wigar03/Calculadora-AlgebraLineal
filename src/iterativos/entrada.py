@@ -4,6 +4,7 @@ from fractions import Fraction
 from math import isfinite
 
 from src.core.arithmetic import parse_number
+from src.core.limites import LimiteExcedido
 
 
 # Umbrales exactos de redondeo IEEE-754 doble (empates al par): cero e infinito.
@@ -23,6 +24,8 @@ def _celda(valor, lugar):
         if isinstance(valor, bool) or valor is None or str(valor).strip() == "":
             raise ValueError("falta un número")
         numero = parse_number(valor)
+    except LimiteExcedido:
+        raise
     except (ValueError, TypeError, ZeroDivisionError, OverflowError) as exc:
         raise ValueError(
             f"{lugar}: valor inválido. Escribe un entero, un decimal como 0.75 "

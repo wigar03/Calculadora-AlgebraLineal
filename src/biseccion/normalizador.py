@@ -3,18 +3,33 @@
 import ast
 
 SIMBOLOS = str.maketrans({"−": "-", "–": "-", "·": "*", "×": "*"})
-SUPERINDICES = {"²": "^2", "³": "^3", "⁴": "^4"}
+DIGITOS_SUPER = {"⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
+                 "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9"}
+SIGNOS_SUPER = {"⁻": "-", "⁺": "+"}
+SUPERINDICES = {k: "^" + v for k, v in DIGITOS_SUPER.items()}
 ALIAS_FUNCIONES = {"sen": "sin"}
 
 
 def normalizar_con_mapa(texto):
     """Convierte símbolos Unicode a ASCII y devuelve `(normalizado, mapa_indices)`."""
-    partes, mapa = [], []
-    for idx, ch in enumerate(texto):
-        rep = SUPERINDICES.get(ch, ch.translate(SIMBOLOS))
+    partes, mapa, i, n = [], [], 0, len(texto)
+    while i < n:
+        ch = texto[i]
+        if ch in DIGITOS_SUPER or (ch in SIGNOS_SUPER and i + 1 < n and texto[i + 1] in DIGITOS_SUPER):
+            primero = SIGNOS_SUPER.get(ch, DIGITOS_SUPER.get(ch))
+            partes.append("^" + primero)
+            mapa.extend([i, i])
+            i += 1
+            while i < n and texto[i] in DIGITOS_SUPER:
+                partes.append(DIGITOS_SUPER[texto[i]])
+                mapa.append(i)
+                i += 1
+            continue
+        rep = ch.translate(SIMBOLOS)
         partes.append(rep)
-        mapa.extend([idx] * len(rep))
-    mapa.append(len(texto))
+        mapa.extend([i] * len(rep))
+        i += 1
+    mapa.append(n)
     return "".join(partes), mapa
 
 

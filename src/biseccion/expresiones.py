@@ -30,6 +30,8 @@ def numero_real(valor, nombre="valor"):
     try:
         if isinstance(valor, bool) or not isinstance(valor, (int, float, str)):
             raise ValueError()
+        if isinstance(valor, str):
+            valor = valor.strip().replace("−", "-").replace("–", "-")
         if isinstance(valor, str) and "/" in valor:
             numerador, denominador = valor.split("/")
             resultado = float(numerador) / float(denominador)

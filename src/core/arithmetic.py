@@ -55,6 +55,8 @@ def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
     Lanza:
         ValueError: Si la cadena no puede ser interpretada como un número racional válido o si b == 0.
     """
+    if isinstance(val, bool):
+        raise ValueError("No se admite un valor booleano como número.")
     if isinstance(val, Fraction):
         # Los resultados internos exactos pueden superar los límites de entrada.
         return val
@@ -63,7 +65,7 @@ def parse_number(val: Union[str, int, float, Fraction]) -> Fraction:
             raise LimiteExcedido(f"Cada entero admite como máximo {DIGITOS_MAX} dígitos.")
         return Fraction(val, 1)
     
-    s = str(val).strip()
+    s = str(val).strip().replace("−", "-").replace("–", "-")
     if not s:
         return Fraction(0, 1)
     _validar_literal_numerico(s)

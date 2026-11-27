@@ -3,6 +3,7 @@ import math
 import re
 from fractions import Fraction
 
+from ..biseccion.expresiones import numero_real
 from .convergencia import (analizar_espectro, garantia_convergencia, medir_cambio,
                            cumple_tolerancia, detectar_parada)
 from .gauss_seidel import paso_gauss_seidel
@@ -27,10 +28,10 @@ def _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar):
     if metodo not in ("jacobi", "gauss_seidel"):
         raise ValueError("Método inválido: elige jacobi o gauss_seidel.")
     try:
-        tol = float(tolerancia)
-    except (TypeError, ValueError, OverflowError) as exc:
+        tol = numero_real(tolerancia, "La tolerancia")
+    except ValueError as exc:
         raise ValueError("La tolerancia debe ser un número positivo finito.") from exc
-    if isinstance(tolerancia, bool) or not math.isfinite(tol) or tol <= 0:
+    if tol <= 0:
         raise ValueError("La tolerancia debe ser un número positivo finito.")
     if isinstance(max_iteraciones, str) and re.fullmatch(r"[0-9]+", max_iteraciones.strip()):
         try:

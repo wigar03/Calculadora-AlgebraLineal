@@ -6,7 +6,12 @@ import re
 import unittest
 from pathlib import Path
 
-from src.biseccion.expresiones import Expresion
+from fractions import Fraction
+from src.biseccion.expresiones import Expresion, numero_real
+from src.core.arithmetic import parse_number
+from src.core.limites import LimiteExcedido
+from src.iterativos.entrada import leer_sistema
+from src.iterativos.resolver import resolver_iterativo
 from tests.validacion.banco_raices import ECUACIONES, INCOMPLETOS
 
 IMPLICITAS = {"III-1", "III-2", "III-5", "III-13", "III-14", "IV-3"}
@@ -29,6 +34,23 @@ class TestNotacionEIgualdades(unittest.TestCase):
         self.assertAlmostEqual(Expresion("3·x² − 2×x³ + x⁴ – 1")(2.0), 3 * 4 - 2 * 8 + 16 - 1, places=12)
         self.assertEqual(Expresion("e^(−x) + sen(x)").latex(), r"e^{-x} + \sin\left(x\right)")
         self.assertEqual(Expresion("x² + x³ + x⁴").latex(), r"x^{2} + x^{3} + x^{4}")
+
+    def test_signo_menos_unicode_superindices_y_tolerancia_racional(self):
+        self.assertEqual(parse_number("−3/4"), Fraction(-3, 4))
+        self.assertEqual(parse_number("–2.5"), Fraction(-5, 2))
+        with self.assertRaises(ValueError):
+            parse_number(True)
+        self.assertEqual(numero_real("−1.5"), -1.5)
+        self.assertEqual(numero_real("−3/4"), -0.75)
+        res_it = resolver_iterativo([["4", "1"], ["1", "3"]], ["1", "2"], "jacobi", tolerancia="1/1000")
+        self.assertAlmostEqual(res_it["tolerancia"], 1e-3, places=12)
+        with self.assertRaises(LimiteExcedido):
+            leer_sistema([["9" * 65]], ["1"])
+        self.assertAlmostEqual(Expresion("x¹⁰ − x⁵ + 10⁻⁶")(2.0), 2**10 - 2**5 + 1e-6, places=12)
+        self.assertAlmostEqual(Expresion("x⁰ + 2⁺³")(5.0), 9.0, places=12)
+        with self.assertRaises(ValueError) as ctx:
+            Expresion("x¹⁰ + 2x")
+        self.assertIn("Escribe x¹⁰ + 2*x.", str(ctx.exception))
 
     def test_igualdad_convierte_a_izquierda_menos_derecha(self):
         f = Expresion("ln(x) + sen(x) = 1.2")
