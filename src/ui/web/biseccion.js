@@ -591,6 +591,24 @@
     const boton = document.getElementById("bis-submit");
     const preview = document.getElementById("bis-preview-math");
     const previewEstado = document.getElementById("bis-preview-status");
+    const recomendar = document.getElementById("bis-recommend"), consejo = document.getElementById("bis-recommendation");
+    let revisionConsejo = 0;
+    form.addEventListener("input", () => { revisionConsejo++; consejo.replaceChildren(); });
+    recomendar.addEventListener("click", async () => {
+      const turno = ++revisionConsejo; recomendar.disabled = true; consejo.textContent = "Evaluando los datos…";
+      const datos = Object.fromEntries(Object.entries({funcion: form.elements.funcion.value,
+        a: form.elements.a.value, b: form.elements.b.value,
+        condicion: document.getElementById("bis-condicion").value}).filter(([,v]) => String(v).trim()));
+      try {
+        const r = await fetch("/api/raices/recomendar", {method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(datos)});
+        const d = await r.json(); if (turno !== revisionConsejo) return;
+        if (!r.ok || d.error) throw Error(d.error || "No se pudo obtener la recomendación.");
+        const nombres = {biseccion:"Bisección",regla_falsa:"Regla falsa",newton_raphson:"Newton-Raphson",secante:"Secante"};
+        consejo.replaceChildren(crearMixto("p", `${d.recomendado ? "Se sugiere "+nombres[d.recomendado] : "Sin recomendación"}. ${d.justificacion}`, "bis-help"));
+        for (const m of d.metodos) consejo.append(crearMixto("p", `${nombres[m.metodo]}: ${m.apto ? "datos iniciales aptos" : "revise los datos"}. ${m.motivos.join(" ")}`, "bis-help"));
+      } catch(e) { if (turno === revisionConsejo) consejo.textContent = e.message; }
+      finally { recomendar.disabled = false; }
+    });
     let controlador = null;
     let version = 0;
     let previewControlador = null;

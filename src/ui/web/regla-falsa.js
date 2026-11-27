@@ -485,6 +485,24 @@
     const pasos = [...panel.querySelectorAll(".rf-step")];
     const tarjetaTabla = el("rf-table-card");
     const preview = el("rf-preview-math"), previewEstado = el("rf-preview-status");
+    const recomendar = el("rf-recommend"), consejo = el("rf-recommendation");
+    let revisionConsejo = 0;
+    panel.addEventListener("input", () => { revisionConsejo++; consejo.replaceChildren(); });
+    recomendar.addEventListener("click", async () => {
+      const turno = ++revisionConsejo; recomendar.disabled = true; consejo.textContent = "Evaluando los datos…";
+      const datos = Object.fromEntries(Object.entries({funcion: el("rf-funcion").value,
+        a: el("rf-xl").value || el("rf-a").value, b: el("rf-xu").value || el("rf-b").value,
+        condicion: el("rf-condicion").value}).filter(([,v]) => String(v).trim()));
+      try {
+        const r = await fetch("/api/raices/recomendar", {method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(datos)});
+        const d = await r.json(); if (turno !== revisionConsejo) return;
+        if (!r.ok || d.error) throw Error(d.error || "No se pudo obtener la recomendación.");
+        const nombres = {biseccion:"Bisección",regla_falsa:"Regla falsa",newton_raphson:"Newton-Raphson",secante:"Secante"};
+        consejo.replaceChildren(crearMixto("p", `${d.recomendado ? "Se sugiere "+nombres[d.recomendado] : "Sin recomendación"}. ${d.justificacion}`, "bis-help"));
+        for (const m of d.metodos) consejo.append(crearMixto("p", `${nombres[m.metodo]}: ${m.apto ? "datos iniciales aptos" : "revise los datos"}. ${m.motivos.join(" ")}`, "bis-help"));
+      } catch(e) { if (turno === revisionConsejo) consejo.textContent = e.message; }
+      finally { recomendar.disabled = false; }
+    });
     const estado = { version: 0, funcion: null, analisis: null, aborto: null };
     // Los errores del paso 1 tienen su propio aviso: la vista previa reescribe su texto de estado.
     const errorFuncion = crear("p", undefined, "bis-message bis-error");
