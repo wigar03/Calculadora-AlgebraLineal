@@ -10,6 +10,7 @@
 | v1.0.0-rc.6 | 2026-11-23 | **prerelease publicada** (CI 45270508552 en verde) | etapa 4: exportación (P2) y Markdown público |
 | v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
 | v1.0.0 | 2026-11-24 | **release estable publicada** (CI 45309347449 en verde) | primera estable, sin firma y sin prueba en Excel (autorizado) |
+| v1.1.0 | 2026-11-27 | release estable (pendiente de CI del tag) | banco final 50-64, auditoría de coherencia, orden observado, condición y recomendación |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -84,3 +85,12 @@
   Binarios compilados por la CI del tag; sumas SHA-256 verificadas tras la CI y de nuevo tras descargarlos sin
   autenticación por `/releases/latest/download/`. `/releases/latest` redirige a v1.0.0. Diagnóstico del portable
   publicado en un Windows 11 real: versión 1.0.0, 11 módulos, 342 fórmulas, carga 2,3 s. `v1.0.0-rc.7` intacta.
+
+## v1.1.0 — banco final y auditoría de coherencia
+- **Motivo:** funciones nuevas compatibles (versión menor): ejercicios 50-64, «Usar resultado como A» (INC-032), forma
+  A·X = B, independencia lineal verificada, orden de convergencia observado, condición de la raíz y recomendación de
+  método (INC-033), y correcciones C-01…C-21 de la auditoría de Carbon (`docs/auditoria/carbon-coherencia.md`).
+- **Sin cambios de resultados verificados:** 43 respuestas doradas iguales salvo los tres campos de certificación
+  aprobados (C-01); 49 ejercicios del banco A y 15 del banco final validados contra SymPy.
+- **Sigue sin firma digital y sin prueba en Excel.** **Notas:** `docs/notas-v1.1.0.md`.
+
