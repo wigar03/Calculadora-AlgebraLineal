@@ -148,6 +148,11 @@ La CI de Linux falló una vez con `BrokenPipe`: ante un cuerpo mayor de 256 KB e
 leerlo, y el cliente que aún enviaba recibía un cierre abrupto en lugar del mensaje del límite (reproducido también
 en Windows). Ahora se lee y descarta hasta 4 MiB antes de responder; prueba `tests/test_cuerpo_excesivo.py`.
 
+### INC-035 · 2026-11-27 · UX · APROBADA POR EL PROPIETARIO (aplazados de INC-034)
+Aprobados los puntos aplazados de la auditoría: C-28b, gráficas en $`\mathbb{R}^2`$ en Vectores, Combinación lineal y
+Sistemas (solo cuando la dimensión es 2), y el resto de C-23 en Newton-Raphson: indicador de porcentaje de zoom y
+reescalado vertical al enfocar la raíz, como en Bisección y Regla falsa.
+
 ### INC-034 · 2026-11-27 · UX · APROBADA E IMPLEMENTADA (lotes 1 y 2 de C-22…C-28; `main` 71c4f60)
 Aprobadas las propuestas de la auditoría de coherencia: lote 1 = C-27 (aviso en el resultado de las casillas vacías
 tomadas como 0, sin exigir escribirlo), C-26 (Inversa n ≥ 1; «Cofactores» desactivado con explicación para n > 6), C-22
