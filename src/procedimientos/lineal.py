@@ -100,6 +100,7 @@ def adaptar_ecuaciones(respuesta, cuerpo):
     if p["pasos"] and p["pasos"][0]["matriz"]:
         p["entrada"] = [_item(r"[A \mid b]", _matriz_latex(p["pasos"][0]["matriz"]))]
     if respuesta.get("forma_matricial"):
+        p["entrada"].insert(0, _item("Sistema", respuesta["forma_matricial"]["latex"]))
         p["pasos"].insert(0, paso("Forma matricial $A\\cdot X = B$", latex=[respuesta["forma_matricial"]["latex"]]))
     p["resultado"] = [_item(nombre, valor) for nombre, valor in respuesta["solucion_dict"].items()]
     p["verificacion"] = list(respuesta["verificacion"])

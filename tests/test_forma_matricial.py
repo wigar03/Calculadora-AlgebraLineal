@@ -21,6 +21,7 @@ class TestFormaMatricial(unittest.TestCase):
                     self.assertEqual(forma["B"], [str(v) for v in datos["b"]])
                     self.assertEqual(forma["X"], [f"x_{j+1}" for j in range(len(datos["A"][0]))])
                     p = r["procedimiento"]["pasos"]
+                    self.assertEqual(r["procedimiento"]["entrada"][0]["latex"], forma["latex"])
                     self.assertEqual(p[0]["latex"], [forma["latex"]])
                     self.assertEqual(p[1]["matriz"], r["pasos"][0]["matrix"])
                     self.assertIn(r"A \cdot X = B", forma["latex"])

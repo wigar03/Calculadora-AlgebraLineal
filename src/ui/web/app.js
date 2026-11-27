@@ -822,11 +822,12 @@ function renderizarResultadoCombinacionUI(calc) {
   }
 
   // Desglose de Comprobación
-  if (data.comprobacion && data.comprobacion.length > 0) {
+  const comprobaciones = [...(data.comprobacion || []), ...(data.verificacion_independencia || [])];
+  if (comprobaciones.length > 0) {
     const verifEl = document.createElement("div");
     verifEl.className = "verification-box";
     verifEl.innerHTML = `<h4>Comprobación Componente por Componente:</h4>`;
-    data.comprobacion.forEach(c => {
+    comprobaciones.forEach(c => {
       const row = document.createElement("div");
       renderMixedLatex(row, c);
       verifEl.appendChild(row);
@@ -1705,7 +1706,7 @@ async function resolverEcuacionMatricialUI() {
 
     // LaTeX del Sistema y de la Solución
     const xVars = Array.from({ length: eqN }, (_, i) => `x_{${i + 1}}`);
-    const latexSystem = `A \\vec{x} = \\vec{b} \\iff ${matrixToLatex(A)} ${vectorToLatexCol(xVars)} = ${vectorToLatexCol(b)}`;
+    const latexSystem = data.forma_matricial?.latex || `A \\vec{x} = \\vec{b} \\iff ${matrixToLatex(A)} ${vectorToLatexCol(xVars)} = ${vectorToLatexCol(b)}`;
     
     let latexSol = "";
     if (data.tipo_sistema === "SCD") {
@@ -1756,6 +1757,19 @@ async function resolverEcuacionMatricialUI() {
       const stepsWrapper = document.createElement("div");
       stepsWrapper.className = "steps-container";
       stepsWrapper.innerHTML = `<h4>Pasos de Eliminación por Renglones:</h4>`;
+      if (data.forma_matricial) {
+        const item = document.createElement("div");
+        item.className = "step-item";
+        const titulo = document.createElement("div");
+        titulo.className = "step-item-title";
+        renderMixedLatex(titulo, "Forma matricial $A\\cdot X = B$");
+        const formula = document.createElement("div");
+        formula.className = "latex-display-box";
+        renderLatexElement(formula, data.forma_matricial.latex);
+        item.appendChild(titulo);
+        item.appendChild(formula);
+        stepsWrapper.appendChild(item);
+      }
       data.pasos.forEach(p => {
         const stepItem = document.createElement("div");
         stepItem.className = "step-item";

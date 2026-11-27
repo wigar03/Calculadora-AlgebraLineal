@@ -332,6 +332,55 @@ test('el vector estructurado conserva ceros, signos, coeficientes unitarios e in
   assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
 });
 
+test('50–54: forma matricial exacta antes de la aumentada en vista y exportación', async () => {
+  const { execFileSync } = require('node:child_process');
+  const { procedimientoALatex } = require('../src/ui/web/exportar.js');
+  const codigo = `import json
+from tests.validacion.banco_final import SISTEMAS_RECTANGULARES
+from src.ui.web_server import calcular_respuesta
+print(json.dumps([dict(**d, data=calcular_respuesta('/api/ecuaciones/resolver',d)[0]) for d in SISTEMAS_RECTANGULARES.values()], default=str))`;
+  for (const caso of JSON.parse(execFileSync('python', ['-c', codigo], { encoding: 'utf8' }))) {
+    const { el, contexto: c, renderizados } = pagina();
+    el('eq-rows-m').value = String(caso.A.length); el('eq-cols-n').value = String(caso.A[0].length);
+    c.renderizarEcuacionMatricial();
+    caso.A.forEach((fila, i) => fila.forEach((v, j) => { el(`eq-a-${i}-${j}`).value = String(v); }));
+    caso.b.forEach((v, i) => { el(`eq-b-${i}`).value = String(v); }); c.respuesta = caso.data;
+    await c.resolverEcuacionMatricialUI();
+    const formula = caso.data.forma_matricial.latex;
+    assert.equal(renderizados.filter(t => t === formula).length, 2);
+    const titulo = renderizados.indexOf('Forma matricial $A\\cdot X = B$');
+    assert.ok(titulo >= 0);
+    assert.ok(renderizados.indexOf(formula, titulo) < renderizados.indexOf(c.augmentedMatrixToLatex(caso.data.pasos[0].matrix, caso.A[0].length)));
+    assert.doesNotThrow(() => katex.renderToString(formula, { throwOnError: true, strict: 'error' }));
+    const tex = procedimientoALatex(caso.data.procedimiento);
+    assert.ok(tex.includes(formula));
+    assert.ok(tex.indexOf(formula, tex.indexOf('Procedimiento')) < tex.indexOf(caso.data.procedimiento.pasos[1].titulo));
+  }
+});
+
+test('60–64: sustitución no trivial, despeje y rango aparecen en verificación y LaTeX', () => {
+  const { execFileSync } = require('node:child_process');
+  const { procedimientoALatex } = require('../src/ui/web/exportar.js');
+  const codigo = `import json
+from tests.validacion.banco_final import CONJUNTOS
+from src.ui.web_server import calcular_respuesta
+vs = [*CONJUNTOS.values(), [['1/2'],['1/3']], [[1,0],[0,1]]]
+print(json.dumps([dict(vectores=v, b=[0]*len(v[0]), data=calcular_respuesta('/api/vectores/combinacion',dict(vectores=v,b=[0]*len(v[0])))[0]) for v in vs]))`;
+  for (const caso of JSON.parse(execFileSync('python', ['-c', codigo], { encoding: 'utf8' }))) {
+    const { el, contexto: c, renderizados } = pagina(); c.renderizarResultadoCombinacionUI(caso);
+    const caja = el('comb-result-content').children.find(n => n.className === 'verification-box');
+    assert.ok(caso.data.verificacion_independencia.length > 0);
+    for (const linea of caso.data.verificacion_independencia) {
+      assert.ok(renderizados.includes(linea)); assert.ok(caja.children.some(n => n.innerText === linea));
+      for (const m of linea.matchAll(/\$([^$]+)\$/g)) {
+        assert.doesNotThrow(() => katex.renderToString(m[1], { throwOnError: true, strict: 'error' }));
+      }
+    }
+    const tex = procedimientoALatex(caso.data.procedimiento);
+    assert.ok(tex.includes(caso.data.independencia === 'dependiente' ? 'Despeje, componente' : 'solo existe la solución trivial'));
+  }
+});
+
 test('KaTeX estricto interpreta los indices emitidos por Python como un solo subindice', () => {
   const { execFileSync } = require('node:child_process');
   const codigo = `import json
