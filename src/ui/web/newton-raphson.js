@@ -68,6 +68,7 @@
     return n;
   }
   document.addEventListener("DOMContentLoaded", () => {
+    const actualizarPreview = window.conectarVistaPreviaFuncion(el("function"), el("preview-math"), el("preview-status"));
     const recomendar = el("recommend"), consejo = el("recommendation");
     let revisionConsejo = 0;
     document.getElementById("tab-newton-raphson").addEventListener("input", () => { revisionConsejo++; consejo.replaceChildren(); });
@@ -307,8 +308,8 @@
     document.querySelectorAll("[data-nr-example]").forEach(b=>b.addEventListener("click",()=>{
       const ej=EJEMPLOS[b.dataset.nrExample]; invalidarFuncion(); el("x0").value="";
       el("function").value=ej.funcion; el("a").value=ej.a; el("b").value=ej.b;
-      el("function-form").requestSubmit(); renderMixedLatex(el("hint"),ej.ayuda);
+      actualizarPreview(); el("function-form").requestSubmit(); renderMixedLatex(el("hint"),ej.ayuda);
     }));
-    el("clear").addEventListener("click",()=>{invalidarFuncion();el("function").value="";el("x0").value="";el("initial-preview").replaceChildren();el("function").focus();});
+    el("clear").addEventListener("click",()=>{invalidarFuncion();el("function").value="";actualizarPreview();el("x0").value="";el("initial-preview").replaceChildren();el("function").focus();});
   });
 })();

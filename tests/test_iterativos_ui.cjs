@@ -141,6 +141,11 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
   const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
   const sinModulo11 = actual
+    // INC-034 C-22: solo vista previa y estado inicial plegado del teclado de Bisección.
+    .replace(/^ +<!-- INC-034 C-22 -->.*<!-- \/INC-034 C-22 -->\n/gm, '')
+    .replace(/<!-- INC-034 C-22 -->.*?<!-- \/INC-034 C-22 -->/g, '')
+    .replace('aria-expanded="false" aria-controls="bis-keyboard">Mostrar teclas', 'aria-expanded="true" aria-controls="bis-keyboard">Ocultar teclas')
+    .replace('aria-labelledby="bis-keyboard-label" hidden', 'aria-labelledby="bis-keyboard-label"')
     // INC-033: selector de raíz y recomendación autorizados en los cuatro módulos.
     .replace(/^ *<!-- INC-033 -->\n[\s\S]*?^ *<!-- \/INC-033 -->\n/gm, '')
     .replace(/<!-- INC-033 -->[\s\S]*?<!-- \/INC-033 -->/g, '')

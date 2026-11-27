@@ -64,9 +64,31 @@
       xScale: x, yScale: y };
   }
 
-  // Exporta solo las utilidades puras para verificarlas con el runner estándar de Node.
+  function conectarVistaPreviaFuncion(input, preview, estado) {
+    let temporizador, control, version = 0;
+    function actualizar() {
+      clearTimeout(temporizador); control?.abort(); const turno = ++version, funcion = input.value.trim();
+      preview.replaceChildren();
+      estado.textContent = funcion ? "Actualizando vista matemática…" : "Escriba una función para ver su representación matemática.";
+      if (!funcion) return;
+      temporizador = setTimeout(async () => {
+        control = new AbortController();
+        try {
+          const r = await fetch("/api/biseccion/preview", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({funcion}), signal:control.signal});
+          const d = await r.json(); if (turno !== version) return;
+          if (!r.ok || d.error) { estado.textContent = d.error || "Complete la expresión para actualizar la vista matemática."; return; }
+          renderLatexElement(preview, `f(x) = ${d.latex}`, true);
+          estado.textContent = window.katex ? "Vista de la función escrita; no verifica su dominio ni su continuidad." : "Representación LaTeX. KaTeX no está disponible; la función puede calcularse igualmente.";
+        } catch (e) {
+          if (turno === version && e.name !== "AbortError") estado.textContent = "Vista matemática no disponible en este momento. Puede seguir escribiendo o calcular.";
+        }
+      }, 200);
+    }
+    input.addEventListener("input", actualizar); actualizar(); return actualizar;
+  }
+  if (typeof window !== "undefined") window.conectarVistaPreviaFuncion = conectarVistaPreviaFuncion;
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { formatear, numeroLatex, datosGrafica, EJEMPLOS, MOTIVOS };
+    module.exports = { formatear, numeroLatex, datosGrafica, EJEMPLOS, MOTIVOS, conectarVistaPreviaFuncion };
   }
   if (typeof document === "undefined") return;
 

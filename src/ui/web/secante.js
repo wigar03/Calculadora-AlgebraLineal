@@ -13,6 +13,7 @@
   if(typeof document==="undefined")return;
   document.addEventListener("DOMContentLoaded",()=>{
     const el=id=>document.getElementById(`sc-${id}`);
+    const actualizarPreview=window.conectarVistaPreviaFuncion(el("function"),el("preview-math"),el("preview-status"));
     const node=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
     const math=(s,display=true)=>{const n=node(display?"div":"span");renderLatexElement(n,s,display);return n;};
     const mix=(s)=>{const n=node("p");renderMixedLatex(n,s);return n;};
@@ -121,7 +122,7 @@
     el("mark-x0").addEventListener("click",()=>marcar(marcando==="x0"?null:"x0"));
     el("mark-x1").addEventListener("click",()=>marcar(marcando==="x1"?null:"x1"));
     el("focus-root").addEventListener("click",()=>{if(!res)return;const margen=Math.max(Math.abs(res.raiz)*.03,.05),a=res.raiz-margen,b=res.raiz+margen;run(el("graph-form"),()=>graph(a,b));});
-    for(const [id,f,b,hint]of [["example","x^3-x-2",2.5,"La presentación utiliza $x_0=1$, $x_1=2$. Escríbalos después de observar la gráfica."],["practice","x^3-2*x-5",3.5,"La práctica propone $x_0=2$, $x_1=3$ y tolerancia $10^{-6}$."]])el(id).addEventListener("click",()=>{invalidate(1);el("function").value=f;el("a").value=0;el("b").value=b;el("x0").value="";el("x1").value="";el("graph-form").requestSubmit();renderMixedLatex(el("hint"),hint);});
-    el("clear").addEventListener("click",()=>{invalidate(1);["function","x0","x1"].forEach(id=>el(id).value="");el("function").focus();});
+    for(const [id,f,b,hint]of [["example","x^3-x-2",2.5,"La presentación utiliza $x_0=1$, $x_1=2$. Escríbalos después de observar la gráfica."],["practice","x^3-2*x-5",3.5,"La práctica propone $x_0=2$, $x_1=3$ y tolerancia $10^{-6}$."]])el(id).addEventListener("click",()=>{invalidate(1);el("function").value=f;el("a").value=0;el("b").value=b;el("x0").value="";el("x1").value="";actualizarPreview();el("graph-form").requestSubmit();renderMixedLatex(el("hint"),hint);});
+    el("clear").addEventListener("click",()=>{invalidate(1);["function","x0","x1"].forEach(id=>el(id).value="");actualizarPreview();el("function").focus();});
   });
 })();

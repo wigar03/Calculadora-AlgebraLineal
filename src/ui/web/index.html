@@ -813,9 +813,9 @@
               </div>
               <div class="bis-keyboard-toolbar">
                 <span id="bis-keyboard-label">Teclado matemático</span>
-                <button id="bis-keyboard-toggle" class="btn-text" type="button" aria-expanded="true" aria-controls="bis-keyboard">Ocultar teclas</button>
+                <button id="bis-keyboard-toggle" class="btn-text" type="button" aria-expanded="false" aria-controls="bis-keyboard">Mostrar teclas</button>
               </div>
-              <div id="bis-keyboard" class="bis-keyboard" role="group" aria-labelledby="bis-keyboard-label"></div>
+              <div id="bis-keyboard" class="bis-keyboard" role="group" aria-labelledby="bis-keyboard-label" hidden></div>
               <p id="bis-keyboard-status" class="sr-only" role="status"></p>
               </div>
               <p id="bis-syntax" class="bis-help">Escriba con su teclado o use las teclas en pantalla. Seleccione una parte de la expresión para envolverla en una raíz, fracción o función. Use × para multiplicar. Ángulos en radianes.</p>
@@ -1151,6 +1151,7 @@
               <form id="nr-function-form" class="rf-form">
                 <div><label class="field-label" for="nr-function" data-math>Función $f(x)$</label>
                   <div class="bis-formula-editor"><input id="nr-function" class="bis-input bis-expression" value="x^3 - x - 2" maxlength="500" required spellcheck="false" autocomplete="off" aria-describedby="nr-syntax">
+                    <!-- INC-034 C-22 --><div class="bis-preview" aria-label="Representación matemática de la función escrita"><div id="nr-preview-math" class="bis-preview-math" aria-live="polite" aria-atomic="true"></div><p id="nr-preview-status" class="bis-help" role="status">La ecuación se actualiza mientras escribe.</p></div><!-- /INC-034 C-22 -->
                     <div class="bis-keyboard-toolbar"><span>Teclado matemático</span><button class="btn-text" type="button" aria-expanded="false" aria-controls="nr-keyboard">Mostrar teclas</button></div>
                     <div id="nr-keyboard" class="bis-keyboard" hidden></div><p class="sr-only" role="status"></p>
                   </div>
@@ -1228,7 +1229,7 @@
         <div class="rf-layout"><div class="rf-column">
           <div class="card rf-card" id="sc-card-1"><div class="card-header"><h3><span class="bis-section-number">01</span>Función y gráfica</h3></div>
             <form id="sc-graph-form" class="rf-form"><div><label for="sc-function" data-math>Función $f(x)$</label>
-              <div class="bis-formula-editor"><input id="sc-function" class="bis-input bis-expression" value="x^3-x-2" required maxlength="500" autocomplete="off" spellcheck="false"><div class="bis-keyboard-toolbar"><span>Teclado matemático</span><button class="btn-text" type="button" aria-expanded="false" aria-controls="sc-keyboard">Mostrar teclas</button></div><div id="sc-keyboard" class="bis-keyboard" hidden></div><p class="sr-only" role="status"></p></div>
+              <div class="bis-formula-editor"><input id="sc-function" class="bis-input bis-expression" value="x^3-x-2" required maxlength="500" autocomplete="off" spellcheck="false"><!-- INC-034 C-22 --><div class="bis-preview" aria-label="Representación matemática de la función escrita"><div id="sc-preview-math" class="bis-preview-math" aria-live="polite" aria-atomic="true"></div><p id="sc-preview-status" class="bis-help" role="status">La ecuación se actualiza mientras escribe.</p></div><!-- /INC-034 C-22 --><div class="bis-keyboard-toolbar"><span>Teclado matemático</span><button class="btn-text" type="button" aria-expanded="false" aria-controls="sc-keyboard">Mostrar teclas</button></div><div id="sc-keyboard" class="bis-keyboard" hidden></div><p class="sr-only" role="status"></p></div>
               <p class="bis-help">Use * y ^. Funciones: sin, cos, tan, asin, acos, atan, exp, ln, log, sqrt y abs. Las inversas devuelven radianes.</p></div>
               <div class="bis-fields"><div><label for="sc-a" data-math>Desde $x=$</label><input id="sc-a" class="bis-input" value="0" required></div><div><label for="sc-b" data-math>Hasta $x=$</label><input id="sc-b" class="bis-input" value="2.5" required></div></div><button class="btn-primary rf-action" type="submit">Graficar función</button>
             <!-- INC-033 --><div><button id="sc-recommend" type="button" class="btn-text">Recomendar método</button><div id="sc-recommendation" class="bis-help" aria-live="polite"></div></div><!-- /INC-033 --></form><div class="card-footer-actions"><button class="btn-text" type="button" id="sc-example">Ejemplo de la presentación</button><button class="btn-text" type="button" id="sc-practice">Práctica</button><button class="btn-clear" type="button" id="sc-clear">Limpiar</button></div><p id="sc-hint" class="bis-help"></p>
@@ -1335,11 +1336,11 @@
   <script src="app.js?v=1ccf33dc3a67"></script>
   <script src="sidebar.js?v=1b48755f71be"></script>
   <script src="formula-keyboard.js?v=009d7a296017"></script>
-  <script src="biseccion.js?v=74df9cc5a953"></script>
+  <script src="biseccion.js?v=eb3b5f34dc8a"></script>
   <script src="regla-falsa.js?v=2ecff85bcc8e"></script>
   <script src="grafica-funciones.js?v=5f3a7d1cb693"></script>
-  <script src="newton-raphson.js?v=1f2ea372b2ae"></script>
-  <script src="secante.js?v=2154afe74408"></script>
+  <script src="newton-raphson.js?v=c1602f795c50"></script>
+  <script src="secante.js?v=1fdba110ca7e"></script>
   <script src="iterativos.js?v=5cf7b4a86fd6"></script>
   <script src="exportar.js?v=85158b0f1fd5"></script>
   <script src="exportar-ui.js?v=7d317634e74c"></script>
