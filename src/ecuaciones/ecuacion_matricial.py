@@ -87,6 +87,19 @@ class ResultadoEcuacionMatricial:
         self.parametros: List[str] = []
         self.solucion_particular: List[Fraction] = []
         self.base_nucleo: List[List[Fraction]] = []
+        self.forma_matricial: Dict[str, Any] = {}
+
+
+def _forma_matricial(A, b, nombres):
+    def matriz(filas):
+        return r"\begin{pmatrix}" + r" \\ ".join(" & ".join(f) for f in filas) + r"\end{pmatrix}"
+
+    a = matriz([[format_latex_number(v) for v in fila] for fila in A])
+    x = matriz([[formatear_subindices_latex(nombre)] for nombre in nombres])
+    independiente = matriz([[format_latex_number(v)] for v in b])
+    return {"A": [[format_number(v) for v in fila] for fila in A], "X": list(nombres),
+            "B": [format_number(v) for v in b],
+            "latex": r"A \cdot X = B \quad\Longleftrightarrow\quad " + a + r" \cdot " + x + " = " + independiente}
 
 
 def resolver_ecuacion_matricial(
@@ -171,6 +184,7 @@ def resolver_ecuacion_matricial(
     res.parametros = gauss_res.parameter_names
     res.solucion_particular = gauss_res.particular_solution
     res.base_nucleo = gauss_res.nullspace_basis
+    res.forma_matricial = _forma_matricial(A, b, nombres_variables)
     
     # 5. Comprobación de consistencia si el sistema es compatible
     if res.tipo_sistema == "SCD":

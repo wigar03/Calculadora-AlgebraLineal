@@ -696,6 +696,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             "parametros": res.parametros,
             "solucion_particular": res.solucion_particular,
             "base_nucleo": res.base_nucleo,
+            "forma_matricial": res.forma_matricial,
         }
         self._send_json(data)
 
