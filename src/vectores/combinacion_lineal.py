@@ -44,6 +44,7 @@ resolución computacional mediante el motor de eliminación de renglones.
 """
 
 from fractions import Fraction
+from math import gcd, lcm
 from src.core.limites import COMBINACION_N_MAX, COMBINACION_K_MAX, exigir_dimension
 from typing import Any, List, Dict, Optional, Union
 
@@ -87,6 +88,37 @@ class ResultadoCombinacionLineal:
         self.justificacion_teorica: str = ""
         self.pasos_reduccion: List[Step] = []
         self.comprobacion_sustitucion: List[str] = []
+        self.analisis_independencia: Dict[str, Any] = {}
+
+
+def _expresion_vectores(coeficientes):
+    terminos = []
+    for j, c in enumerate(coeficientes, 1):
+        if not c:
+            continue
+        valor = "" if abs(c) == 1 else format_latex_number(abs(c))
+        signo = ("-" if c < 0 else "") if not terminos else (" - " if c < 0 else " + ")
+        terminos.append(signo + valor + rf"\vec{{v}}_{{{j}}}")
+    return "".join(terminos) or r"\vec{0}"
+
+
+def _independencia(gauss, k):
+    datos = {"independencia": "independiente" if gauss.rank_A == k else "dependiente",
+             "rango": gauss.rank_A, "numero_vectores": k, "relacion": None, "despeje": None}
+    if not gauss.nullspace_basis:
+        return datos
+    # Primer parámetro libre = 1, los demás = 0; después se eliminan denominadores.
+    base = gauss.nullspace_basis[0]
+    multiplo = lcm(*(c.denominator for c in base))
+    enteros = [int(c * multiplo) for c in base]
+    divisor = gcd(*enteros)
+    coef = [Fraction(c // divisor) for c in enteros]
+    datos["relacion"] = {"coeficientes": [str(c) for c in coef],
+                         "latex": _expresion_vectores(coef) + r" = \vec{0}"}
+    j = max(i for i, c in enumerate(coef) if c)
+    otros = [-c / coef[j] if i != j else Fraction(0) for i, c in enumerate(coef)]
+    datos["despeje"] = rf"\vec{{v}}_{{{j + 1}}} = " + _expresion_vectores(otros)
+    return datos
 
 
 def evaluar_combinacion_lineal(
@@ -165,6 +197,8 @@ def evaluar_combinacion_lineal(
     resultado.matriz_aumentada_final = gauss_res.final_matrix
     resultado.escalares = gauss_res.solution
     resultado.escalares_vector = gauss_res.solution_vector
+    if not any(b):
+        resultado.analisis_independencia = _independencia(gauss_res, k)
     
     # Clasificación algebraica
     if gauss_res.system_type == "SI":
