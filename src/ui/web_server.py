@@ -521,6 +521,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
             "comprobacion": resultado.comprobacion_sustitucion,
             "pasos": pasos_serializables,
             **resultado.analisis_independencia,
+            "verificacion_independencia": resultado.verificacion_independencia,
         }
         self._send_json(data)
 

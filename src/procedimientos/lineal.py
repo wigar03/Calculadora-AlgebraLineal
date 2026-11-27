@@ -79,6 +79,7 @@ def adaptar_combinacion(respuesta, cuerpo):
                                  f"rango {respuesta['rango']}; {respuesta['numero_vectores']} vectores.")
         if respuesta.get("relacion"):
             p["verificacion"].extend([f"${respuesta['relacion']['latex']}$", f"${respuesta['despeje']}$"])
+        p["verificacion"].extend(respuesta.get("verificacion_independencia", []))
     p["avisos"].extend(respuesta[k] for k in ("tipo_solucion", "expresion_algebraica") if respuesta.get(k))
     return p
 

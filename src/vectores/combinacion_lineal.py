@@ -89,6 +89,7 @@ class ResultadoCombinacionLineal:
         self.pasos_reduccion: List[Step] = []
         self.comprobacion_sustitucion: List[str] = []
         self.analisis_independencia: Dict[str, Any] = {}
+        self.verificacion_independencia: List[str] = []
 
 
 def _expresion_vectores(coeficientes):
@@ -119,6 +120,35 @@ def _independencia(gauss, k):
     otros = [-c / coef[j] if i != j else Fraction(0) for i, c in enumerate(coef)]
     datos["despeje"] = rf"\vec{{v}}_{{{j + 1}}} = " + _expresion_vectores(otros)
     return datos
+
+
+def _comprobar_independencia(vectores, datos):
+    k = len(vectores)
+    if datos["independencia"] == "independiente":
+        return [rf"Como $\operatorname{{rg}}(V) = {datos['rango']} = k$, no hay variables libres: "
+                rf"solo existe la solución trivial $c_{{1}} = \cdots = c_{{{k}}} = 0$ de $V\vec{{c}} = \vec{{0}}$."]
+    coef = [Fraction(c) for c in datos["relacion"]["coeficientes"]]
+    j = max(i for i, c in enumerate(coef) if c)
+    despeje = [-c / coef[j] if i != j else Fraction(0) for i, c in enumerate(coef)]
+    salida = ["Verificación algebraica de la relación no trivial (coeficientes no todos nulos):"]
+    for titulo, pesos, objetivo in (("Relación", coef, [Fraction(0)] * len(vectores[0])),
+                                    ("Despeje", despeje, vectores[j])):
+        if titulo == "Despeje":
+            salida.append(f"Comprobación del despeje: ${datos['despeje']}$.")
+        calculado = []
+        for i, esperado in enumerate(objetivo):
+            suma = sum((c * v[i] for c, v in zip(pesos, vectores)), Fraction(0))
+            calculado.append(format_latex_number(suma))
+            productos = [" \\cdot ".join(format_latex_scalar(x, True) for x in (c, v[i]))
+                         for c, v in zip(pesos, vectores) if c]
+            desglose = " + ".join(productos) or "0"
+            salida.append(f"{titulo}, componente {i+1}: ${desglose} = {format_latex_number(suma)}$ "
+                          f"(Esperado: ${format_latex_number(esperado)}$) "
+                          + ("Satisface" if suma == esperado else "Falla"))
+        vector = r"\begin{pmatrix}" + r" \\ ".join(calculado) + r"\end{pmatrix}"
+        simbolo = r"\vec{0}" if titulo == "Relación" else rf"\vec{{v}}_{{{j+1}}}"
+        salida.append(f"{titulo}: $" + _expresion_vectores(pesos) + " = " + vector + " = " + simbolo + "$.")
+    return salida
 
 
 def evaluar_combinacion_lineal(
@@ -199,6 +229,7 @@ def evaluar_combinacion_lineal(
     resultado.escalares_vector = gauss_res.solution_vector
     if not any(b):
         resultado.analisis_independencia = _independencia(gauss_res, k)
+        resultado.verificacion_independencia = _comprobar_independencia(vectores, resultado.analisis_independencia)
     
     # Clasificación algebraica
     if gauss_res.system_type == "SI":
