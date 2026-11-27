@@ -50,7 +50,13 @@ function crearEntorno(mensajeError, responder) {
   ctx.globalThis = ctx;
   return {
     timers, doc,
-    cargar(archivo) { vm.runInNewContext(fs.readFileSync(path.join(WEB, archivo), 'utf8'), ctx, { filename: archivo }); ready.splice(0).forEach(fn => fn()); },
+    cargar(archivo) {
+      // C-22: cargar la dependencia de vista previa como en index.html, sin iniciar Bisección.
+      if (['newton-raphson.js', 'secante.js'].includes(archivo)) {
+        vm.runInNewContext(fs.readFileSync(path.join(WEB, 'biseccion.js'), 'utf8'), ctx); ready.pop();
+      }
+      vm.runInNewContext(fs.readFileSync(path.join(WEB, archivo), 'utf8'), ctx, { filename: archivo }); ready.splice(0).forEach(fn => fn());
+    },
   };
 }
 

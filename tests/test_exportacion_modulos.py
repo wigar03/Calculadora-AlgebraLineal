@@ -210,7 +210,7 @@ class TestExportacionModulos(unittest.TestCase):
 
     def test_cobertura_corpus_y_limites_reales(self):
         self.assertEqual(len(self.consultas), 43 + 3)
-        self.assertEqual(len(self.casos), 33 + 3 + 1)
+        self.assertEqual(len(self.casos), 34 + 3 + 1)  # INC-034 C-28a: análisis sin iterar.
         modulos = {c["procedimiento"]["modulo"] for c in self.casos[:-4]}
         # Combinación lineal es una ruta propia del módulo de vectores.
         self.assertGreaterEqual(len(modulos), 11)
