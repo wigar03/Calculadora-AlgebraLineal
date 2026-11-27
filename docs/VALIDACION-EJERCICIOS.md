@@ -75,3 +75,13 @@ Aceptación del integrador: `tests/test_validacion_iterativos.py` por HTTP real.
 | Batería adversaria de Codex 1 (28 sistemas, 128 llamadas) | 3 hallazgos corregidos (INC-017) |
 | Revisión cruzada de Codex 2 | P1 subnormal corregido con verificación exacta final (INC-018) |
 | Navegador: sistema de práctica escrito como texto, comparación, gráficas, KaTeX | correcto; 0 errores KaTeX |
+
+## Banco final, ejercicios 50–64 — `Dev-Carbon` (2026-11-27, integrador)
+Prueba: `tests/test_validacion_banco_final.py` (HTTP contra `referencias_final.json`, SymPy).
+| Bloque | Resultado | Notas |
+|---|---|---|
+| V-50…V-54 sistemas rectangulares | 5/5 MOTOR OK | tipo, rangos y nº de parámetros iguales; soluciones paramétricas sustituidas con `Fraction` |
+| VI-55…VI-59 (12 expresiones) | 12/12 MOTOR OK | 2A + B, A − 3B y A + B + C solo encadenando operaciones; sin reutilizar el resultado en la interfaz |
+| VII-60…VII-64 independencia | 5/5 MOTOR OK | relación no trivial proporcional al núcleo; falta la conclusión «dependiente/independiente» explícita (en curso, Codex 1) |
+| 1–49 | sin cambios | mismos enunciados que el banco A; 46 y 49 INCOMPLETO (INC-001) |
+

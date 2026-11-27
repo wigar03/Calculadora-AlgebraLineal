@@ -4,6 +4,8 @@ Fuentes (adjuntas por el propietario, revisadas el 2026-11-23 sobre el XML del .
 - **A** = banco ampliado (49 ejercicios: I 1–19, II 1–10, III 1–15, IV 1–5).
 - **B** = banco corto (30 ejercicios: I 1–10, II 1–10, III 1–10). Los 30 son idénticos a los de A (mismos
   coeficientes, matrices y ecuaciones); B solo añade instrucciones de informe. Sin diferencias matemáticas.
+- **C** = banco final (2026-11-27, 64 ejercicios): 1–49 son los de A con numeración corrida (el 45 añade la forma
+  `sen(x)/ln(x) − 1 = 0`; el 46 y el 49 siguen sin igualdad, INC-001) y 50–64 son nuevos (Partes V–VII, abajo).
 
 Datos exactos: `tests/validacion/banco_*.py`. Referencias: `tests/validacion/referencias.json`.
 Estado: ver `docs/VALIDACION-EJERCICIOS.md`.
@@ -65,3 +67,13 @@ Ninguna matriz del banco es singular; el caso singular se cubre con pruebas sint
 | IV-5 | A | √((x+4)/(x−1)) — **sin igualdad** | — | bisección | **INCOMPLETO** (INC-001) |
 
 Total: 49 ejercicios (47 matemáticamente definidos + 2 incompletos en la fuente).
+
+## Partes V–VII — Banco final (C), ejercicios 50–64
+Datos: `tests/validacion/banco_final.py`. Referencias SymPy: `tests/validacion/referencias_final.json`.
+| ID | Tipo | Datos | Referencia | Capacidad necesaria |
+|---|---|---|---|---|
+| V-50, V-52, V-54 | sistema rectangular 3×4, 4×5, 3×5 | enteros | SCI con 1, 1 y 2 variables libres | Ecuaciones Ax = b con m ≠ n, solución paramétrica |
+| V-51, V-53 | sistema rectangular 5×4, 6×4 | enteros | incompatible (rg A = 4, rg [A\|b] = 5) | identificar la contradicción |
+| VI-55 … VI-59 | A ± B, kA ± B, A + B + C (2×3 a 4×2) | enteros | matrices exactas | Matrices: suma, resta y escalar encadenados |
+| VII-60 … VII-64 | independencia de 3 a 5 vectores en R³ y R⁴ | enteros | todos dependientes; núcleo de dimensión 1 | Combinación lineal con b = 0 |
+
