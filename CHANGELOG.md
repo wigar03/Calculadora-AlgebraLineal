@@ -1,5 +1,24 @@
 # Historial de versiones
 
+## 1.1.0
+
+Amplía el trabajo con el banco final y la interpretación de los métodos de raíces.
+
+- Ejercicios 50–64: sistemas rectangulares, operaciones encadenadas con «Usar resultado como A» e independencia lineal.
+- Ecuaciones muestra $`A\cdot X=B`$ antes de la matriz aumentada, también en la exportación LaTeX.
+- Con objetivo cero, Combinación lineal incluye dictamen, relación no trivial, despeje y verificación algebraica exacta;
+  si el conjunto es independiente, justifica mediante el rango que solo existe la solución trivial.
+- Los cuatro métodos de raíces informan el orden observado y la constante asintótica cuando hay datos suficientes.
+- Selector de condición: cualquier raíz real, positiva o positiva no nula; «Recomendar método» ofrece orientación
+  previa razonada, sin garantizar convergencia ni una raíz admisible.
+- Auditoría de coherencia: certificación con unidades porcentuales correctas y avisos visibles; diagnóstico de coma
+  decimal; signo menos Unicode y superíndices; correcciones de impresión y accesibilidad; Regla Falsa a 10 cifras
+  significativas en la presentación, conservando la precisión interna.
+- Límites: los ejercicios 46 y 49 conservan enunciados incompletos; ejecutables sin firma digital y Excel no
+  verificado directamente; gráficas, recomendación y orden observado son orientativos.
+
+Consulta las instrucciones de uso y los límites en las [notas de v1.1.0](docs/notas-v1.1.0.md).
+
 ## 1.0.0
 
 Primera versión estable; consolida el trabajo de las candidatas rc.1 a rc.7.
