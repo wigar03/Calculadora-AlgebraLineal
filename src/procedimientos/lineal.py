@@ -74,6 +74,11 @@ def adaptar_combinacion(respuesta, cuerpo):
     p["entrada"].extend(_entradas(cuerpo, vectores=("b",)))
     p["resultado"] = [_item(nombre, valor) for nombre, valor in respuesta["escalares"].items()]
     p["verificacion"] = list(respuesta["comprobacion"])
+    if respuesta.get("independencia"):
+        p["verificacion"].append(f"Conjunto linealmente {respuesta['independencia']}; "
+                                 f"rango {respuesta['rango']}; {respuesta['numero_vectores']} vectores.")
+        if respuesta.get("relacion"):
+            p["verificacion"].extend([f"${respuesta['relacion']['latex']}$", f"${respuesta['despeje']}$"])
     p["avisos"].extend(respuesta[k] for k in ("tipo_solucion", "expresion_algebraica") if respuesta.get(k))
     return p
 
