@@ -105,6 +105,18 @@ test('las celdas 01–06 identifican vector o matriz e índices y los errores se
   assert.equal(el('eq-result-content').children[0].role, 'alert');
 });
 
+test('combinación muestra independencia, relación concreta y despeje sin nuevos controles', () => {
+  const { contexto: c, renderizados } = pagina();
+  const relacion = '\\vec{v}_{3} - 2\\vec{v}_{1} - \\vec{v}_{2} = \\vec{0}';
+  const despeje = '\\vec{v}_{3} = 2\\vec{v}_{1} + \\vec{v}_{2}';
+  c.renderizarResultadoCombinacionUI({ vectores: [[1, 0], [0, 1], [2, 1]], b: [0, 0],
+    data: { es_combinacion: true, tipo_solucion: 'INFINITAS', escalares_vector: ['-2t', '-t', 't'],
+      independencia: 'dependiente', rango: 2, numero_vectores: 3, relacion: { latex: relacion }, despeje } });
+  assert.ok(renderizados.some(t => t.includes('linealmente dependiente') && t.includes('Rango: 2')));
+  assert.ok(renderizados.includes(relacion)); assert.ok(renderizados.includes(despeje));
+  for (const tex of [relacion, despeje]) assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true }));
+});
+
 test('las grillas 5x5 conservan fracciones y decimales como texto', () => {
   const { el, contexto: c } = pagina();
   for (const id of ['eq-rows-m', 'eq-cols-n', 'inv-dim-n', 'det-order-n']) el(id).value = '5';

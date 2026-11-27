@@ -790,6 +790,17 @@ function renderizarResultadoCombinacionUI(calc) {
     </div>
   `;
 
+  if (data.independencia) {
+    const dictamen = document.createElement("p");
+    renderMixedLatex(dictamen, `El conjunto es linealmente ${data.independencia}. Rango: ${data.rango}; número de vectores: ${data.numero_vectores}.`);
+    resultBox.appendChild(dictamen);
+    for (const formula of [data.relacion?.latex, data.despeje].filter(Boolean)) {
+      const linea = document.createElement("div");
+      renderLatexElement(linea, formula);
+      resultBox.appendChild(linea);
+    }
+  }
+
   // Renderizar la ecuación principal
   const targetEl = document.getElementById("comb-latex-target");
   renderLatexElement(targetEl, latexComb);
