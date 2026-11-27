@@ -93,3 +93,47 @@ def _secante(f, u, v, condicion):
                       "Orden local esperado ≈ 1,618 en una raíz simple; los pasos pueden salir del dominio."]
     except ValueError as exc:
         return False, [f"Revise el dominio y los puntos de secante: {exc}"]
+
+
+def recomendar_metodo(funcion, a=None, b=None, x0=None, x1=None, condicion="real"):
+    f = Expresion(funcion)
+    validar_condicion(condicion)
+    a, b, x0, x1 = (None if v is None else numero_real(v, nombre)
+                      for v, nombre in ((a, "a"), (b, "b"), (x0, "x0"), (x1, "x1")))
+    cerrado, motivos, continuo = _intervalo(f, a, b, condicion)
+    bis = motivos + (["El ancho se divide por dos; coste orientativo: "
+                      r"$n \approx \lceil\log_2((b-a)/\mathrm{tol})\rceil$."] if cerrado else [])
+    rf = motivos + (["Puede necesitar menos pasos que bisección, salvo estancamiento de un extremo."]
+                    if cerrado else [])
+    if cerrado:
+        try:
+            dd = derivada_simbolica(derivada_simbolica(f))
+            lo, hi = _rango(dd.arbol, (Fraction(a), Fraction(b)))
+            if lo > 0 or hi < 0:
+                rf.append("La segunda derivada conserva signo: riesgo de estancamiento por convexidad.")
+        except (ValueError, OverflowError, ZeroDivisionError):
+            rf.append("No se pudo determinar el signo de la segunda derivada en todo el intervalo.")
+    semilla = x0 if x0 is not None else a+(b-a)/2 if continuo else None
+    newton, mn = _newton(f, semilla, condicion)
+    if x0 is None and semilla is not None:
+        mn.append("Evaluación orientativa en el punto medio; escriba esa semilla si elige Newton.")
+    secante, ms = _secante(f, x0 if x0 is not None else a, x1 if x1 is not None else b, condicion)
+    metodos = [dict(metodo=m, apto=ok, motivos=razones) for m, ok, razones in (
+        ("biseccion", cerrado, bis), ("regla_falsa", cerrado, rf),
+        ("newton_raphson", newton, mn), ("secante", secante, ms))]
+    restringido = _restringido(f)
+    elegido = ("biseccion" if cerrado and restringido else "newton_raphson" if newton
+               else "biseccion" if cerrado else "secante" if secante else None)
+    if elegido == "biseccion":
+        razon = ("Se prefiere un intervalo validado para respetar el dominio restringido."
+                 if restringido else "Se prefiere conservar el encierro validado por cambio de signo.")
+    elif elegido == "newton_raphson":
+        razon = "Newton tiene una derivada práctica y un primer paso evaluable; revise su comportamiento local."
+        if restringido:
+            razon += " El dominio es restringido: es preferible aportar también un intervalo validado."
+    elif elegido == "secante":
+        razon = "Secante permite usar dos puntos útiles sin evaluar una derivada práctica."
+    else:
+        razon = "Falta un intervalo continuo con cambio de signo o semillas útiles; cambie los datos indicados."
+    return {"recomendado": elegido, "metodos": metodos,
+            "justificacion": razon + " Esta recomendación previa no garantiza convergencia ni una raíz admisible."}

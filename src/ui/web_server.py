@@ -384,6 +384,10 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
                 if not isinstance(body, dict):
                     raise ValueError("Envíe un objeto JSON con la función.")
                 self._send_json(analizar_derivada(body.get("funcion")))
+            elif parsed.path == "/api/raices/recomendar":
+                from src.raices.recomendacion import recomendar_metodo
+                self._send_json(recomendar_metodo(**{k: body[k] for k in
+                    ("funcion", "a", "b", "x0", "x1", "condicion") if k in body}))
             elif parsed.path.startswith("/api/secante/"):
                 self._handle_secante(parsed.path.rsplit("/", 1)[-1], body)
             elif parsed.path.startswith("/api/newton-raphson/"):
