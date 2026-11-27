@@ -853,6 +853,9 @@
                   <label class="field-label" for="bis-max">Máximo de iteraciones</label>
                   <input id="bis-max" name="max_iteraciones" class="bis-input" type="number" value="100" min="1" max="1000" step="1" required>
                 </div>
+                <!-- INC-033 -->
+                <div><label class="field-label" for="bis-condicion">Condición de la raíz</label><select id="bis-condicion" name="condicion" class="bis-input"><option value="real">Cualquier raíz real</option><option value="positiva">Raíz positiva (x &gt; 0)</option><option value="positiva_no_nula">Raíz positiva no nula</option></select></div>
+                <!-- /INC-033 -->
               </div>
               </div>
               </div>
@@ -864,6 +867,9 @@
               <button id="bis-submit" type="submit" class="btn-primary btn-large">
                 <i data-lucide="play" class="btn-icon"></i><span>Calcular raíz por bisección</span>
               </button>
+              <!-- INC-033 -->
+              <div class="rf-form"><button id="bis-recommend" type="button" class="btn-text">Recomendar método</button><div id="bis-recommendation" aria-live="polite"></div></div>
+              <!-- /INC-033 -->
             </form>
             <div class="card-footer-actions">
               <div class="sample-actions">
@@ -992,6 +998,9 @@
                 <button id="rf-graficar" type="submit" class="btn-primary rf-action">
                   <i data-lucide="line-chart" class="btn-icon"></i><span>Graficar función</span>
                 </button>
+                <!-- INC-033 -->
+                <div><button id="rf-recommend" type="button" class="btn-text">Recomendar método</button><div id="rf-recommendation" aria-live="polite"></div></div>
+                <!-- /INC-033 -->
               </form>
               <div class="card-footer-actions">
                 <div class="sample-actions">
@@ -1068,6 +1077,9 @@
                     <label class="field-label" for="rf-max">Máximo de iteraciones</label>
                     <input id="rf-max" name="max_iteraciones" class="bis-input" type="number" value="100" min="1" max="1000" step="1" required>
                   </div>
+                  <!-- INC-033 -->
+                  <div><label class="field-label" for="rf-condicion">Condición de la raíz</label><select id="rf-condicion" name="condicion" class="bis-input"><option value="real">Cualquier raíz real</option><option value="positiva">Raíz positiva (x &gt; 0)</option><option value="positiva_no_nula">Raíz positiva no nula</option></select></div>
+                  <!-- /INC-033 -->
                 </div>
                 <p id="rf-stop-help" class="bis-help" data-math>Se detiene cuando $\varepsilon_a = \left|\dfrac{x_r^{\text{nuevo}} - x_r^{\text{anterior}}}{x_r^{\text{nuevo}}}\right|\cdot 100\% \le \varepsilon_s$ o al alcanzar el máximo de iteraciones.</p>
                 <button id="rf-resolver" type="submit" class="btn-primary rf-action">
@@ -1148,6 +1160,9 @@
                   <div><label for="nr-b" data-math>Hasta $x=$</label><input id="nr-b" class="bis-input" value="2.5" required></div>
                 </div></fieldset>
                 <button class="btn-primary rf-action" type="submit">Derivar y graficar</button>
+                <!-- INC-033 -->
+                <div><button id="nr-recommend" type="button" class="btn-text">Recomendar método</button><div id="nr-recommendation" aria-live="polite"></div></div>
+                <!-- /INC-033 -->
               </form>
               <div class="card-footer-actions"><div class="sample-actions">
                 <button type="button" class="btn-text" data-nr-example="referencia">Ejemplo de la presentación</button>
@@ -1175,6 +1190,9 @@
               <form id="nr-solve-form" class="rf-form"><div class="bis-fields">
                 <div><label for="nr-tolerance" data-math>Tolerancia aproximada $\varepsilon$</label><input id="nr-tolerance" class="bis-input" value="0.000001" required></div>
                 <div><label for="nr-limit">Máximo de iteraciones</label><input id="nr-limit" class="bis-input" type="number" min="1" max="1000" value="50" required></div>
+                <!-- INC-033 -->
+                <div><label class="field-label" for="nr-condition">Condición de la raíz</label><select id="nr-condition" name="condicion" class="bis-input"><option value="real">Cualquier raíz real</option><option value="positiva">Raíz positiva (x &gt; 0)</option><option value="positiva_no_nula">Raíz positiva no nula</option></select></div>
+                <!-- /INC-033 -->
               </div><fieldset class="nr-criteria"><legend>Criterio de parada</legend>
                 <label><input type="radio" name="nr-criterion" value="absoluto" checked><span data-math>Error absoluto: $E_a&lt;\varepsilon$</span></label>
                 <label><input type="radio" name="nr-criterion" value="relativo"><span data-math>Error relativo: $\varepsilon_r=E_a/|x_n|&lt;\varepsilon$</span></label>
