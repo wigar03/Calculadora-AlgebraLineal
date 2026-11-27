@@ -16,17 +16,17 @@ La misma interfaz funciona en el navegador y en una aplicación de escritorio.
 
 | Área | Herramientas |
 |---|---|
-| Vectores | Suma, resta, multiplicación por escalar y producto punto en dimensión variable. |
-| Combinación lineal | Pertenencia al espacio generado y clasificación mediante rangos. |
-| Matrices | Suma, resta, escalar, producto y transpuesta. |
-| Inversa | Gauss y Gauss-Jordan, detección de singularidad y verificación. |
-| Sistemas $`Ax = b`$ | Solución única, infinitas soluciones o incompatibilidad. |
-| Determinantes | Cofactores y descomposición LU, con comparación de eficiencia. |
+| Vectores | Suma, resta, escalar y producto punto; $`1 \le n \le 20`$. |
+| Combinación lineal | Pertenencia e independencia mediante rangos; hasta 10 vectores de dimensión 15. |
+| Matrices | Suma, resta, escalar, producto y transpuesta; hasta 8 filas y 8 columnas. |
+| Inversa | Gauss y Gauss-Jordan, singularidad y verificación; hasta orden 6. |
+| Sistemas $`Ax = b`$ | Solución única, infinitas soluciones o incompatibilidad; hasta 10 ecuaciones y 10 incógnitas. |
+| Determinantes | Cofactores hasta orden 6 y LU hasta orden 8, con comparación de eficiencia. |
 | Bisección | Intervalos, validaciones, errores e historial de iteraciones. |
 | Regla falsa | Intervalos, rectas secantes, errores e historial de iteraciones. |
 | Newton-Raphson | Derivada simbólica, punto inicial manual, tangentes y criterios de parada. |
 | Secante | Dos puntos manuales, rectas secantes e historial de aproximaciones. |
-| Jacobi y Gauss-Seidel | Sistemas por matriz o por texto (`10x1 − x2 = 6`), análisis de convergencia (dominancia, radio espectral exacto), iteraciones paso a paso, residuo y comparación de ambos métodos. |
+| Jacobi y Gauss-Seidel | Sistemas por matriz o texto (`10x1 − x2 = 6`), convergencia, iteraciones, residuo y comparación; orden 2–10 en la interfaz y 1–20 por API, análisis espectral general hasta orden 12. |
 
 Los módulos de álgebra lineal trabajan con fracciones exactas sobre entradas
 racionales. Los métodos numéricos trabajan en punto flotante y muestran errores

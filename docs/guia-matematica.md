@@ -58,6 +58,8 @@ Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v =
 
 ### Módulo 2: Evaluación de Combinación Lineal
 
+Se admiten $`1 \le n \le 15`$ componentes y $`1 \le k \le 10`$ vectores. Con objetivo cero, el resultado indica independencia, rango y, si hay dependencia, una relación no trivial y un vector despejado.
+
 Dado un conjunto de vectores $`S = \{v_1, v_2, \dots, v_k\} \subset \mathbb{R}^n`$ y un vector objetivo $`b \in \mathbb{R}^n`$, $`b`$ es combinación lineal de $`S`$ si existen escalares $`c_1, c_2, \dots, c_k \in \mathbb{R}`$ tales que:
 
 ```math
@@ -94,6 +96,8 @@ El vector $`b`$ **no es combinación lineal** de los vectores de $`S`$ si el ran
 ```
 
 ### Módulo 3: Operaciones Matriciales Básicas
+
+Cada matriz de entrada admite hasta 8 filas y 8 columnas, con al menos una de cada una.
 
 Para matrices $`A, B \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un escalar $`k \in \mathbb{R}`$:
 
@@ -156,6 +160,8 @@ El programa analiza exhaustivamente sus propiedades teóricas:
 
 Este módulo implementa el cálculo y análisis formal de la inversa de una matriz:
 
+La interfaz admite matrices de orden 2 a 6; la API admite también orden 1.
+
 #### 1. Definición Formal
 Sea $`A`$ una matriz cuadrada de orden $`n \times n`$. Se dice que $`A`$ es **invertible** (o no singular) si existe una matriz $`C`$ de orden $`n \times n`$ tal que:
 
@@ -207,6 +213,8 @@ R = A \cdot A^{-1} - I_n = 0_{n \times n}
 
 ### Módulo 5: Ecuaciones Matriciales $`Ax = b`$ y Enlace al Programa Anterior
 
+Se admiten hasta 10 ecuaciones y 10 incógnitas, incluidas matrices rectangulares, con al menos una fila y una columna.
+
 Dada una matriz de coeficientes $`A \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un vector de términos independientes $`b \in \mathbb{R}^m`$, el sistema lineal se expresa en forma matricial compacta:
 
 ```math
@@ -225,6 +233,8 @@ r = A \cdot x_{\mathrm{sol}} - b = 0
 ```
 
 ### Módulo 6: Determinante de Matrices Cuadradas $`|A|`$ (Cofactores vs Descomposición LU)
+
+El orden admitido es de 1 a 8 para LU y de 1 a 6 para cofactores.
 
 Este módulo implementa el cálculo exacto del determinante $`|A|`$ o $`\det(A)`$ para cualquier matriz cuadrada $`A \in \mathcal{M}_{n \times n}(\mathbb{R})`$ mediante una pestaña interactiva dedicada dentro del servidor web de la aplicación, desarrollada 100% en Python estándar (sin librerías prohibidas como NumPy, SciPy o rutinas de `math`):
 
