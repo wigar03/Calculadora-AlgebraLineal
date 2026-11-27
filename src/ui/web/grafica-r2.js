@@ -12,7 +12,7 @@
     if(!s.includes('/'))return Number(s);
     const [n,d]=s.split('/');
     const directo=Number(n)/Number(d);
-    if(Number.isFinite(directo))return directo;
+    if([Number(n),Number(d)].every(Number.isFinite))return directo;
     // Cocientes de enteros grandes: evita Infinity/Infinity al convertir para el dibujo.
     const parte=t=>{const signo=t.startsWith('-')?-1:1, dig=t.replace(/^[+-]?0*/, '')||'0';
       return [signo*Number(dig.slice(0,15)),Math.max(0,dig.length-15)];};
