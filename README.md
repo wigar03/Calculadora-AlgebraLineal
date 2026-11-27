@@ -35,9 +35,10 @@ y residuo. Las gráficas son orientativas y no demuestran continuidad ni converg
 Puedes copiar LaTeX, exportar CSV para hojas de cálculo en español e imprimir o guardar como PDF.
 En Matrices, «Usar resultado como A» permite encadenar operaciones como `2A+B` o `A+B+C` conservando fracciones exactas.
 
-La [versión 1.2.0](docs/notas-v1.2.0.md) añade avisos de ceros en rejillas, vista previa de funciones en Newton y
-Secante, controles de gráficas y mejoras táctiles. También permite exportar «Solo analizar matriz» en Jacobi y
-Gauss-Seidel, sin cambiar los resultados matemáticos.
+La [versión 1.3.0](docs/notas-v1.3.0.md) añade gráficas en $`\mathbb{R}^2`$ en Vectores, Combinación lineal y
+Ecuaciones con dos incógnitas: flechas, descomposición punta-cola, rectas e intersecciones. Newton-Raphson muestra
+el porcentaje de zoom y reescala el eje vertical al enfocar la raíz. Las gráficas son orientativas y visibles al
+imprimir; se conservan los resultados matemáticos y las exportaciones LaTeX y CSV.
 
 Conserva la cobertura de los ejercicios 50–64 incorporada en [v1.1.0](docs/notas-v1.1.0.md). Los cuatro métodos de raíces
 añaden condición de la raíz, orientación con «Recomendar método» y estimación del orden observado y la constante

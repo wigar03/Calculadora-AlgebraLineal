@@ -55,6 +55,11 @@ las celdas de las rejillas alcanzan esa altura mínima. En los métodos numéric
 columna cuando el ancho de la pantalla es de 480 píxeles o menos. Los módulos 07–11 unifican la iconografía
 de los controles de zoom y de los botones de limpieza.
 
+**Gráficas en el plano.** Vectores, Combinación lineal y Ecuaciones muestran apoyo gráfico en
+$`\mathbb{R}^2`$ solo cuando la dimensión es 2. Las gráficas son orientativas, tienen escala automática y
+son visibles al imprimir. Las fracciones se aproximan solo para dibujar: el procedimiento, la verificación
+exacta y las exportaciones LaTeX y CSV se conservan.
+
 ### Módulo 1: Operaciones Vectoriales en $`\mathbb{R}^n`$
 
 Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v = (v_1, v_2, \dots, v_n)`$. La calculadora admite $`1 \le n \le 20`$:
@@ -65,6 +70,10 @@ Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v =
 - **Producto Escalar Euclídeo (Producto Punto)**: $`\langle u, v \rangle = \sum_{i=1}^n u_i \cdot v_i`$.
 - **Norma al Cuadrado**: $`\|v\|^2 = \langle v, v \rangle = \sum_{i=1}^n v_i^2`$.
 
+Con $`n=2`$, al calcular suma, resta o producto por escalar se representan $`u`$, $`v`$ y el resultado
+con flechas desde el origen. La suma incluye el paralelogramo. En el producto punto se muestra el ángulo
+entre $`u`$ y $`v`$; si alguno es nulo, se indica que el ángulo no está definido.
+
 ### Módulo 2: Evaluación de Combinación Lineal
 
 Se admiten $`1 \le n \le 15`$ componentes y $`1 \le k \le 10`$ vectores. Con objetivo cero, el resultado indica independencia, rango y, si hay dependencia, una relación no trivial y un vector despejado.
@@ -74,6 +83,11 @@ homogéneo. Si $`\mathrm{rg}(V)=k`$, solo existe la solución trivial y los vect
 $`\mathrm{rg}(V)\lt k`$, se muestra una relación $`\sum_{i=1}^k c_i v_i=0`$ con coeficientes no todos nulos.
 El procedimiento sustituye esos coeficientes componente a componente, obtiene el vector cero y comprueba el
 vector despejado con fracciones exactas. Así se verifica algebraicamente la conclusión de los ejercicios 60–64.
+
+Con $`n=2`$, la gráfica representa los generadores y $`b`$. Si es combinación, la cadena punta-cola
+de los vectores escalados llega hasta $`b`$; en una familia de soluciones se dibuja una descomposición
+fijando los parámetros libres a cero. Con $`b=0`$ y dependencia, la relación no trivial se representa
+como una cadena que regresa al origen. La conclusión se comprueba en el procedimiento exacto.
 
 Dado un conjunto de vectores $`S = \{v_1, v_2, \dots, v_k\} \subset \mathbb{R}^n`$ y un vector objetivo $`b \in \mathbb{R}^n`$, $`b`$ es combinación lineal de $`S`$ si existen escalares $`c_1, c_2, \dots, c_k \in \mathbb{R}`$ tales que:
 
@@ -231,6 +245,12 @@ R = A \cdot A^{-1} - I_n = 0_{n \times n}
 ### Módulo 5: Ecuaciones Matriciales $`Ax = b`$ y Enlace al Programa Anterior
 
 Se admiten hasta 10 ecuaciones y 10 incógnitas, incluidas matrices rectangulares, con al menos una fila y una columna.
+
+Con dos incógnitas, cada ecuación se dibuja como una recta etiquetada, incluidas verticales y horizontales.
+La gráfica señala la intersección común si hay solución única; con infinitas soluciones muestra rectas
+coincidentes, una sola recta o todo el plano, según las restricciones. Un sistema incompatible puede mostrar
+paralelas o rectas sin punto común. Las ecuaciones de coeficientes nulos se identifican como todo el plano
+o sin puntos, según su término independiente. El número de ecuaciones puede ser distinto de dos.
 
 Dada una matriz de coeficientes $`A \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un vector de términos independientes $`b \in \mathbb{R}^m`$, el sistema lineal se expresa en forma matricial compacta:
 
@@ -464,6 +484,10 @@ x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}
 ```
 
 4. **Iteraciones y raíz.** Elija tolerancia, máximo de iteraciones y criterio de parada. La tabla incluye $`n`$, $`x_n`$, $`f(x_n)`$, $`f'(x_n)`$ y ambos errores, con detalles desplegables de las sustituciones. La gráfica muestra las primeras ocho tangentes y la aproximación final; permite ampliar, desplazar, restablecer y enfocar la raíz.
+
+La gráfica muestra el porcentaje de zoom. **Enfocar raíz** centra la vista en la aproximación obtenida y
+reescala también el eje vertical para observar la curva cerca de ella, como en Bisección y Regla Falsa.
+Estos controles conservan el resultado y las iteraciones.
 
 El error absoluto aproximado es $`E_a=|x_n-x_{n-1}|`$ y el relativo es $`\varepsilon_r=E_a/|x_n|`$, expresado como **fracción, sin porcentaje**. El relativo no está definido cuando $`x_n=0`$. Para cambios distintos de cero, es menor que el absoluto cuando $`|x_n|>1`$, mayor cuando $`|x_n|<1`$ e igual cuando $`|x_n|=1`$. Estos cambios no son cotas del error respecto a la raíz verdadera.
 
