@@ -13,6 +13,7 @@ from ..regla_falsa.dominio import (
     raiz_admisible, verificar_raiz,
 )
 from ..regla_falsa.certificacion import certificar_raiz
+from ..secante.convergencia import estimar_convergencia
 
 
 CRITERIOS = {"intervalo", "relativo", "residuo"}
@@ -64,6 +65,7 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
             "iteraciones": len(pasos), "pasos": pasos,
             "condicion": condicion, "verificacion": verificar_raiz(f, c, tolerancia),
             "certificacion": cert,
+            "convergencia_observada": estimar_convergencia(p["c"] for p in pasos),
         }
 
     if fa == 0 or fb == 0:

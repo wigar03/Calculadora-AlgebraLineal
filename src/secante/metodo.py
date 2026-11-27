@@ -7,6 +7,7 @@ from ..regla_falsa.dominio import (
 )
 from ..core.tolerancia import clasificar, informe
 from ..regla_falsa.certificacion import certificar_raiz
+from .convergencia import estimar_convergencia
 
 
 def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, criterio="absoluto",
@@ -42,6 +43,7 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
                 "raiz": b, "f_raiz": fb, "residuo": abs(fb), "error_absoluto": ea,
                 "condicion": condicion, "verificacion": verificar_raiz(f, b, tol),
                 "certificacion": cert,
+                "convergencia_observada": estimar_convergencia([*iniciales, *(p["c"] for p in pasos)]),
                 "error_relativo": er, "iteraciones": len(pasos), "pasos": pasos,
                 "convergio": convergio, "motivo": motivo, "advertencias": avisos,
                 "tolerancia": tol, "criterio": criterio,

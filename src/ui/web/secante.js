@@ -68,6 +68,7 @@
     });});
     function result(d){
       const out=el("result");out.replaceChildren(node("h4",d.convergio?"Raíz calculada":"Sin convergencia"),node("p",MOTIVOS[d.motivo]));
+      if(d.convergencia_observada?.texto)out.append(node("p",d.convergencia_observada.texto,"bis-help"));
       if(d.funcion_latex)out.append(math(`f(x)=${d.funcion_latex}`));
       el("focus-root").disabled=false;
       out.append(math(`x_n\\approx ${num(d.raiz)}\\qquad |f(x_n)|=${num(d.residuo)}`),math(`E_a=${num(d.error_absoluto)}\\qquad \\varepsilon_r=${num(d.error_relativo)}`),mix(`Iteraciones: $${d.iteraciones}$.`));

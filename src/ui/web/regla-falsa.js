@@ -812,6 +812,7 @@
       const [xl, xu] = res.intervalo_final;
       const nodos = [funcion, crearMixto("p", MOTIVOS[res.motivo], "bis-message"), resumen,
         crearMixto("p", `Verificación: $f(${numeroLatex(res.raiz)}) = ${numeroLatex(res.f_raiz)}$. Intervalo final: $[${numeroLatex(xl)},\\; ${numeroLatex(xu)}]$.`, "bis-message")];
+      if (res.convergencia_observada?.texto) nodos.push(crear("p", res.convergencia_observada.texto, "bis-help"));
       if (res.estancamiento) {
         const fijo = res.estancamiento.extremo === "xl" ? "x_l" : "x_u";
         nodos.push(crearMixto("p", `Estancamiento: $${fijo}$ permaneció fijo durante ${res.estancamiento.iteraciones} iteraciones seguidas. La curva es muy convexa o cóncava en el intervalo y la convergencia se vuelve unilateral y lenta.`, "rf-note"));

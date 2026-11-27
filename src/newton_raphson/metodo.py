@@ -10,6 +10,7 @@ from ..regla_falsa.dominio import (
 from ..core.tolerancia import clasificar, informe
 from ..derivadas import derivada_simbolica, analizar_derivada
 from ..regla_falsa.certificacion import certificar_raiz, aviso_no_certificada
+from ..secante.convergencia import estimar_convergencia
 
 
 def preparar_funcion(funcion):
@@ -82,6 +83,7 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
                 "f_raiz": p["fx"], "residuo": abs(p["fx"]),
                 "condicion": condicion, "verificacion": verificar_raiz(f, p["x"], tol),
                 "certificacion": cert,
+                "convergencia_observada": estimar_convergencia(p["x"] for p in pasos),
                 "error_absoluto": p["error_absoluto"], "error_relativo": p["error_relativo"],
                 "criterio": criterio, "tolerancia": tol,
                 "cumple": {k: c == "digitada" for k, c in clases.items()},

@@ -254,6 +254,7 @@
     }
     function resultado(r) {
       const out=el("result"); out.replaceChildren(crear("p",r.convergio?"Raíz calculada":"Sin convergencia","badge"),mixto("p",MOTIVOS[r.motivo],"rf-verdict"));
+      if(r.convergencia_observada?.texto)out.append(crear("p",r.convergencia_observada.texto,"bis-help"));
       const dl=crear("dl",undefined,"nr-summary");
       [[r.convergio?"Raíz aproximada $x_n$":"Última aproximación $x_n$",r.raiz],["Residuo $|f(x_n)|$",r.residuo],["Error absoluto $E_a$",r.error_absoluto],["Error relativo $\\varepsilon_r$",r.error_relativo],["Iteraciones",r.iteraciones]].forEach(([titulo,valor])=>{const box=crear("div"), dd=crear("dd"); dd.title=String(valor??"No definido"); dd.append(math(num(valor),false)); box.append(mixto("dt",titulo),dd); dl.append(box);}); out.append(dl);
       out.append(crear("strong","Criterios al terminar"));

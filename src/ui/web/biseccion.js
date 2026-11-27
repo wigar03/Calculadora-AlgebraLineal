@@ -504,6 +504,7 @@
     const criterio = crearMixto("p", `Criterio: ${res.criterio}. Tolerancia: $${numeroLatex(res.tolerancia)}${res.criterio === "relativo" ? "\\%" : ""}$.`, "bis-help");
     contenedor.replaceChildren(funcion, mensaje, resumen, verificacion, intervalo, criterio,
       crearMixto("p", "*La cota del intervalo supone continuidad en $[a,b]$. Un cambio de signo no garantiza una raíz si la función es discontinua. Los valores se calculan en punto flotante y se redondean solo para mostrarlos; sitúe el cursor sobre una cifra para ver su valor completo.", "bis-help"));
+    if (res.convergencia_observada?.texto) contenedor.append(crear("p", res.convergencia_observada.texto, "bis-help"));
     for (const aviso of res.advertencias || []) {
       const texto = typeof aviso === "string" ? aviso : aviso?.mensaje;
       if (texto) contenedor.append(crearMixto("p", texto, "rf-note"));

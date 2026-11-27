@@ -16,6 +16,7 @@ from .dominio import (
 )
 from .continuidad import analizar_continuidad
 from .certificacion import certificar_raiz
+from ..secante.convergencia import estimar_convergencia
 
 # Iteraciones consecutivas con el mismo extremo fijo a partir de las cuales se avisa.
 UMBRAL_ESTANCAMIENTO = 10
@@ -161,6 +162,7 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
             "tolerancia": tolerancia, "convergio": convergio, "motivo": motivo,
             "estancamiento": estancamiento,
             "iteraciones": len(pasos), "pasos": pasos,
+            "convergencia_observada": estimar_convergencia(p["xr"] for p in pasos),
         }
 
     if previa["raiz_en_extremo"]:
