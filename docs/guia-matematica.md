@@ -317,7 +317,9 @@ Seleccione uno de los siguientes criterios; el proceso también termina si $`f(c
 
 La diferencia absoluta de la tabla mide el cambio entre dos aproximaciones, no el error verdadero respecto de una raíz desconocida. El resultado incluye la sustitución en la función original, el intervalo final y la cota obtenida a partir de sus extremos. La gráfica interactiva permite realizar zoom in, zoom out, enfocar la raíz aproximada, restablecer la vista completa al 100% y desplazarse (pan) mediante controles en pantalla, rueda del ratón o arrastre táctil; toma muestras orientativas para el intervalo visualizado y no demuestra continuidad ni permite descartar singularidades entre muestras.
 
-**Entradas admitidas:** use `x` como variable, multiplicación explícita (`2*x`), operadores `+`, `-`, `*`, `/`, potencias con `^` o `**`, paréntesis, constantes `pi` y `e`, y funciones `sin` (también `sen`), `cos`, `tan`, `exp`, `ln` (natural), `log` (base 10), `sqrt` y `abs`. También se admiten igualdades como `ln(x) + sen(x) = 1.2`. Los ángulos están en radianes. Los extremos y la tolerancia aceptan decimales con punto, fracciones como `1/2` y notación científica como `1e-4`.
+**Entradas admitidas:** use `x` como variable, multiplicación explícita (`2*x`), operadores `+`, `-`, `*`, `/`, potencias con `^` o `**`, paréntesis, constantes `pi` y `e`, y funciones `sin` (también `sen`), `cos`, `tan`, `asin`, `acos`, `atan`, `exp`, `ln` (natural), `log` (base 10), `sqrt` y `abs`. También se admiten igualdades como `ln(x) + sen(x) = 1.2`. Los ángulos están en radianes. Los extremos y la tolerancia aceptan decimales con punto, fracciones como `1/2` y notación científica como `1e-4`.
+
+El lenguaje compartido de los cuatro métodos acepta superíndices Unicode completos (`x¹⁰`, `x⁵`, `10⁻⁶`) y el signo menos Unicode `−`. Este signo también se admite en entradas numéricas; la tolerancia admite fracciones en los métodos de raíces y en Iterativos.
 
 **Límites y diagnósticos:** tolerancia finita mayor que cero, máximo entero de 1 a 1000 iteraciones, función de hasta 500 caracteres y 120 nodos de expresión, y exponentes de magnitud máxima 1000. Se rechazan sintaxis no permitida, entradas no finitas, intervalos sin cambio de signo y errores de dominio detectados durante la evaluación. Alcanzar el máximo de iteraciones o agotar la precisión se informa sin declarar que se alcanzó la tolerancia. Las evaluaciones usan punto flotante: un cero calculado puede deberse al redondeo o al subdesbordamiento, y la cota del intervalo no incluye los errores de evaluación de la función. Solo se redondea la presentación; el cursor sobre las cifras permite consultar el valor completo.
 
@@ -344,7 +346,7 @@ Se consultaron los materiales locales de `Docs`, especialmente la hoja `Bisecci�
 
 `POST /api/biseccion/preview` recibe `{"funcion": "sqrt(x)+1/x"}` y devuelve `{"latex": "\\sqrt{x} + \\frac{1}{x}"}`. Valida la sintaxis y convierte la expresión a LaTeX sin evaluarla. Una entrada incompleta o no permitida devuelve HTTP 400 con `error`.
 
-`POST /api/biseccion/muestrear` recibe `{"funcion": "cos(x)-x", "a": -1, "b": 2, "cantidad": 201}` y devuelve `{"grafica": [{"x": ..., "y": ...}]}` con muestreo dinámico adaptativo para mantener la máxima resolución y continuidad al hacer zoom in, zoom out y desplazar la vista en la gráfica.
+`POST /api/biseccion/muestrear` recibe `{"funcion": "cos(x)-x", "a": -1, "b": 2, "cantidad": 201}` y devuelve `{"grafica": [{"x": ..., "y": ...}]}` con 201 puntos equiespaciados por defecto (entre 2 y 2000 si se indica `cantidad`). Al cambiar la vista se vuelve a muestrear el intervalo visible; las muestras no garantizan continuidad entre puntos.
 
 ---
 
@@ -364,6 +366,8 @@ x_r = x_u - \frac{f(x_u)\,(x_l - x_u)}{f(x_l) - f(x_u)}
 Si $`f(x_l)\cdot f(x_r) < 0`$, $`x_u \leftarrow x_r`$; si es $`> 0`$, $`x_l \leftarrow x_r`$; si es $`0`$, $`x_r`$ es la raíz. En cada iteración se calcula $`\varepsilon_a = \left|\frac{x_r^{nuevo}-x_r^{anterior}}{x_r^{nuevo}}\right|\cdot 100\%`$ hasta alcanzar la tolerancia (en %) o el máximo de iteraciones. La raíz, las primeras rectas secantes y los $`x_r`$ se muestran sobre la gráfica final, junto con la tabla de iteraciones.
 
 El análisis de continuidad es numérico (401 muestras con refinamiento) y orientativo: no demuestra continuidad y puede pasar por alto discontinuidades más estrechas que la separación entre muestras. Cuando un extremo queda fijo durante 10 o más iteraciones seguidas se informa el estancamiento, como ocurre con $`x^{10}-1`$ en $`[0, 1.3]`$. Los valores de los ejemplos se recalculan desde la función ingresada; con $`x^4 - 5x^3 + 0.5x^2 - 11x + 10`$ en $`[4.95, 5.5]`$ y tolerancia $`0.01\%`$ se obtienen 5 iteraciones y $`x_r \approx 5.2360550811`$.
+
+Por diseño, además del error porcentual se exige que el residuo escalado $`|f(x_r)|/s`$, con $`s=\max(1,\min(|f(x_l^{(0)})|,|f(x_u^{(0)})|))`$, sea menor o igual que la tolerancia digitada. Esta guarda evita declarar convergencia por un cambio pequeño con residuo elevado; también se reconoce un cero evaluado de la función.
 
 #### API de regla falsa
 
@@ -394,7 +398,7 @@ x_{n+1}=x_n-\frac{f(x_n)}{f'(x_n)}
 
 El error absoluto aproximado es $`E_a=|x_n-x_{n-1}|`$ y el relativo es $`\varepsilon_r=E_a/|x_n|`$, expresado como **fracción, sin porcentaje**. El relativo no está definido cuando $`x_n=0`$. Para cambios distintos de cero, es menor que el absoluto cuando $`|x_n|>1`$, mayor cuando $`|x_n|<1`$ e igual cuando $`|x_n|=1`$. Estos cambios no son cotas del error respecto a la raíz verdadera.
 
-Se detiene cuando el criterio elegido cumple estrictamente $`E_a<\varepsilon`$, $`\varepsilon_r<\varepsilon`$ o $`|f(x_n)|<\varepsilon`$. El resultado comprueba los tres criterios, el residuo y las iteraciones; un cambio pequeño no garantiza un residuo pequeño. También reconoce una raíz evaluada como cero. Detecta derivada nula o no definida, salida del dominio, aproximaciones no finitas, ciclos, falta de progreso en punto flotante y agotamiento de iteraciones. Una derivada muy pequeña o pasos crecientes generan avisos. La convergencia es local y depende del punto inicial.
+Para el criterio elegido ($`E_a`$, $`\varepsilon_r`$ o $`|f(x_n)|`$), se distingue un valor menor que $`\varepsilon`$ de uno cercano: se acepta un margen del 10 %, hasta $`1.10\varepsilon`$ inclusive, informando cuál se usó. El resultado comprueba los tres criterios, el residuo y las iteraciones; un cambio pequeño no garantiza un residuo pequeño. También reconoce una raíz evaluada como cero. Detecta derivada nula o no definida, salida del dominio, aproximaciones no finitas, ciclos, falta de progreso en punto flotante y agotamiento de iteraciones. Una derivada muy pequeña o pasos crecientes generan avisos. La convergencia es local y depende del punto inicial.
 
 La derivación opera sobre el árbol de expresiones validado, sin ejecutar código del usuario ni utilizar dependencias externas. Las fórmulas se evalúan en su dominio real, sin extenderlas por límites en puntos singulares; por ejemplo, la derivada de `abs(x)` no se evalúa en cero. La gráfica es orientativa y puede omitir singularidades estrechas. Las entradas conservan sintaxis editable; fórmulas, resultados, tabla y etiquetas matemáticas de la gráfica se presentan con KaTeX.
 
@@ -432,13 +436,13 @@ La gráfica muestra las primeras ocho rectas secantes y la aproximación final. 
 
 El ejemplo de la presentación usa `x^3-x-2`, puntos `1` y `2`, y produce primero $`1.333333333`$, luego $`1.462686567`$ y finalmente una raíz cercana a $`1.521379707`$.
 
+Secante comparte con Newton el margen del 10 % sobre la tolerancia digitada y el informe que distingue tolerancia digitada de cercana.
+
 | Ruta POST | Entrada | Respuesta |
 |---|---|---|
 | `/api/secante/graficar` | `funcion`, `a`, `b`, `cantidad` opcional | Función en LaTeX y muestras de la gráfica |
 | `/api/secante/evaluar` | `funcion`, `x0`, `x1` | Primera sustitución en `pasos` o motivo de parada |
 | `/api/secante/resolver` | Los anteriores, `tolerancia`, `max_iteraciones`, `criterio` | Aproximación, residuo, errores, historial, advertencias y motivo |
-
-Nuevos archivos: `src/derivadas/{__init__,motor}.py`, `src/secante/{__init__,metodo}.py`, `src/ui/web/secante.js`, `tests/test_secante.py` y `tests/test_secante_ui.cjs`. Para la revisión manual pruebe el ejemplo, `x^2+1` con puntos `-1` y `1` (denominador nulo), la vista móvil y ambos temas.
 
 ### Módulo 11: Métodos iterativos de Jacobi y Gauss-Seidel
 
@@ -469,10 +473,23 @@ Jacobi converge y Gauss-Seidel diverge en este ejemplo.
 
 **Parada.** Se calculan el cambio $`\|x^{(k+1)} - x^{(k)}\|_\infty`$ y el residuo $`\|b - Ax^{(k+1)}\|_\infty`$; los criterios comparan sus versiones relativas con la tolerancia. Solo se declara convergencia si además la verificación exacta final del residuo cumple la tolerancia. La convergencia se clasifica como **demostrada** (garantía previa), **observada** (convergió sin garantía) o **no asegurada**.
 
+El residuo relativo se exige en cada parada por tolerancia, incluso con el criterio `cambio`; con `ambos` se exigen cambio y residuo relativos. Es la decisión de diseño del [contrato de Iterativos](contratos/iterativos.md), que evita aceptar estancamiento con residuo alto. El residuo relativo es $`\|b-Ax\|_\infty/(\|b\|_\infty+\|A\|_\infty\|x\|_\infty)`$; si el denominador es cero, se usa el absoluto.
+
 La interfaz admite sistemas de orden 2 a 10 y la API hasta 20. El análisis espectral exacto general llega a orden 12;
 los casos triangulares o nilpotentes pueden demostrarse hasta orden 20.
 
 **Nota sobre la presentación de clase.** Las tablas de las diapositivas 16 y 22 son correctas; los desarrollos de las diapositivas 15, 20 y 21 contienen errores aritméticos (ver [INCIDENCIAS.md](INCIDENCIAS.md), INC-012).
+
+#### API de Jacobi y Gauss-Seidel
+
+Todas las rutas reciben JSON mediante `POST`.
+
+| Ruta | Entrada | Respuesta principal |
+|---|---|---|
+| `/api/iterativos/resolver` | `A`, `b`, `x0` opcional, `metodo`, `tolerancia`, `max_iteraciones`, `criterio`, `reordenar` | Solución, iteraciones, análisis, motivo y verificación |
+| `/api/iterativos/comparar` | Mismos datos, sin `metodo` | `jacobi`, `gauss_seidel`, `resumen` |
+| `/api/iterativos/analizar` | `A`, `b`, `reordenar` opcional | Análisis de la matriz |
+| `/api/iterativos/texto` | `texto` | `A`, `b`, `nombres` |
 
 ---
 

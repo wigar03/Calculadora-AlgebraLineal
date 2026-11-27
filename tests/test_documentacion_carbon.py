@@ -16,3 +16,14 @@ class TestDocumentacionCarbon(unittest.TestCase):
         readme = (RAIZ / "README.md").read_text(encoding="utf-8")
         self.assertIn("n \\le 20", readme)
         self.assertIn("general hasta orden 12", readme)
+
+    def test_notacion_parada_muestreo_y_api_iterativos(self):
+        guia = (RAIZ / "docs/guia-matematica.md").read_text(encoding="utf-8")
+        for fragmento in ("201 puntos equiespaciados", "residuo escalado", "margen del 10 %",
+                          "x¹⁰", "signo menos Unicode", "asin", "acos", "atan",
+                          "incluso con el criterio `cambio`"):
+            self.assertIn(fragmento, guia)
+        for ruta in ("resolver", "comparar", "analizar", "texto"):
+            self.assertIn(f"`/api/iterativos/{ruta}`", guia)
+        self.assertNotIn("muestreo dinámico adaptativo", guia)
+        self.assertNotIn("Nuevos archivos:", guia)
