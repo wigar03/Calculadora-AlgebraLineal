@@ -1,5 +1,22 @@
 # Historial de versiones
 
+## 1.2.0
+
+Mejora la entrada de datos, los controles de las gráficas y el uso táctil de los once módulos,
+sin cambiar los resultados matemáticos.
+
+- Aviso de las casillas vacías tomadas como 0 en los módulos con rejilla, conservando ese comportamiento.
+- Inversa admite matrices de un solo elemento desde la interfaz; Cofactores se desactiva con explicación
+  por encima de orden 6 y se selecciona LU.
+- Vista previa de la función en Newton-Raphson y Secante; iconos y botones unificados en los módulos 07–11.
+- Exportación del resultado de «Solo analizar matriz» en Jacobi y Gauss-Seidel.
+- «Enfocar raíz» en Regla Falsa y coordenadas bajo el cursor en Bisección.
+- Áreas táctiles de 44 píxeles y campos en una columna en pantallas de hasta 480 píxeles.
+- Límites de v1.1.0 conservados: ejercicios 46 y 49 incompletos, ejecutables sin firma y Excel no verificado
+  directamente; aplazadas las gráficas en el plano y el porcentaje de zoom y reescalado vertical en Newton.
+
+Consulta las instrucciones de uso y los límites en las [notas de v1.2.0](docs/notas-v1.2.0.md).
+
 ## 1.1.0
 
 Amplía el trabajo con el banco final y la interpretación de los métodos de raíces.
