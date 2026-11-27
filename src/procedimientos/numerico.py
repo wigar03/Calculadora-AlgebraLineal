@@ -68,7 +68,7 @@ def adaptar_biseccion(res, _cuerpo):
     filas = [[p["numero"], p["a"], p["b"], p["c"], p["fc"], p["error_relativo"]] for p in res.get("pasos", ())]
     avisos = [r"La cota del intervalo supone continuidad en $[a,b]$."]
     if not res.get("convergio"):
-        avisos.append("Tolerancia no alcanzada.")
+        avisos.append(MOTIVOS_BISECCION.get(res["motivo"], res["motivo"]))
     return procedimiento(
         "biseccion", "Método de bisección",
         entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
@@ -87,7 +87,7 @@ def adaptar_biseccion(res, _cuerpo):
     )
 
 
-@registrar("/api/derivadas/derivar")
+@registrar("/api/derivadas/derivar", "/api/newton-raphson/derivar")
 def adaptar_derivadas(res, _cuerpo):
     fl, dl = res["funcion_latex"], res["derivada_latex"]
     return procedimiento(
@@ -152,12 +152,12 @@ def adaptar_regla_falsa(res, _cuerpo):
         verif.append(res["verificacion"]["nota"])
     filas = [[p["numero"], p["xl"], p["xu"], p["f_xl"], p["f_xu"], p["xr"], p["f_xr"],
               p["error_relativo"], p["decision"]] for p in res.get("pasos", ())]
-    avisos = []
+    avisos = list(res.get("advertencias") or ())
     if res.get("estancamiento"):
         fijo = "x_l" if res["estancamiento"]["extremo"] == "xl" else "x_u"
         avisos.append(f"Estancamiento: ${fijo}$ permaneció fijo durante {res['estancamiento']['iteraciones']} iteraciones.")
     if not res.get("convergio"):
-        avisos.append("Tolerancia no alcanzada.")
+        avisos.append(MOTIVOS_RF.get(res["motivo"], res["motivo"]))
     return procedimiento(
         "regla_falsa", "Método de regla falsa",
         entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
@@ -199,8 +199,12 @@ def adaptar_newton(res, _cuerpo):
         avisos.append(f"Derivada pequeña en $n={','.join(grupos['derivada_pequena'])}$.")
     if "paso_creciente" in grupos:
         avisos.append(f"El cambio aumentó en $n={','.join(grupos['paso_creciente'])}$.")
+    for adv in res.get("advertencias", ()):
+        if isinstance(adv, dict) and adv.get("tipo") == "no_certificada":
+            avisos.append(adv.get("mensaje") or MOTIVOS_ABIERTO["no_certificada"])
     if not res.get("convergio"):
-        avisos.append("Sin convergencia.")
+        if res.get("motivo") != "no_certificada" or "no_certificada" not in grupos:
+            avisos.append(MOTIVOS_ABIERTO.get(res["motivo"], res["motivo"]))
     return procedimiento(
         "newton_raphson", "Método de Newton-Raphson",
         entrada=[{"etiqueta": "f(x)", "latex": fl}, {"etiqueta": "f'(x)", "latex": dl},
