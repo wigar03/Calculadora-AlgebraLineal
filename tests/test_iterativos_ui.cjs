@@ -141,6 +141,9 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
   const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
   const sinModulo11 = actual
+    // INC-033: selector de raíz y recomendación autorizados en los cuatro módulos.
+    .replace(/^ *<!-- INC-033 -->\n[\s\S]*?^ *<!-- \/INC-033 -->\n/gm, '')
+    .replace(/<!-- INC-033 -->[\s\S]*?<!-- \/INC-033 -->/g, '')
     .replace(/\n  <link rel="stylesheet" href="iterativos\.css\?v=[0-9a-f]+">/, '')
     .replace(/\n  <link rel="stylesheet" href="impresion\.css(?:\?v=[0-9a-f]+)?" media="print">/, '')
     .replace(
