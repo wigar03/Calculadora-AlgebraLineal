@@ -1,5 +1,6 @@
 """Adaptadores puros: conservan valores, textos y pasos de las respuestas lineales."""
 from copy import deepcopy
+import re
 
 from . import registrar
 from .base import paso, procedimiento, tabla
@@ -13,7 +14,7 @@ def _matriz_latex(matriz):
 def _item(etiqueta, latex):
     if latex == "Sin solución":
         latex = r"\text{" + latex + "}"
-    return {"etiqueta": etiqueta, "latex": str(latex)}
+    return {"etiqueta": etiqueta, "latex": re.sub(r"_(\d+)", r"_{\1}", str(latex))}
 
 
 def _entradas(cuerpo, vectores=(), matrices=(), escalares=()):
@@ -30,7 +31,8 @@ def _pasos(respuesta):
         salida = []
         for original in respuesta[clave]:
             if isinstance(original, str):
-                salida.append(paso(original, original))
+                formula = clave in ("pasos_multiplicacion", "pasos_mapeo") and "$" not in original
+                salida.append(paso("", latex=[original]) if formula else paso(original))
             else:
                 salida.append(paso(original.get("titulo", original.get("title", "")),
                                    original.get("descripcion", original.get("description", "")),
@@ -43,7 +45,8 @@ def _pasos(respuesta):
 def _base(respuesta, modulo, titulo):
     avisos = [respuesta[k] for k in ("explicacion_teorica", "justificacion_teorica", "descripcion_sistema",
                                     "mensaje_diagnostico", "formula_2x2_detalle") if respuesta.get(k)]
-    return procedimiento(modulo, respuesta.get("titulo_operacion", titulo), pasos=_pasos(respuesta), avisos=avisos)
+    return procedimiento(modulo, respuesta.get("titulo_operacion", titulo), pasos=_pasos(respuesta),
+                         avisos=[a.replace("**", "") for a in avisos])
 
 
 @registrar("/api/vectores/operar")
@@ -102,6 +105,10 @@ def adaptar_determinante(respuesta, cuerpo):
     if p["pasos"] and p["pasos"][0]["matriz"]:
         p["entrada"] = [_item("A", _matriz_latex(p["pasos"][0]["matriz"]))]
     p["resultado"] = [_item(r"\det(A)", respuesta["determinante"])]
+    p["verificacion"] = ["Invertible: existe inversa única." if respuesta["es_invertible"]
+                         else "No invertible: matriz singular, no existe inversa."]
+    p["avisos"].append(f"Método: {respuesta['metodo']}; complejidad: {respuesta['complejidad_teorica']}; "
+                       f"operaciones estimadas: {respuesta['operaciones_estimadas']}.")
     return p
 
 

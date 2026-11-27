@@ -42,6 +42,30 @@ class TestProcedimientosLineales(unittest.TestCase):
         self.assertEqual([i["etiqueta"] for i in p["entrada"]], ["v_1", "b"])
         self.assertIn("1/7", p["entrada"][0]["latex"])
 
+    def test_pasos_sin_repeticion_y_formulas_en_latex(self):
+        for caso in casos_lineales():
+            p = ADAPTADORES[caso["ruta"]](caso["respuesta"], caso["cuerpo"])
+            for fuente, s in zip(pasos_fuente(caso["respuesta"]), p["pasos"]):
+                if isinstance(fuente, str):
+                    self.assertEqual(s["texto"], "")
+                    if "$" not in fuente and "pasos_multiplicacion" in caso["respuesta"]:
+                        self.assertEqual(s["latex"], [fuente])
+                        self.assertEqual(s["titulo"], "")
+        caso = next(c for c in casos_lineales() if c["ruta"] == "/api/vectores/combinacion")
+        r = copy.deepcopy(caso["respuesta"])
+        r["escalares"] = {"c_1": "-2t_10 + t_11"}
+        p = ADAPTADORES[caso["ruta"]](r, {})
+        self.assertEqual(p["resultado"][0]["latex"], "-2t_{10} + t_{11}")
+
+    def test_determinante_exporta_dictamen_y_coste(self):
+        for caso in casos_lineales():
+            if caso["ruta"] != "/api/matrices/determinante":
+                continue
+            p = ADAPTADORES[caso["ruta"]](caso["respuesta"], caso["cuerpo"])
+            dictamen = "Invertible" if caso["respuesta"]["es_invertible"] else "No invertible"
+            self.assertIn(dictamen, " ".join(p["verificacion"]))
+            self.assertIn(str(caso["respuesta"]["operaciones_estimadas"]), " ".join(p["avisos"]))
+
     def test_corpus_valido_mismos_pasos_y_sin_mutaciones(self):
         for caso in casos_lineales():
             with self.subTest(ruta=caso["ruta"], cuerpo=caso["cuerpo"]):
@@ -52,6 +76,8 @@ class TestProcedimientosLineales(unittest.TestCase):
                 self.assertEqual(cuerpo, caso["cuerpo"])
                 fuente = pasos_fuente(respuesta)
                 titulos = [s.get("titulo", s.get("title")) if isinstance(s, dict) else s for s in fuente]
+                if any(k in respuesta for k in ("pasos_multiplicacion", "pasos_mapeo")):
+                    titulos = ["" if isinstance(s, str) and "$" not in s else s for s in titulos]
                 self.assertEqual([s["titulo"] for s in p["pasos"]], titulos)
                 for original, adaptado in zip(fuente, p["pasos"]):
                     if isinstance(original, dict):
