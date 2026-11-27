@@ -137,7 +137,7 @@ test('LaTeX endurecido: MaxMatrixCols>=20, babel plainpercent, escape 1 pasada y
   for (const m of uni.matchAll(/(?<!\\)\$([^$\n]+?)\$/g)) katex.renderToString(m[1], { displayMode: false, throwOnError: true, strict: 'error' });
 });
 
-test('procedimientoALatex genera documento compilable con babel spanish, longtable y KaTeX estricto en los 33 golden', () => {
+test('procedimientoALatex genera documento compilable con babel spanish, longtable y KaTeX estricto en los 34 procedimientos golden', () => {
   const doc = procedimientoALatex(EJEMPLO);
   assert.ok(doc.includes('\\documentclass') && doc.includes('\\usepackage[spanish]{babel}') && doc.includes('\\usepackage{amsmath,amssymb}') && doc.includes('\\usepackage{longtable}'));
   assert.ok(doc.includes('\\begin{document}') && doc.includes('\\end{document}') && doc.includes('100\\%') && doc.includes('\\det(A) = 10'));
@@ -145,7 +145,9 @@ test('procedimientoALatex genera documento compilable con babel spanish, longtab
     + "out=[adjuntar(c['ruta'],c['respuesta'],c['cuerpo'])['procedimiento'] for p in sorted(pathlib.Path('tests/validacion/golden').glob('*.json')) "
     + "for c in json.loads(p.read_text(encoding='utf-8')) if 'procedimiento' in adjuntar(c['ruta'],c['respuesta'],c['cuerpo'])]; print(json.dumps(out))";
   const procs = JSON.parse(execFileSync('python', ['-c', py], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, PYTHONIOENCODING: 'utf-8' } }));
-  assert.equal(procs.length, 33);
+  // INC-034 C-28a añade el análisis de iterativos a las respuestas exportables.
+  assert.equal(procs.length, 34);
+  assert.ok(procs.some(p => p.titulo === 'Análisis del sistema y convergencia'));
   for (const proc of procs) {
     const tex = procedimientoALatex(proc);
     assert.equal((tex.match(/\\begin\{/g) || []).length, (tex.match(/\\end\{/g) || []).length);
