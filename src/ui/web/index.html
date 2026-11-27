@@ -509,7 +509,7 @@
                 <button type="button" class="btn-step" onclick="cambiarDimInversa(-1)" title="Disminuir orden">
                   <i data-lucide="minus"></i>
                 </button>
-                <input type="number" id="inv-dim-n" min="2" max="6" value="2" onchange="renderizarMatrizInversaInput()">
+                <input type="number" id="inv-dim-n" min="1" max="6" value="2" onchange="renderizarMatrizInversaInput()">
                 <button type="button" class="btn-step" onclick="cambiarDimInversa(1)" title="Aumentar orden">
                   <i data-lucide="plus"></i>
                 </button>
@@ -744,9 +744,10 @@
                 <span id="label-method-lu"><strong>Descomposición LU (PA = LU)</strong> — Triangulación con pivoteo parcial [O(n³)]</span>
               </label>
               <label class="radio-label">
-                <input type="radio" name="det-method" value="cofactores" onchange="actualizarPreferenciaMetodo()">
+                <input type="radio" name="det-method" value="cofactores" aria-describedby="det-cofactores-limite" onchange="actualizarPreferenciaMetodo()">
                 <span id="label-method-cof"><strong>Expansión por Cofactores (Laplace)</strong> — Desarrollo por fila/columna óptima [O(n!)]</span>
               </label>
+              <p id="det-cofactores-limite" class="result-explanation" role="status" hidden>Cofactores admite matrices de orden hasta 6. Para órdenes mayores se selecciona LU.</p>
             </div>
 
             <button type="button" class="btn-primary btn-large" onclick="calcularDeterminanteUI()">
@@ -1331,7 +1332,7 @@
     </div>
   </div>
 
-  <script src="app.js?v=c40445d7ec2a"></script>
+  <script src="app.js?v=ca7609a57cac"></script>
   <script src="sidebar.js?v=1b48755f71be"></script>
   <script src="formula-keyboard.js?v=009d7a296017"></script>
   <script src="biseccion.js?v=74df9cc5a953"></script>

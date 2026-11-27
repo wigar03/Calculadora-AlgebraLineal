@@ -1204,7 +1204,7 @@ function inicializarModuloInversa() {
 
 function cambiarDimInversa(delta) {
   const el = document.getElementById("inv-dim-n");
-  let val = Math.max(2, Math.min(6, (parseInt(el.value, 10) || 2) + delta));
+  let val = Math.max(1, Math.min(6, (parseInt(el.value, 10) || 2) + delta));
   el.value = val;
   invN = val;
   renderizarMatrizInversaInput();
@@ -1930,10 +1930,25 @@ function calcularOperacionesTeoricas(n) {
   return { opsCof, opsLu };
 }
 
+const COFACTORES_MAX = 6;
+
 function actualizarEficienciaDeterminanteUI() {
   const input = document.getElementById("det-order-n");
   if (!input) return;
   const n = parseInt(input.value) || 3;
+
+  const cofactores = document.querySelector('input[name="det-method"][value="cofactores"]');
+  const lu = document.querySelector('input[name="det-method"][value="lu"]');
+  const sobreLimite = n > COFACTORES_MAX;
+  if (cofactores) {
+    cofactores.disabled = sobreLimite;
+    if (sobreLimite) {
+      cofactores.checked = false;
+      if (lu) lu.checked = true;
+    }
+  }
+  const aviso = document.getElementById("det-cofactores-limite");
+  if (aviso) aviso.hidden = !sobreLimite;
 
   const { opsCof, opsLu } = calcularOperacionesTeoricas(n);
 
