@@ -80,6 +80,19 @@ python tests/validacion/generar_referencias.py   # regenera referencias (requier
   última release; sin emojis ni insignias. Verificación visual en github.com tras publicar.
 - No se implementan módulos matemáticos nuevos. No se declara 1.0.0 estable.
 
+## Versiones estables (v1.0.0 en adelante)
+- Estable publicada: v1.3.0. Versión menor si hay funciones nuevas; parche si solo hay correcciones. Release solo con
+  CI en verde (Linux, Windows, `externos`), binarios de la CI del tag y SHA-256 verificadas tras la descarga pública.
+- Banco final (64 ejercicios): `tests/validacion/banco_final.py` y `referencias_final.json` (SymPy); 46 y 49 sin
+  igualdad completa en la fuente, igual que IV-2/IV-5: no se inventan.
+- Auditoría de coherencia: `docs/auditoria/carbon-coherencia.md` (C-01…C-28 cerrados). Cambios de UX aprobados por el
+  propietario: INC-032 a INC-035; cualquier otro sigue requiriendo aprobación.
+- `tests/validacion/golden/` solo cambia con autorización expresa y diff limitado a los campos aprobados.
+- `index.html`: al integrar ramas, recalcular todos los `?v=` desde el contenido y comparar el marcado final con cada
+  rama (un conflicto de huellas resuelto tomando una versión puede borrar marcado ajeno).
+- Pruebas de navegador: no suponer `pointer: fine` (Chrome sin ventana en Linux informa `none`); los recuentos de
+  corpus en `test_externo_*` deben actualizarse al añadir procedimientos exportables.
+
 ## UX
 No cambiar navegación, disposición, colores, tipografía, controles ni flujos sin autorización del propietario.
 Permitido: corregir errores internos, ampliar capacidades matemáticas y mejorar los mensajes de error.

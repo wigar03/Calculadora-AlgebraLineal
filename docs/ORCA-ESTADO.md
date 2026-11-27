@@ -1,36 +1,34 @@
 # Estado operativo de Orca
 
-Última actualización: 2026-11-24, etapa final v1.0.0 (integrador: Claude Business, Opus 5.5).
+Última actualización: 2026-11-27, tras publicar v1.3.0 (integrador: Claude Business, Opus 5.5).
 
 ## Resumen para el propietario
-- **Etapa final:** v1.0.0 estable autorizada sin firma y sin Excel. INC-031 cerrada (entorno de CI; 15 máquinas
-  limpias, `docs/validacion/inc031-windows.md`). Excel para la Web no disponible (`docs/validacion/excel-web.md`).
-- **Etapa 5 (consolidación) completa:** exportaciones validadas con herramientas reales y auditoría visual en GitHub.
-  Sin módulos nuevos ni cambios de UX. Hallazgos y limitaciones: INC-023 a INC-029 en `docs/INCIDENCIAS.md`.
-- **LaTeX:** 37 documentos reales compilados con pdflatex en dos pasadas, 0 desbordes > 1 pt, incluido un adversario
-  con `ñ á Ω 你好`. Evidencia: `docs/validacion/codex2-latex-rendimiento.md`, `codex2-exportacion-sin-marcas.md`.
-- **CSV:** abrir, guardar y reabrir con LibreOffice Calc (dos perfiles) y Gnumeric, 22/22 etapas cada uno; inyección
-  con espacios iniciales corregida. Excel no disponible. Evidencia: `docs/validacion/consolidacion-csv.md`,
-  `csv-integrado-e11d33e.md`.
-- **Rendimiento:** 4 respuestas Jacobi de 10,3 MB simultáneas bajo el límite de 16 MiB; cálculo ≤ 8,6 s; servidor
-  103 MiB; consultas ligeras atendidas durante la carga.
-- **GitHub:** README y guías sin LaTeX expuesto (escritorio, móvil, oscuro); capturas en `docs/validacion/github/`.
-- **Chrome local:** causa de entorno (Orca elevado), no de la aplicación: `docs/validacion/chrome-local.md`.
-- **Firma de Windows:** opciones reales en `docs/firma-opciones.md`. No se adquirió nada.
-- La CI tiene un job `externos` con TeX Live, LibreOffice y Gnumeric, además de Linux y Windows.
+- **Versión estable publicada:** v1.3.0 (`latest`), con setup, portable y `SHA256SUMS.txt` verificados tras la CI y
+  tras la descarga pública. Historial: v1.0.0 → v1.1.0 → v1.2.0 → v1.3.0 (`docs/RELEASES.md`).
+- **Ejercicios:** banco A (49; 47 resueltos, IV-2/IV-5 incompletos en la fuente) y banco final (64; los 15 nuevos,
+  50-64, validados contra SymPy; 46 y 49 siguen sin igualdad). `docs/VALIDACION-EJERCICIOS.md`.
+- **Auditoría de coherencia (Carbon):** C-01…C-28 cerrados. Correcciones sin cambio de UX en v1.1.0; propuestas de UX
+  aprobadas en INC-032 a INC-035 y publicadas en v1.1.0-v1.3.0. `docs/auditoria/carbon-coherencia.md`.
+- **CI:** Linux, Windows (ejecutable empaquetado) y `externos` (pdflatex, LibreOffice Calc, Gnumeric reales, con
+  caché de paquetes), más el flujo manual `windows-estabilidad.yml` (5 máquinas limpias) que cerró INC-031.
+- **Etapa 5 y v1.0.0:** evidencia de exportaciones, rendimiento, Chrome local e INC-031 en `docs/validacion/`.
+
+## Pendiente (requiere decisión o recursos del propietario)
+- Enunciados completos de los ejercicios 46 y 49 (INC-001).
+- Firma digital de los ejecutables (`docs/firma-opciones.md`); antes, una licencia OSI para SignPath Foundation.
+  En el equipo del integrador, Windows Application Control bloqueó el ejecutable sin firma de v1.2.0.
+- Prueba con Microsoft Excel (escritorio o web) con una cuenta o licencia autorizada (`docs/validacion/excel-web.md`).
+- Prueba en Windows 10 real; pruebas con estudiantes y docentes; lector de pantalla.
+- Limpieza de ramas de trabajo ya integradas (borrarlas es irreversible).
 
 ## Agentes (Run `run_e96b75f55a83`)
-| Agente | Cuenta / modelo | Rama | Entregado e integrado en la etapa 5 |
-|---|---|---|---|
-| Codex 1 | Codex «Personal (Plus)» · gpt-6.1-sol xhigh | `orca/consolidacion-csv` | auditoría CSV con Calc y Gnumeric; regla Markdown `<`/`>` |
-| Codex 2 | Codex «Team» (sistema) · gpt-6.1-sol xhigh | `orca/consolidacion-latex-rendimiento` | pdflatex real; oráculo CSV; rendimiento 16 MiB |
-| Antigravity | Antigravity · gemini-4-neon-high | `orca/consolidacion-chrome` | diagnóstico Chrome; correcciones de `exportar.js` |
-| Claude Business | Claude Business (sistema) · Opus 5.5 | `main` | auditoría visual GitHub, firma, CI, decisiones, integración |
+| Agente | Cuenta / modelo | Área |
+|---|---|---|
+| Codex 1 | Codex «Personal (Plus)» · gpt-6.1-sol xhigh | álgebra lineal, vistas 01-06, Markdown público |
+| Codex 2 | Codex «Team» (sistema) · gpt-6.1-sol xhigh | métodos numéricos, vistas 07-11, núcleo |
+| Antigravity | Antigravity · gemini-4-neon-high | analizador y CSS/UI; con la cuota agotada se reasigna a los Codex |
+| Gemini Carbon | sesión del propietario | auditoría de coherencia en la rama `Dev-Carbon` (integrada) |
+| Claude Business | Claude Business (sistema) · Opus 5.5 | plan, revisión, CI, validación, integración y releases |
 
-Claude Pro individual: **no usado**. Ningún commit supera 100 líneas ni lleva coautores.
-Quien implementó `exportar.js` no modificó los oráculos: Codex 1 y Codex 2 revalidaron de forma independiente.
-
-## Pendiente tras v1.0.0
-- Firma digital de los ejecutables (decisión y gasto del propietario; ver `docs/firma-opciones.md`).
-- Prueba con Microsoft Excel real (no disponible en los entornos autorizados).
-- IV-2 e IV-5: limitación del enunciado original (INC-001), no bloquea.
+Claude Pro individual: **no usado**. Ningún commit supera 100 líneas ni lleva coautores; cada rama se revisa commit a
+commit y se integra con `cherry-pick` o avance rápido, sin reescribir historial publicado.
