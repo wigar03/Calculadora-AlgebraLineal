@@ -1170,7 +1170,7 @@
                 <button type="button" class="btn-text" data-nr-example="referencia">Ejemplo de la presentación</button>
                 <button type="button" class="btn-text" data-nr-example="practica">Práctica</button>
                 <button type="button" class="btn-text" data-nr-example="ciclo">Ejemplo con ciclo</button>
-              </div><button id="nr-clear" class="btn-clear" type="button">Limpiar</button></div>
+              </div><button id="nr-clear" class="btn-clear" type="button"><i data-lucide="trash-2" class="btn-icon"></i><span>Limpiar</span></button></div>
               <div id="nr-derivative" class="nr-math" aria-live="polite"></div>
             </div>
             <div id="nr-card-2" class="card rf-card" hidden>
@@ -1209,8 +1209,10 @@
             <div class="card-header"><h3>Gráfica y tangentes</h3></div>
             <div id="nr-graph-controls" class="nr-controls" hidden>
               <button id="nr-mark" class="btn-text" type="button" aria-pressed="false" data-math>Marcar $x_0$</button>
-              <button id="nr-zoom-in" class="btn-text" type="button" aria-label="Acercar gráfica">+</button><button id="nr-zoom-out" class="btn-text" type="button" aria-label="Alejar gráfica">−</button>
-              <button id="nr-reset-view" class="btn-text" type="button">Restablecer vista</button><button id="nr-focus-root" class="btn-text" type="button" disabled>Enfocar raíz</button>
+              <!-- INC-034 C-24 nr --><div class="bis-zoom-group" role="group" aria-label="Controles de zoom de la gráfica">
+              <button id="nr-zoom-in" class="btn-bis-zoom" type="button" title="Acercar" aria-label="Acercar gráfica"><i data-lucide="zoom-in"></i></button><button id="nr-zoom-out" class="btn-bis-zoom" type="button" title="Alejar" aria-label="Alejar gráfica"><i data-lucide="zoom-out"></i></button>
+              <button id="nr-reset-view" class="btn-bis-zoom" type="button" title="Restablecer vista" aria-label="Restablecer vista"><i data-lucide="rotate-ccw"></i></button><button id="nr-focus-root" class="btn-bis-zoom" type="button" title="Enfocar raíz" aria-label="Enfocar raíz" disabled><i data-lucide="target"></i></button>
+              </div><!-- /INC-034 C-24 nr -->
             </div>
             <div id="nr-plot" class="bis-plot" hidden></div><p class="bis-plot-placeholder placeholder-text">Derive y grafique la función para elegir su valor inicial.</p>
             <p id="nr-readout" class="bis-help" aria-hidden="true"></p>
@@ -1232,7 +1234,7 @@
               <div class="bis-formula-editor"><input id="sc-function" class="bis-input bis-expression" value="x^3-x-2" required maxlength="500" autocomplete="off" spellcheck="false"><!-- INC-034 C-22 --><div class="bis-preview" aria-label="Representación matemática de la función escrita"><div id="sc-preview-math" class="bis-preview-math" aria-live="polite" aria-atomic="true"></div><p id="sc-preview-status" class="bis-help" role="status">La ecuación se actualiza mientras escribe.</p></div><!-- /INC-034 C-22 --><div class="bis-keyboard-toolbar"><span>Teclado matemático</span><button class="btn-text" type="button" aria-expanded="false" aria-controls="sc-keyboard">Mostrar teclas</button></div><div id="sc-keyboard" class="bis-keyboard" hidden></div><p class="sr-only" role="status"></p></div>
               <p class="bis-help">Use * y ^. Funciones: sin, cos, tan, asin, acos, atan, exp, ln, log, sqrt y abs. Las inversas devuelven radianes.</p></div>
               <div class="bis-fields"><div><label for="sc-a" data-math>Desde $x=$</label><input id="sc-a" class="bis-input" value="0" required></div><div><label for="sc-b" data-math>Hasta $x=$</label><input id="sc-b" class="bis-input" value="2.5" required></div></div><button class="btn-primary rf-action" type="submit">Graficar función</button>
-            <!-- INC-033 --><div><button id="sc-recommend" type="button" class="btn-text">Recomendar método</button><div id="sc-recommendation" class="bis-help" aria-live="polite"></div></div><!-- /INC-033 --></form><div class="card-footer-actions"><button class="btn-text" type="button" id="sc-example">Ejemplo de la presentación</button><button class="btn-text" type="button" id="sc-practice">Práctica</button><button class="btn-clear" type="button" id="sc-clear">Limpiar</button></div><p id="sc-hint" class="bis-help"></p>
+            <!-- INC-033 --><div><button id="sc-recommend" type="button" class="btn-text">Recomendar método</button><div id="sc-recommendation" class="bis-help" aria-live="polite"></div></div><!-- /INC-033 --></form><div class="card-footer-actions"><button class="btn-text" type="button" id="sc-example">Ejemplo de la presentación</button><button class="btn-text" type="button" id="sc-practice">Práctica</button><button class="btn-clear" type="button" id="sc-clear"><i data-lucide="trash-2" class="btn-icon"></i><span>Limpiar</span></button></div><p id="sc-hint" class="bis-help"></p>
           </div>
           <div class="card rf-card" id="sc-card-2" hidden><div class="card-header"><h3><span class="bis-section-number">02</span>Dos valores iniciales</h3></div><aside class="bis-theory"><strong>Elegir los puntos</strong><p data-math>Observe la gráfica y elija dos valores distintos, $x_0$ y $x_1$. No es obligatorio que encierren una raíz ni que tengan signos opuestos. La convergencia no está garantizada.</p></aside>
             <form id="sc-initial-form" class="rf-form"><div class="bis-fields"><div><label for="sc-x0" data-math>Valor $x_0$</label><input id="sc-x0" class="bis-input" required></div><div><label for="sc-x1" data-math>Valor $x_1$</label><input id="sc-x1" class="bis-input" required></div></div><p class="bis-help">Introduzca decimales, fracciones o notación científica. Los puntos no se eligen automáticamente.</p><button class="btn-primary rf-action" type="submit">Evaluar primera secante</button></form>
@@ -1243,9 +1245,9 @@
         </div><div class="card rf-graph-card" id="sc-graph-card"><div class="card-header"><h3>Gráfica y rectas secantes</h3></div><div id="sc-graph-controls" class="nr-controls" hidden>
 <button id="sc-mark-x0" type="button" class="btn-text" aria-pressed="false" data-math>Marcar $x_0$</button>
 <button id="sc-mark-x1" type="button" class="btn-text" aria-pressed="false" data-math>Marcar $x_1$</button>
-<div class="bis-zoom-group"><button id="sc-zoom-in" type="button" class="btn-bis-zoom" aria-label="Acercar gráfica" title="Acercar (+)">+</button><span id="sc-zoom-level" class="bis-zoom-level">100%</span><button id="sc-zoom-out" type="button" class="btn-bis-zoom" aria-label="Alejar gráfica" title="Alejar (-)">−</button></div>
-<button id="sc-reset" type="button" class="btn-text">Restablecer vista</button><button id="sc-focus-root" type="button" class="btn-text" disabled>Enfocar raíz</button>
-</div><div id="sc-plot" class="bis-plot"></div><p id="sc-readout" class="bis-help" aria-hidden="true"></p>
+<!-- INC-034 C-24 sc --><div class="bis-zoom-group" role="group" aria-label="Controles de zoom de la gráfica"><button id="sc-zoom-in" type="button" class="btn-bis-zoom" aria-label="Acercar gráfica" title="Acercar (+)"><i data-lucide="zoom-in"></i></button><span id="sc-zoom-level" class="bis-zoom-level">100%</span><button id="sc-zoom-out" type="button" class="btn-bis-zoom" aria-label="Alejar gráfica" title="Alejar (-)"><i data-lucide="zoom-out"></i></button>
+<button id="sc-reset" type="button" class="btn-bis-zoom" title="Restablecer vista" aria-label="Restablecer vista"><i data-lucide="rotate-ccw"></i></button><button id="sc-focus-root" type="button" class="btn-bis-zoom" title="Enfocar raíz" aria-label="Enfocar raíz" disabled><i data-lucide="target"></i></button></div><!-- /INC-034 C-24 sc -->
+</div><div id="sc-plot" class="bis-plot" hidden></div><p class="bis-plot-placeholder placeholder-text">Escriba la función y presione «Graficar función» para verla en el plano cartesiano.</p><p id="sc-readout" class="bis-help" aria-hidden="true"></p>
 <p class="bis-help">Use la rueda para ampliar alrededor del cursor y arrastre para desplazar. Con la gráfica enfocada: flechas para mover, + / − para zoom e Inicio para restablecer. Doble clic restablece la vista.</p>
 <p class="bis-help" data-math>Azul: $f(x)$. Violeta: rectas secantes. Verde: aproximación final. La gráfica es orientativa; las primeras ocho rectas muestran cómo se desplazan los dos puntos.</p></div></div>
         <div id="sc-table-card" class="card bis-table-card" hidden><div class="card-header"><h3><span class="bis-section-number">05</span>Tabla de iteraciones</h3></div><p class="bis-help" data-math>Cada fila aplica la fórmula y actualiza las dos aproximaciones. $E_a$ y $\varepsilon_r$ son cambios aproximados, no cotas del error verdadero. El relativo no está definido si la nueva aproximación es cero.</p><div id="sc-table" class="bis-table-scroll" tabindex="0" role="region" aria-label="Iteraciones de la secante"></div></div>
@@ -1275,7 +1277,7 @@
                 <button type="button" class="btn-text" data-it-example="practica">Práctica (4×4)</button>
                 <button type="button" class="btn-text" data-it-example="reordenable">Reordenable (3×3)</button>
                 <button type="button" class="btn-text" data-it-example="jacobi_si_gs_no">Jacobi sí / GS no</button>
-              </div><button id="it-clear" type="button" class="btn-clear">Limpiar</button></div>
+              </div><button id="it-clear" type="button" class="btn-clear"><i data-lucide="trash-2" class="btn-icon"></i><span>Limpiar</span></button></div>
               <p id="it-hint" class="bis-help"></p>
             </div>
             <div class="card rf-card" id="it-card-2">
@@ -1340,7 +1342,7 @@
   <script src="regla-falsa.js?v=2ecff85bcc8e"></script>
   <script src="grafica-funciones.js?v=5f3a7d1cb693"></script>
   <script src="newton-raphson.js?v=c1602f795c50"></script>
-  <script src="secante.js?v=1fdba110ca7e"></script>
+  <script src="secante.js?v=9053c8926939"></script>
   <script src="iterativos.js?v=5cf7b4a86fd6"></script>
   <script src="exportar.js?v=85158b0f1fd5"></script>
   <script src="exportar-ui.js?v=7d317634e74c"></script>

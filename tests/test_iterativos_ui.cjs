@@ -141,6 +141,11 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
   const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
   const sinModulo11 = actual
+    // INC-034 C-24: solo iconos, grupos de zoom y placeholder inicial de Secante.
+    .replace(/<!-- INC-034 C-24 nr -->[\s\S]*?<!-- \/INC-034 C-24 nr -->/, '<button id="nr-zoom-in" class="btn-text" type="button" aria-label="Acercar gráfica">+</button><button id="nr-zoom-out" class="btn-text" type="button" aria-label="Alejar gráfica">−</button>\n              <button id="nr-reset-view" class="btn-text" type="button">Restablecer vista</button><button id="nr-focus-root" class="btn-text" type="button" disabled>Enfocar raíz</button>')
+    .replace(/<!-- INC-034 C-24 sc -->[\s\S]*?<!-- \/INC-034 C-24 sc -->/, '<div class="bis-zoom-group"><button id="sc-zoom-in" type="button" class="btn-bis-zoom" aria-label="Acercar gráfica" title="Acercar (+)">+</button><span id="sc-zoom-level" class="bis-zoom-level">100%</span><button id="sc-zoom-out" type="button" class="btn-bis-zoom" aria-label="Alejar gráfica" title="Alejar (-)">−</button></div>\n<button id="sc-reset" type="button" class="btn-text">Restablecer vista</button><button id="sc-focus-root" type="button" class="btn-text" disabled>Enfocar raíz</button>')
+    .replace(/(<button[^>]*id="(?:nr|sc)-clear"[^>]*>)<i data-lucide="trash-2" class="btn-icon"><\/i><span>Limpiar<\/span>/g, '$1Limpiar')
+    .replace(/id="sc-plot" class="bis-plot" hidden><\/div><p class="bis-plot-placeholder placeholder-text">[^<]+<\/p>/, 'id="sc-plot" class="bis-plot"></div>')
     // INC-034 C-22: solo vista previa y estado inicial plegado del teclado de Bisección.
     .replace(/^ +<!-- INC-034 C-22 -->.*<!-- \/INC-034 C-22 -->\n/gm, '')
     .replace(/<!-- INC-034 C-22 -->.*?<!-- \/INC-034 C-22 -->/g, '')

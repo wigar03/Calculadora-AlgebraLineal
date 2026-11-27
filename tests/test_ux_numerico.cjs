@@ -23,3 +23,11 @@ test('C-22: Newton y Secante tienen bloques accesibles y los cuatro teclados ini
   }
   for(const p of ['bis','rf','nr','sc'])assert.match(s,new RegExp(`id="${p}-keyboard"[^>]* hidden`));
 });
+test('C-24: zoom y limpieza reutilizan los mismos iconos y Secante muestra ayuda inicial',()=>{
+  const s=html();for(const p of ['bis','rf','nr','sc'])for(const [id,icon] of [['zoom-in','zoom-in'],['zoom-out','zoom-out']]){
+    const b=s.match(new RegExp(`<button[^>]*id="${p}-${id}"[^>]*>[\\s\\S]*?</button>`))?.[0];
+    assert.ok(b?.includes('btn-bis-zoom')&&b.includes(`data-lucide="${icon}"`),`${p}-${id}`);
+  }
+  for(const p of ['bis','rf','nr','sc','it'])assert.ok(s.match(new RegExp(`<button[^>]*id="${p}-clear"[^>]*>[\\s\\S]*?</button>`))?.[0].includes('data-lucide="trash-2"'),p);
+  assert.ok(/id="sc-plot"[^>]* hidden><\/div><p class="bis-plot-placeholder placeholder-text">/.test(s));
+});

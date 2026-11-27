@@ -41,7 +41,7 @@
     function cancel(){version++;requests.forEach(c=>c.abort());requests.clear();clearTimeout(temporizador);}
     function error(s){el("error").textContent=s;el("error").hidden=!s;if(s)window.ExportarUI?.limpiar("tab-secante");}
     function clearResult(){window.ExportarUI?.limpiar("tab-secante");res=null;el("result").replaceChildren();el("table-card").hidden=true;el("focus-root").disabled=true;draw();}
-    function invalidate(level){cancel();navegacion.cancelar();error("");clearResult();if(level<=2){revisionConsejo++;consejo.replaceChildren();el("card-3").hidden=true;el("card-4").hidden=true;el("first").replaceChildren();}if(level===1){funcion=null;vista=null;vistaBase=null;base=null;puntos=[];marcar(null);el("graph-controls").hidden=true;el("readout").replaceChildren();el("card-2").hidden=true;el("plot").replaceChildren();el("hint").replaceChildren();}}
+    function invalidate(level){cancel();navegacion.cancelar();error("");clearResult();if(level<=2){revisionConsejo++;consejo.replaceChildren();el("card-3").hidden=true;el("card-4").hidden=true;el("first").replaceChildren();}if(level===1){funcion=null;vista=null;vistaBase=null;base=null;puntos=[];marcar(null);el("graph-controls").hidden=true;el("readout").replaceChildren();el("card-2").hidden=true;el("plot").replaceChildren();el("plot").hidden=true;el("hint").replaceChildren();}}
     async function request(route,data){
       requests.get(route)?.abort();const c=new AbortController(),v=version;requests.set(route,c);
       try{const r=await fetch(`/api/secante/${route}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data),signal:c.signal});const d=await r.json();if(v!==version||requests.get(route)!==c)return null;if(!r.ok||d.error)throw Error(d.error||"No se pudo completar el cálculo.");return d;}
@@ -50,7 +50,7 @@
     async function run(form,fn){const b=form.querySelector('[type="submit"]');b.disabled=true;error("");try{await fn();}catch(e){if(e.name!=="AbortError")error(e.message);}finally{b.disabled=false;}}
     const datos=()=>({funcion,x0:el("x0").value,x1:el("x1").value,tolerancia:el("tolerance").value,max_iteraciones:el("limit").value,criterio:document.querySelector('[name="sc-criterion"]:checked').value,condicion:el("condition").value});
     function draw(){
-      if(!vista)return;const e=G.crearEscala(vista),M=G.MARCO;
+      el("plot").hidden=!vista;if(!vista)return;const e=G.crearEscala(vista),M=G.MARCO;
       const svg=(tag,a={},t)=>{const n=document.createElementNS("http://www.w3.org/2000/svg",tag);Object.entries(a).forEach(([k,v])=>n.setAttribute(k,v));if(t!==undefined)n.textContent=t;return n;};
       const s=lienzo;s.replaceChildren();
       const defs=svg("defs"),clip=svg("clipPath",{id:"sc-clip"});clip.append(svg("rect",{x:M.x,y:M.y,width:M.ancho,height:M.alto}));defs.append(clip);s.append(defs);
