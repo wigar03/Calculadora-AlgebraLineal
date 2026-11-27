@@ -38,10 +38,26 @@ class TestCertificacionPorcentual(unittest.TestCase):
         self.assertTrue(est["convergio"])
         self.assertGreater(est["certificacion"]["radio"], (1e-4 / 100.0) * max(1.0, abs(est["raiz"])))
         self.assertEqual(len(est["advertencias"]), 1)
-        for dato in ("estancamiento", "\\lambda", "error estimado", "\\varepsilon_a", "menor que la tolerancia"):
+        for dato in ("estancamiento", "\\lambda", "error absoluto estimado", "error relativo estimado", "\\varepsilon_a", "radio absoluto"):
             self.assertIn(dato.lower(), est["advertencias"][0].lower())
         a, b = resolver_regla_falsa("ln(x)", 0.5, 2.0, tolerancia=200)["certificacion"]["intervalo"]
         self.assertTrue(0.5 <= a and b <= 2.0)
+
+    def test_aviso_compara_porcentajes_y_declara_radio_absoluto(self):
+        for funcion, extremo, tol in (("x^10-1", 1.3, 1e-4), ("x^3-1", 3, 20)):
+            with self.subTest(funcion=funcion):
+                res = resolver_regla_falsa(funcion, 0, extremo, tolerancia=tol)
+                self.assertTrue(res["convergio"])
+                self.assertEqual(res["motivo"], "tolerancia")
+                pasos = res["pasos"]
+                lam = pasos[-1]["error_absoluto"] / pasos[-2]["error_absoluto"]
+                estimado = lam / (1 - lam) * pasos[-1]["error_absoluto"]
+                relativo = estimado / abs(res["raiz"]) * 100
+                texto = res["advertencias"][0]
+                self.assertIn(f"error absoluto estimado ≈ {estimado:.3g}", texto)
+                self.assertIn(f"error relativo estimado ≈ {relativo:.3g} %", texto)
+                self.assertIn(f"\\varepsilon_a$ = {res['error_relativo']:.3g} %", texto)
+                self.assertIn(f"±{res['certificacion']['radio']:.3g} (radio absoluto)", texto)
 
     def test_metodos_abiertos_conservan_radio_en_fraccion(self):
         for res in (resolver_newton("x^2 - 2", "1.5", tolerancia="1e-4", criterio="relativo"),

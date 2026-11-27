@@ -139,10 +139,12 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
                 motivo, convergio = "no_certificada", False
             elif radio > radio_base and lam_est is not None and err_est is not None:
                 ea_txt = f"{error:.3g} %" if error is not None else "no definido"
+                er_txt = f"{err_est / abs(xr) * 100:.3g} %" if xr != 0 else "no definido"
                 advertencias.append(
-                    f"Estancamiento de un extremo: factor lineal estimado $\\lambda$ = {lam_est:.4g} y "
-                    f"error estimado {err_est:.3g}, que supera el cambio relativo $\\varepsilon_a$ = {ea_txt}; "
-                    f"la precisión certificada (±{radio:.3g}) es menor que la tolerancia pedida."
+                    f"Estancamiento de un extremo ($\\lambda \\approx {lam_est:.4g}$): "
+                    f"error absoluto estimado ≈ {err_est:.3g} (error relativo estimado ≈ {er_txt}), "
+                    f"frente a $\\varepsilon_a$ = {ea_txt}; "
+                    f"la raíz está certificada en ±{radio:.3g} (radio absoluto)."
                 )
         estancamiento = None
         if racha["mayor"] >= UMBRAL_ESTANCAMIENTO:
