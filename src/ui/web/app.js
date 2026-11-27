@@ -268,6 +268,19 @@ function mostrarErrorResultado(resultBox, titulo, mensaje) {
   resultBox.appendChild(card);
 }
 
+function restablecerResultadoLineal(prefijo, modulo) {
+  window.ExportarUI?.limpiar(`tab-${modulo}`);
+  const badge = document.getElementById(`${prefijo}-badge-status`);
+  const resultBox = document.getElementById(`${prefijo}-result-content`);
+  if (badge) {
+    badge.className = "badge";
+    badge.innerText = "Pendiente";
+  }
+  if (resultBox) resultBox.innerHTML = '<p class="placeholder-text">Pendiente de cálculo.</p>';
+  if (prefijo === "vec") ultimoCalculoVector = null;
+  if (prefijo === "comb") ultimoCalculoCombinacion = null;
+}
+
 // =============================================================================
 // =============================================================================
 // APARTADO 1: OPERACIONES CON VECTORES EN R^n
@@ -366,6 +379,7 @@ function limpiarModuloVectores() {
 }
 
 function cargarEjemploVector(tipo) {
+  restablecerResultadoLineal("vec", "vectores");
   const input = document.getElementById("vec-dim");
   if (tipo === 1) {
     input.value = 3;
@@ -396,6 +410,7 @@ function cargarEjemploVector(tipo) {
 }
 
 async function calcularOperacionVector(operacion) {
+  restablecerResultadoLineal("vec", "vectores");
   const u = obtenerValoresVector("u");
   const v = obtenerValoresVector("v");
   const c = document.getElementById("vec-scalar-c").value.trim() || "1";
@@ -601,6 +616,7 @@ function limpiarModuloCombinacion() {
 }
 
 function cargarEjemploCombinacion(caso) {
+  restablecerResultadoLineal("comb", "combinacion");
   if (caso === 1) {
     document.getElementById("comb-dim-n").value = 2;
     document.getElementById("comb-num-k").value = 2;
@@ -640,6 +656,7 @@ function cargarEjemploCombinacion(caso) {
 }
 
 async function evaluarCombinacionLinealUI() {
+  restablecerResultadoLineal("comb", "combinacion");
   const vectores = [];
   for (let j = 0; j < combK; j++) {
     const vec = [];
@@ -940,6 +957,7 @@ function limpiarModuloMatrices() {
 }
 
 function cargarEjemploMatrices(tipo) {
+  restablecerResultadoLineal("mat", "matrices");
   if (tipo === 1) {
     document.getElementById("mat-a-m").value = 2;
     document.getElementById("mat-a-n").value = 3;
@@ -962,6 +980,7 @@ function cargarEjemploMatrices(tipo) {
 }
 
 async function operarMatrices(operacion) {
+  restablecerResultadoLineal("mat", "matrices");
   const m = parseInt(document.getElementById("mat-a-m").value, 10);
   const n = parseInt(document.getElementById("mat-a-n").value, 10);
   const r = parseInt(document.getElementById("mat-b-r").value, 10);
@@ -1174,6 +1193,7 @@ function limpiarModuloInversa() {
 }
 
 function cargarEjemploInversa(tipo) {
+  restablecerResultadoLineal("inv", "inversa");
   if (tipo === 1) {
     // Ejemplo 1: 2x2
     // A = [[2, 5], [-3, -7]]
@@ -1246,6 +1266,7 @@ function cargarEjemploInversa(tipo) {
 }
 
 async function calcularInversaUI() {
+  restablecerResultadoLineal("inv", "inversa");
   const badge = document.getElementById("inv-badge-status");
   const resultBox = document.getElementById("inv-result-content");
   badge.className = "badge badge-dim";
@@ -1394,7 +1415,7 @@ async function calcularInversaUI() {
         item.className = "step-item";
         const t = document.createElement("div");
         t.className = "step-item-title";
-        renderMixedLatex(t, `Paso ${p.step_number}: ${p.title}`);
+        renderMixedLatex(t, /^Paso\s+\d+\s*:/i.test(p.title) ? p.title : `Paso ${p.step_number}: ${p.title}`);
         
         const d = document.createElement("div");
         d.className = "step-item-desc";
@@ -1552,6 +1573,7 @@ function limpiarModuloEcuaciones() {
 }
 
 function cargarEjemploEcuacion(caso) {
+  restablecerResultadoLineal("eq", "ecuaciones");
   if (caso === 1) {
     document.getElementById("eq-rows-m").value = 3;
     document.getElementById("eq-cols-n").value = 3;
@@ -1588,6 +1610,7 @@ function cargarEjemploEcuacion(caso) {
 }
 
 async function resolverEcuacionMatricialUI() {
+  restablecerResultadoLineal("eq", "ecuaciones");
   const A = [];
   const b = [];
   for (let i = 0; i < eqM; i++) {
@@ -1909,6 +1932,7 @@ function actualizarPreferenciaMetodo() {
 }
 
 function cargarEjemploDeterminante(caso) {
+  restablecerResultadoLineal("det", "determinante");
   const input = document.getElementById("det-order-n");
   if (!input) return;
 
@@ -1987,6 +2011,7 @@ function limpiarModuloDeterminante() {
 }
 
 async function calcularDeterminanteUI() {
+  restablecerResultadoLineal("det", "determinante");
   const badge = document.getElementById("det-badge-status");
   const resultBox = document.getElementById("det-result-content");
   if (!badge || !resultBox) return;

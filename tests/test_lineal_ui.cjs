@@ -11,7 +11,7 @@ function pagina() {
     set innerHTML(v) { this.html = v; this.children = []; },
     get innerHTML() { return this.html || ''; },
     appendChild(hijo) { this.children.push(hijo); if (hijo.id) nodos.set(hijo.id, hijo); },
-    querySelectorAll() { return []; } });
+    querySelector() { return nodo(); }, querySelectorAll() { return []; } });
   const el = id => { if (!nodos.has(id)) nodos.set(id, nodo()); return nodos.get(id); };
   const renderizados = [];
   const contexto = vm.createContext({ document: { addEventListener() {}, createElement: nodo,
@@ -49,6 +49,42 @@ test('Limpiar determinante borra el resultado y restablece la insignia', () => {
   assert.match(el('det-result-content').innerHTML, /placeholder-text/);
   assert.doesNotMatch(el('det-result-content').innerHTML, /Resultado anterior/);
   assert.deepEqual(limpiados, ['tab-determinante']);
+});
+
+test('ejemplos y cálculos de 01–06 invalidan resultado y exportación anteriores', () => {
+  const { el, contexto: c } = pagina();
+  vm.runInContext('mostrarToast = () => {}; actualizarEficienciaDeterminanteUI = () => {};', c);
+  const limpiados = [];
+  c.window.ExportarUI = { limpiar: id => limpiados.push(id) };
+  c.fetch = () => new Promise(() => {});
+  const casos = [
+    ['vec', 'vectores', 'cargarEjemploVector', 'calcularOperacionVector'],
+    ['comb', 'combinacion', 'cargarEjemploCombinacion', 'evaluarCombinacionLinealUI'],
+    ['mat', 'matrices', 'cargarEjemploMatrices', 'operarMatrices'],
+    ['inv', 'inversa', 'cargarEjemploInversa', 'calcularInversaUI'],
+    ['eq', 'ecuaciones', 'cargarEjemploEcuacion', 'resolverEcuacionMatricialUI'],
+    ['det', 'determinante', 'cargarEjemploDeterminante', 'calcularDeterminanteUI']
+  ];
+  for (const [prefijo, modulo, ejemplo, calcular] of casos) {
+    for (const ejecutar of [() => c[ejemplo](1), () => c[calcular]('suma')]) {
+      el(`${prefijo}-result-content`).innerHTML = 'ANTERIOR';
+      el(`${prefijo}-badge-status`).innerText = 'ANTERIOR';
+      limpiados.length = 0;
+      ejecutar();
+      assert.doesNotMatch(el(`${prefijo}-result-content`).innerHTML, /ANTERIOR/, calcular);
+      assert.notEqual(el(`${prefijo}-badge-status`).innerText, 'ANTERIOR');
+      assert.ok(limpiados.includes(`tab-${modulo}`));
+    }
+  }
+});
+
+test('la inversa no repite el prefijo Paso en los títulos recibidos', async () => {
+  const { contexto: c, renderizados } = pagina();
+  c.respuesta = { orden_n: 3, es_invertible: false,
+    pasos: [{ step_number: 1, title: 'Paso 1: Inicio', description: '' }] };
+  await c.calcularInversaUI();
+  assert.ok(renderizados.includes('Paso 1: Inicio'));
+  assert.ok(!renderizados.some(t => t.includes('Paso 1: Paso 1:')));
 });
 
 test('las grillas 5x5 conservan fracciones y decimales como texto', () => {
