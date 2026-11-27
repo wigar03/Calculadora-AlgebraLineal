@@ -147,6 +147,40 @@ test('VI-57: la interfaz encadena 2A+B reutilizando el resultado exacto como A',
   assert.equal(el('mat-usar-resultado').hidden, true);
 });
 
+test('reutilizar una transpuesta ajusta dimensiones y conserva fracciones sin redondeo', async () => {
+  const html = readFileSync(require.resolve('../src/ui/web/index.html'), 'utf8');
+  assert.match(html, /<button type="button" class="btn-text" id="mat-usar-resultado"[^>]*aria-label="[^"]+" hidden>/);
+  const { el, contexto: c } = pagina(); c.inicializarModuloMatrices();
+  el('mat-a-m').value = '2'; el('mat-a-n').value = '1'; c.renderizarMatrizA();
+  el('mat-a-0-0').value = '1/3'; el('mat-a-1-0').value = '-5/7';
+  c.respuesta = { matriz_resultado: [['1/3', '-5/7']], matriz_formateada: '1/3 -5/7' };
+  await c.operarMatrices('transpuesta_a'); c.usarResultadoComoA();
+  assert.equal(String(el('mat-a-m').value), '1'); assert.equal(String(el('mat-a-n').value), '2');
+  assert.deepEqual(Array.from(c.obtenerMatrizValores('a', 1, 2)[0]), ['1/3', '-5/7']);
+  await c.operarMatrices('transpuesta_a');
+  el('tab-matrices').querySelector('.card-input').listeners.change[0]({ target: el('mat-scalar-k') });
+  assert.equal(el('mat-usar-resultado').hidden, true);
+  el('mat-a-0-0').value = '9'; c.usarResultadoComoA(); assert.equal(el('mat-a-0-0').value, '9');
+});
+
+test('los cinco conjuntos VII y la base canónica se presentan con sus datos reales de API', () => {
+  const { execFileSync } = require('node:child_process');
+  const codigo = `import json
+from tests.validacion.banco_final import CONJUNTOS
+from src.ui.web_server import calcular_respuesta
+vs = [*CONJUNTOS.values(), [[1, 0], [0, 1]]]
+print(json.dumps([dict(vectores=v, b=[0]*len(v[0]), data=calcular_respuesta('/api/vectores/combinacion', dict(vectores=v,b=[0]*len(v[0])))[0]) for v in vs]))`;
+  const casos = JSON.parse(execFileSync('python', ['-c', codigo], { encoding: 'utf8' }));
+  for (const caso of casos) {
+    const { contexto: c, renderizados } = pagina(); c.renderizarResultadoCombinacionUI(caso);
+    assert.ok(renderizados.some(t => t.includes(`linealmente ${caso.data.independencia}`)));
+    for (const tex of [caso.data.relacion?.latex, caso.data.despeje].filter(Boolean)) {
+      assert.ok(renderizados.includes(tex));
+      assert.doesNotThrow(() => katex.renderToString(tex, { throwOnError: true, strict: 'error' }));
+    }
+  }
+});
+
 test('las grillas 5x5 conservan fracciones y decimales como texto', () => {
   const { el, contexto: c } = pagina();
   for (const id of ['eq-rows-m', 'eq-cols-n', 'inv-dim-n', 'det-order-n']) el(id).value = '5';
