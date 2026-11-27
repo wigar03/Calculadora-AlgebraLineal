@@ -23,6 +23,14 @@ test('SI y SCI conservan paralelas y coincidentes, sin inventar una intersecció
   assert.match(si.descripcion,/sin punto común/); assert.match(sci.descripcion,/coincidentes/);
 });
 
+test('m ecuaciones: una sola recta, todo el plano o tres restricciones',()=>{
+  const una=sistema([['1','1']],['3'],'SCI');
+  assert.match(una.descripcion,/una recta/);assert.ok(!una.descripcion.includes('coincidentes'));
+  assert.match(sistema([['0','0']],['0'],'SCI').descripcion,/todo el plano/);
+  const tres=sistema([['1','0'],['0','1'],['1','1']],['1','2','3'],'SCD',['1','2']);
+  assert.equal(tres.rectas.length,3);assert.deepEqual(tres.punto,[1,2]);
+});
+
 test('verticales, horizontales y ecuaciones degeneradas se distinguen',()=>{
   const m=sistema([['1','0'],['0','1'],['0','0']],['1','2','0'],'SCD',['1','2']);
   const v=R.vistaAutomatica(m);

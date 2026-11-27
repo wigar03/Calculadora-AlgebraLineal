@@ -84,6 +84,10 @@
         const caso=a===0 && b===0 ? (c===0?' (todo el plano)':' (sin puntos)'):'';
         return {a,b,c,color:COLORES[i%COLORES.length],etiqueta:`E${i+1}: ${f[0]}·x₁ + ${f[1]}·x₂ = ${f[2]}${caso}`};
       })};
+    if(data.tipo_sistema==='SCI') {
+      const cantidad=m.rectas.filter(r=>r.a || r.b).length;
+      m.descripcion='Infinitas soluciones: '+(cantidad>1?'rectas coincidentes.':cantidad?'una recta.':'todo el plano.');
+    }
     if(data.tipo_sistema==='SCD') {
       m.punto=coordenadas(data.vector_solucion);
       m.puntoExacto=`(${data.vector_solucion.join(', ')})`;
