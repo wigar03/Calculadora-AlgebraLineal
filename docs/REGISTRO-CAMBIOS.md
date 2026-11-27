@@ -60,3 +60,10 @@ Todos los commits de agentes se integraron con `cherry-pick` (autoría del propi
 | `orca/final-lineal` (Codex 1) | forma A·X = B y verificación algebraica de dependencia | `src/ecuaciones`, `src/vectores`, `src/procedimientos/lineal.py`, `app.js` |
 | `orca/final-numerico` (Codex 2) | orden de convergencia observado; selector de condición y recomendación de método (INC-033) | `src/raices/`, métodos de raíces, `web_server.py`, vistas 07-10 |
 
+## 2026-11-27 — propuestas de UX C-22…C-28 (INC-034)
+| Origen | Motivo | Archivos principales |
+|---|---|---|
+| `orca/ux-movil` (Antigravity) | C-25: áreas táctiles de 44 px y una columna bajo 480 px | `styles.css`, CSS de 07-11 |
+| `orca/ux-lineal` (Codex 1) | C-27 en 01-06 (aviso de casillas vacías) y C-26 (Inversa 1×1, Cofactores ≤ 6) | `app.js`, `index.html` |
+| `orca/ux-numerico` (Codex 2) | C-22, C-24, C-27 en el módulo 11, C-28a y C-23 parcial | vistas 07-11, `src/procedimientos/numerico.py`, `web_server.py` |
+
