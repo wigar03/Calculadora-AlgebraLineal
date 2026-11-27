@@ -25,7 +25,7 @@
   };
   function leerNumero(texto) {
     if (!String(texto).trim()) return null;
-    const partes = String(texto).trim().split("/");
+    const partes = String(texto).trim().replace(/[−–]/g, "-").split("/");
     const decimal = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
     if (partes.length > 2 || partes.some(p => !decimal.test(p.trim()))) return null;
     const n = Number(partes[0]) / (partes.length === 2 ? Number(partes[1]) : 1);

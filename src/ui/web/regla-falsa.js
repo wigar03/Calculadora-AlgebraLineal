@@ -21,6 +21,11 @@
     no_certificada: "El criterio de parada se alcanzó, pero no se pudo certificar una raíz admisible cercana con un cambio de signo en un intervalo continuo; puede tratarse de una raíz múltiple, un extremo o un límite sin raíz. Revise el intervalo inicial.",
   };
 
+  function leerNumero(texto) {
+    const raw = String(texto).trim().replace(/[−–]/g, "-"), partes = raw.split("/");
+    return partes.length === 2 ? Number(partes[0]) / Number(partes[1]) : (raw === "" ? NaN : Number(raw));
+  }
+
   function formatear(valor, cifras = 10) {
     return valor === null || valor === undefined ? "—" : Number(valor.toPrecision(cifras)).toString();
   }
@@ -135,6 +140,7 @@
   // Exporta solo las utilidades puras para verificarlas con el runner estándar de Node.
   if (typeof module !== "undefined" && module.exports) {
     module.exports = {
+      leerNumero,
       MARCO, formatear, numeroLatex, marcas, rangoVertical, crearEscala, caminoCurva,
       interpolar, redondearSegunVista,
       describirDiscontinuidad, textoTramos,
@@ -679,9 +685,7 @@
 
     function leerIntervalo() {
       const [xl, xu] = ["xl", "xu"].map(nombre => {
-        const texto = formIntervalo.elements[nombre].value.trim();
-        const partes = texto.split("/");
-        return partes.length === 2 ? Number(partes[0]) / Number(partes[1]) : (texto === "" ? NaN : Number(texto));
+        return leerNumero(formIntervalo.elements[nombre].value);
       });
       return Number.isFinite(xl) && Number.isFinite(xu) && xl < xu ? [xl, xu] : null;
     }

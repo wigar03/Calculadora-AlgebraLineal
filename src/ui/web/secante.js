@@ -3,9 +3,13 @@
   "use strict";
   const G = typeof module !== "undefined" && module.exports ? require("./grafica-funciones.js") : window.GraficaFunciones;
   const num=G.numeroLatex;
+  function leerNumero(texto){
+    const raw=String(texto).trim().replace(/[−–]/g,"-"),partes=raw.split("/");
+    return raw&&partes.length<=2?Number(partes[0])/(partes.length===2?Number(partes[1]):1):NaN;
+  }
   const MOTIVOS={tolerancia:"Se alcanzó la tolerancia del criterio seleccionado.",raiz_inicial:"Uno de los valores iniciales ya es una raíz.",raiz_evaluada:"La función se evaluó como cero en punto flotante.",denominador_nulo:"Las dos evaluaciones son iguales: el denominador es cero. Elija otros puntos.",divergencia:"El siguiente paso no es finito. Revise los puntos iniciales.",fuera_de_dominio:"La siguiente aproximación sale del dominio real de la función.",sin_progreso:"La precisión de punto flotante impide seguir avanzando.",ciclo:"Las aproximaciones forman un ciclo. Elija otros puntos.",max_iteraciones:"Se alcanzó el máximo de iteraciones sin cumplir la tolerancia.",raiz_no_admisible:"La aproximación obtenida no cumple la condición pedida (raíz positiva o positiva no nula); por ejemplo, converge a la raíz excluida x = 0. Elija otros datos iniciales.",no_certificada:"El criterio de parada se alcanzó, pero no se pudo certificar una raíz admisible cercana con un cambio de signo en un intervalo continuo; puede tratarse de una raíz múltiple, un extremo o un límite sin raíz. Revise la semilla o use un intervalo que encierre la raíz."};
   function sustitucion(p) {return String.raw`x_{${p.n+1}}=${num(p.b)}-\frac{(${num(p.fb)})(${num(p.b)}-(${num(p.a)}))}{${num(p.fb)}-(${num(p.fa)})}\approx ${num(p.c)}`;}
-  if(typeof module!=="undefined"&&module.exports)module.exports={sustitucion,MOTIVOS};
+  if(typeof module!=="undefined"&&module.exports)module.exports={sustitucion,MOTIVOS,leerNumero};
   if(typeof document==="undefined")return;
   document.addEventListener("DOMContentLoaded",()=>{
     const el=id=>document.getElementById(`sc-${id}`);
@@ -44,7 +48,7 @@
       [[96,97,"x"],[9,7,"f(x)"]].forEach(([x,y,t])=>{const a=math(t,false);a.className="nr-plot-label";a.style.left=`${x}%`;a.style.top=`${y}%`;labels.append(a);});
       const colocadas=[];
       const label=(x,y,t)=>{const px=e.x(x),py=e.y(y);if(px<M.x||px>M.x+M.ancho||py<M.y+18||py>M.y+M.alto||colocadas.some(p=>Math.abs(p[0]-px)<65&&Math.abs(p[1]-py)<22))return;colocadas.push([px,py]);const n=math(t,false);n.className="nr-plot-label";n.style.left=`${px/6}%`;n.style.top=`${py/3.3}%`;labels.append(n);};
-      for(const [id,n] of [["x0",0],["x1",1]]){const raw=el(id).value.trim(),partes=raw.split("/"),x=raw?Number(partes[0])/(partes.length===2?Number(partes[1]):1):NaN;if(!Number.isFinite(x)||partes.length>2)continue;const y=G.interpolar(puntos,x);line(x,vista.yMin,x,vista.yMax,"nr-guide");if(y!==null)dot(x,y);label(x,0,`x_${n}`);}
+      for(const [id,n] of [["x0",0],["x1",1]]){const x=leerNumero(el(id).value);if(!Number.isFinite(x))continue;const y=G.interpolar(puntos,x);line(x,vista.yMin,x,vista.yMax,"nr-guide");if(y!==null)dot(x,y);label(x,0,`x_${n}`);}
       if(res)label(res.raiz,vista.yMax-(vista.yMax-vista.yMin)*.13,`x_n\\approx ${num(res.raiz)}`);
       if(s.parentNode!==el("plot"))el("plot").replaceChildren(s,labels);
       else el("plot").querySelector(".nr-labels").replaceWith(labels);
