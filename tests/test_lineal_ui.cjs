@@ -48,7 +48,7 @@ test('INC-034 C-27: 01–06 avisan de ceros asumidos y limpian el aviso con cada
       determinante: '0', determinante_decimal: '0' };
     const caja = el(`${prefijo}-result-content`);
     const avisos = () => caja.children.filter(n => n.textContent?.startsWith('Se tomaron como 0'));
-    for (const accion of ['recalcular', 'limpiar', 'ejemplo']) {
+    for (const accion of ['recalcular', 'limpiar', 'ejemplo', 'pendiente']) {
       c[ejemplo](prefijo === 'det' ? 3 : 1);
       ids.forEach(id => { el(id).value = '   '; });
       await c[calcular]('suma');
@@ -61,11 +61,33 @@ test('INC-034 C-27: 01–06 avisan de ceros asumidos y limpian el aviso con cada
       if (accion === 'recalcular') {
         ids.forEach(id => { el(id).value = '0'; });
         await c[calcular]('suma');
+      } else if (accion === 'pendiente') {
+        c.fetch = () => new Promise(() => {}); c[calcular]('suma');
       } else if (accion === 'limpiar') c[limpiar]();
       else c[ejemplo](prefijo === 'det' ? 3 : 1);
       assert.equal(avisos().length, 0, `${prefijo}: aviso obsoleto tras ${accion}`);
     }
   }
+});
+
+test('INC-034 C-27: solo se avisa de los operandos usados y conserva fracciones', async () => {
+  const { el, contexto: c } = pagina();
+  vm.runInContext('mostrarToast = () => {};', c);
+  c.respuesta = { resultado_str: '(1, 2, 3)', matriz_resultado: [['1/3']] };
+  c.cargarEjemploVector(1); el('vec-v-0').value = '';
+  await c.calcularOperacionVector('escalar_u');
+  assert.ok(!el('vec-result-content').children.some(n => n.role === 'status'));
+  c.cargarEjemploMatrices(1); el('mat-a-0-0').value = ''; el('mat-b-0-0').value = '1/3';
+  await c.operarMatrices('transpuesta_b');
+  assert.ok(!el('mat-result-content').children.some(n => n.role === 'status'));
+  assert.equal(c.enviado.datos.B[0][0], '1/3');
+  el('mat-b-0-0').value = ' \t'; await c.operarMatrices('transpuesta_b');
+  const aviso = el('mat-result-content').children.find(n => n.role === 'status');
+  assert.equal(aviso.textContent, 'Se tomaron como 0 las casillas vacías: B[1,1].');
+  assert.equal(c.enviado.datos.B[0][0], '0');
+  const vacias = []; el('mat-b-0-0').value = '0';
+  assert.equal(c.valorCasillaLineal(el('mat-b-0-0'), vacias), '0');
+  assert.deepEqual(vacias, []);
 });
 
 test('los controles HTML permiten sistemas, inversas y determinantes de orden 5', () => {
