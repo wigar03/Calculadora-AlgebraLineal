@@ -81,7 +81,7 @@ Prueba: `tests/test_validacion_banco_final.py` (HTTP contra `referencias_final.j
 | Bloque | Resultado | Notas |
 |---|---|---|
 | V-50…V-54 sistemas rectangulares | 5/5 MOTOR OK | tipo, rangos y nº de parámetros iguales; soluciones paramétricas sustituidas con `Fraction` |
-| VI-55…VI-59 (12 expresiones) | 12/12 MOTOR OK | 2A + B, A − 3B y A + B + C solo encadenando operaciones; sin reutilizar el resultado en la interfaz |
-| VII-60…VII-64 independencia | 5/5 MOTOR OK | relación no trivial proporcional al núcleo; falta la conclusión «dependiente/independiente» explícita (en curso, Codex 1) |
+| VI-55…VI-59 (12 expresiones) | 12/12 MOTOR OK | encadenando operaciones; en la interfaz con «Usar resultado como A» (VI-57 probado, INC-032) |
+| VII-60…VII-64 independencia | 5/5 MOTOR OK | dictamen «dependiente», rango, relación entera igual al núcleo SymPy y despeje (63: v₄ = v₁ + v₂) |
 | 1–49 | sin cambios | mismos enunciados que el banco A; 46 y 49 INCOMPLETO (INC-001) |
 
