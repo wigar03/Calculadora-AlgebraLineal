@@ -35,3 +35,33 @@ test('impresión conserva Acción y oculta Detalle junto con sus datos',()=>{
     }else assert.ok(oculto(th.find(n=>n.textContent==='Detalle')),archivo);
   }
 });
+
+test('Regla Falsa muestra diez cifras sin redondear los datos exportados',()=>{
+  const x=5.236055081129443, res={...muestra,pasos:[{...muestra.pasos[0],xr:x}]};
+  const {nodos}=ejecutar('regla-falsa.js','renderizarTabla',res);
+  assert.ok(nodos.get('rf-table').textContent.includes('5.236055081'));
+  const csv=require(path.join(WEB,'exportar.js')).tablaACSV({
+    titulo:'Regla falsa',columnas:['x_r'],filas:[[x]]});
+  assert.ok(csv.includes('5,236055081129443'));
+});
+
+test('tablas 07-10 tienen descripción accesible y Secante conserva f(x_n) con signo',()=>{
+  for(const [archivo,fn]of [['biseccion.js','renderizarTabla'],['regla-falsa.js','renderizarTabla'],
+                           ['newton-raphson.js','tabla'],['secante.js','result']]){
+    const {nodos,contenedor}=ejecutar(archivo,fn,{...muestra,funcion_latex:'x^2-2'});
+    const raices=[contenedor,...nodos.values()];
+    assert.ok(raices.flatMap(n=>buscar(n,t=>t.tag==='caption'&&t.textContent.length>10)).length,archivo);
+    if(archivo==='secante.js'){
+      assert.ok(nodos.get('result').textContent.includes('f(x)=x^2-2'));
+      assert.ok(nodos.get('result').textContent.includes('f(x_n)=-0.1'));
+    }
+  }
+});
+
+test('Newton presenta el aviso de raíz no certificada',()=>{
+  const mensaje='El criterio se alcanzó, pero no se pudo certificar la raíz cercana.';
+  const res={...muestra,motivo:'no_certificada',convergio:false,
+    advertencias:[{tipo:'no_certificada',n:0,mensaje}]};
+  const {nodos}=ejecutar('newton-raphson.js','resultado',res);
+  assert.ok(nodos.get('result').textContent.includes(mensaje));
+});

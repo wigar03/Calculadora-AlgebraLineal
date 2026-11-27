@@ -237,6 +237,7 @@
     function tabla(r) {
       const headers=["n","x_n","f(x_n)","f'(x_n)","E_a","\\varepsilon_r"];
       const t=crear("table"), head=crear("thead"), hr=crear("tr"), body=crear("tbody");
+      t.append(crear("caption",`Procedimiento de Newton-Raphson: ${r.iteraciones} iteraciones.`,"sr-only"));
       headers.forEach(h=>{const th=crear("th"); th.scope="col"; th.append(math(h,false)); hr.append(th);}); hr.append(crear("th","Detalle","bis-detail-head")); head.append(hr);
       r.pasos.forEach((p,i)=>{
         const tr=crear("tr"); [p.n,p.x,p.fx,p.dfx,p.error_absoluto,p.error_relativo].forEach((v,j)=>{
@@ -263,6 +264,7 @@
       const grupos={}; r.advertencias.forEach(a=>(grupos[a.tipo]??=[]).push(a.n));
       if(grupos.derivada_pequena)out.append(mixto("p",`Derivada pequeña en $n=${grupos.derivada_pequena.join(",")}$: puede producir saltos grandes.`,"rf-note"));
       if(grupos.paso_creciente)out.append(mixto("p",`El cambio aumentó en $n=${grupos.paso_creciente.join(",")}$: revise la convergencia.`,"rf-note"));
+      r.advertencias.filter(a=>a.tipo==="no_certificada").forEach(a=>out.append(mixto("p",a.mensaje||MOTIVOS.no_certificada,"rf-note")));
       if(r.raiz<estado.base[0] || r.raiz>estado.base[1])out.append(crear("p","La aproximación final está fuera de la región graficada inicialmente.","rf-note"));
       const ver=crear("button","Ver la raíz en la gráfica","btn-text"); ver.type="button"; ver.addEventListener("click",()=>el("graph-card").scrollIntoView({block:"start"})); out.append(ver);
       tabla(r); el("focus-root").disabled=false;

@@ -841,8 +841,8 @@
         for (const [clave, etiqueta, nombre] of columnas) {
           const valor = paso[clave];
           const celda = crear("td", undefined, "bis-cell");
-          const cifra = crear("span", formatear(valor, 8));
-          if (typeof valor === "number" && /e/i.test(cifra.textContent)) renderLatexElement(cifra, numeroLatex(valor, 8), false);
+          const cifra = crear("span", formatear(valor, 10));
+          if (typeof valor === "number" && /e/i.test(cifra.textContent)) renderLatexElement(cifra, numeroLatex(valor, 10), false);
           if (typeof valor === "number") celda.title = String(valor);
           celda.append(crearMixto("span", nombre || etiqueta, "bis-cell-label"), cifra);
           fila.append(celda);

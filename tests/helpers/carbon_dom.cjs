@@ -22,7 +22,7 @@ function ejecutar(archivo,nombre,res){
   const contexto={crear:nodo,node:nodo,crearMixto:mixto,mixto,mix:s=>nodo('p',s),math,el,
     numeroLatex:G.numeroLatex,formatear:util.formatear,num:G.numeroLatex,G,
     detalleLatex:util.detalleLatex,sustitucion:util.sustitucion,compararErrores:util.compararErrores,
-    MOTIVOS:util.MOTIVOS,estado:{base:[-10,10]},renderLatexElement:(n,s)=>{n.textContent=s;}};
+    MOTIVOS:util.MOTIVOS,tabla(){},estado:{base:[-10,10]},renderLatexElement:(n,s)=>{n.textContent=s;}};
   const fn=vm.runInNewContext('('+src.slice(inicio,fin).trim()+')',contexto);
   const contenedor=nodo('div');
   if(nombre==='renderizarTabla'&&archivo==='biseccion.js')fn(contenedor,res);else fn(res);
