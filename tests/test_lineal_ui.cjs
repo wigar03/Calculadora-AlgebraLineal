@@ -8,6 +8,7 @@ const source = readFileSync(require.resolve('../src/ui/web/app.js'), 'utf8');
 function pagina() {
   const nodos = new Map();
   const nodo = () => ({ style: {}, children: [], value: '', addEventListener() {},
+    setAttribute(k, v) { this[k] = v; },
     set innerHTML(v) { this.html = v; this.children = []; },
     get innerHTML() { return this.html || ''; },
     appendChild(hijo) { this.children.push(hijo); if (hijo.id) nodos.set(hijo.id, hijo); },
@@ -85,6 +86,23 @@ test('la inversa no repite el prefijo Paso en los títulos recibidos', async () 
   await c.calcularInversaUI();
   assert.ok(renderizados.includes('Paso 1: Inicio'));
   assert.ok(!renderizados.some(t => t.includes('Paso 1: Paso 1:')));
+});
+
+test('las celdas 01–06 identifican vector o matriz e índices y los errores se anuncian', () => {
+  const { el, contexto: c, renderizados } = pagina();
+  c.actualizarEntradasVectores(); c.actualizarEntradasCombinacion();
+  c.renderizarMatrizA(); c.renderizarMatrizB(); c.renderizarMatrizInversaInput();
+  c.renderizarEcuacionMatricial(); c.renderizarMatrizDeterminante();
+  for (const [id, etiqueta] of Object.entries({ 'vec-u-0': 'u[1]', 'vec-v-0': 'v[1]',
+    'comb-v-1-0': 'v_2[1]', 'comb-b-0': 'b[1]', 'mat-a-0-1': 'A[1,2]',
+    'mat-b-0-1': 'B[1,2]', 'inv-a-0-1': 'A[1,2]', 'eq-a-0-1': 'A[1,2]',
+    'eq-b-0': 'b[1]', 'det-a-0-1': 'A[1,2]' })) {
+    assert.equal(el(id)['aria-label'], etiqueta, id);
+  }
+  assert.ok(renderizados.includes('v_{2,1}'));
+  assert.ok(!renderizados.includes('c_{1}'));
+  c.mostrarErrorResultado(el('eq-result-content'), 'Error', 'Dato incorrecto');
+  assert.equal(el('eq-result-content').children[0].role, 'alert');
 });
 
 test('las grillas 5x5 conservan fracciones y decimales como texto', () => {

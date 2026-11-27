@@ -255,6 +255,7 @@ function mostrarToast(mensaje, duracion = 3000) {
 function mostrarErrorResultado(resultBox, titulo, mensaje) {
   const card = document.createElement("div");
   card.className = "latex-equation-card";
+  card.setAttribute("role", "alert");
   card.style.borderColor = "rgba(225,29,72,0.4)";
   const header = document.createElement("div");
   header.className = "latex-header";
@@ -324,6 +325,7 @@ function actualizarEntradasVectores() {
     inpU.type = "text";
     inpU.className = "cell-input";
     inpU.id = `vec-u-${i}`;
+    inpU.setAttribute("aria-label", `u[${i + 1}]`);
     inpU.value = (i + 1).toString();
     wrapU.appendChild(subU);
     wrapU.appendChild(inpU);
@@ -339,6 +341,7 @@ function actualizarEntradasVectores() {
     inpV.type = "text";
     inpV.className = "cell-input";
     inpV.id = `vec-v-${i}`;
+    inpV.setAttribute("aria-label", `v[${i + 1}]`);
     inpV.value = (vectorDim - i).toString();
     wrapV.appendChild(subV);
     wrapV.appendChild(inpV);
@@ -558,11 +561,12 @@ function actualizarEntradasCombinacion() {
       wrap.className = "cell-wrapper";
       const sub = document.createElement("span");
       sub.className = "cell-sublabel";
-      renderLatexElement(sub, `c_{${i + 1}}`, false);
+      renderLatexElement(sub, `v_{${j + 1},${i + 1}}`, false);
       const inp = document.createElement("input");
       inp.type = "text";
       inp.className = "cell-input";
       inp.id = `comb-v-${j}-${i}`;
+      inp.setAttribute("aria-label", `v_${j + 1}[${i + 1}]`);
       inp.value = (i === j ? "1" : "0");
       wrap.appendChild(sub);
       wrap.appendChild(inp);
@@ -584,6 +588,7 @@ function actualizarEntradasCombinacion() {
     inp.type = "text";
     inp.className = "cell-input";
     inp.id = `comb-b-${i}`;
+    inp.setAttribute("aria-label", `b[${i + 1}]`);
     inp.value = "1";
     wrap.appendChild(sub);
     wrap.appendChild(inp);
@@ -883,6 +888,7 @@ function renderizarMatrizA() {
       inp.type = "text";
       inp.className = "cell-input";
       inp.id = `mat-a-${i}-${j}`;
+      inp.setAttribute("aria-label", `A[${i + 1},${j + 1}]`);
       inp.value = (i * n + j + 1).toString();
       grid.appendChild(inp);
     }
@@ -903,6 +909,7 @@ function renderizarMatrizB() {
       inp.type = "text";
       inp.className = "cell-input";
       inp.id = `mat-b-${i}-${j}`;
+      inp.setAttribute("aria-label", `B[${i + 1},${j + 1}]`);
       inp.value = (i + j + 1).toString();
       grid.appendChild(inp);
     }
@@ -1152,6 +1159,7 @@ function renderizarMatrizInversaInput() {
       inp.type = "text";
       inp.className = "cell-input";
       inp.id = `inv-a-${i}-${j}`;
+      inp.setAttribute("aria-label", `A[${i + 1},${j + 1}]`);
       inp.value = i === j ? "1" : "0";
       grid.appendChild(inp);
     }
@@ -1528,6 +1536,7 @@ function renderizarEcuacionMatricial() {
       inp.type = "text";
       inp.className = "cell-input";
       inp.id = `eq-a-${i}-${j}`;
+      inp.setAttribute("aria-label", `A[${i + 1},${j + 1}]`);
       inp.value = (i === j ? "1" : "0");
       grid.appendChild(inp);
     }
@@ -1544,6 +1553,7 @@ function renderizarEcuacionMatricial() {
     inpB.type = "text";
     inpB.className = "cell-input augmented-cell-b";
     inpB.id = `eq-b-${i}`;
+    inpB.setAttribute("aria-label", `b[${i + 1}]`);
     inpB.value = (i + 1).toString();
     grid.appendChild(inpB);
   }
@@ -1782,6 +1792,7 @@ function renderizarMatrizDeterminante() {
       const cell = document.createElement("input");
       cell.type = "text";
       cell.id = `det-a-${r}-${c}`;
+      cell.setAttribute("aria-label", `A[${r + 1},${c + 1}]`);
       cell.className = "cell-input";
       cell.value = (r === c) ? "1" : "0";
       cell.placeholder = "0";
