@@ -6,6 +6,7 @@ el punto medio de la bisección por el corte con el eje X de la recta que une
 """
 
 import math
+from ..core.limites import RAICES_ITER_MAX
 
 from ..biseccion.expresiones import numero_real
 from ..core.config import MARGEN_TOLERANCIA
@@ -104,8 +105,8 @@ def resolver_regla_falsa(funcion, xl, xu, tolerancia=0.0001, max_iteraciones=100
     limite = numero_real(max_iteraciones, "El máximo de iteraciones")
     if tolerancia <= 0:
         raise ValueError("La tolerancia debe ser mayor que cero.")
-    if not limite.is_integer() or not 1 <= limite <= 1000:
-        raise ValueError("El máximo de iteraciones debe ser un entero entre 1 y 1000.")
+    if not limite.is_integer() or not 1 <= limite <= RAICES_ITER_MAX:
+        raise ValueError(f"El máximo de iteraciones debe ser un entero entre 1 y {RAICES_ITER_MAX}.")
     previa = validar_intervalo(f, xl, xu)
     xl, xu, f_xl, f_xu = previa["xl"], previa["xu"], previa["f_xl"], previa["f_xu"]
     validar_continuidad(f, xl, xu)

@@ -6,6 +6,7 @@ se intenta extenderla por límites (por ejemplo abs(x) en cero).
 
 import ast
 import math
+from ..core.limites import DERIVADA_MAX_NODOS
 
 from ..biseccion.expresiones import Expresion
 from ..regla_falsa.dominio import ExpresionNumerica
@@ -103,7 +104,7 @@ def derivar(nodo):
 def derivada_simbolica(funcion):
     f = funcion if isinstance(funcion, Expresion) else Expresion(funcion)
     arbol = ast.fix_missing_locations(derivar(f.arbol))
-    if sum(1 for _ in ast.walk(arbol)) > 4000:
+    if sum(1 for _ in ast.walk(arbol)) > DERIVADA_MAX_NODOS:
         raise ValueError("La derivada es demasiado compleja. Simplifique la función.")
     # Árbol generado exclusivamente desde nodos ya validados. No se vuelve a
     # aplicar el límite de 500 caracteres de la entrada a la fórmula generada.

@@ -4,7 +4,7 @@ from fractions import Fraction
 from math import isfinite
 
 from src.core.arithmetic import parse_number
-from src.core.limites import LimiteExcedido
+from src.core.limites import ITERATIVOS_MAX, LimiteExcedido
 
 
 # Umbrales exactos de redondeo IEEE-754 doble (empates al par): cero e infinito.
@@ -45,8 +45,8 @@ def _vector(vector, n, nombre):
 
 def leer_sistema(A, b, x0=None):
     """Devuelve copias (A, b, x0) en Fraction; nunca interpreta una celda vacía como cero."""
-    if not isinstance(A, (list, tuple)) or not 1 <= len(A) <= 20:
-        raise ValueError("A debe ser una matriz cuadrada de 1 a 20 filas; ajusta su tamaño.")
+    if not isinstance(A, (list, tuple)) or not 1 <= len(A) <= ITERATIVOS_MAX:
+        raise ValueError(f"A debe ser una matriz cuadrada de 1 a {ITERATIVOS_MAX} filas; ajusta su tamaño.")
     n = len(A)
     matriz = []
     for i, fila in enumerate(A):

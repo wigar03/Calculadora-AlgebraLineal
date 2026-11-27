@@ -5,6 +5,7 @@ por sí solo no certifica continuidad ni unicidad de la raíz.
 """
 
 import math
+from ..core.limites import RAICES_ITER_MAX
 
 from .expresiones import numero_real
 from ..regla_falsa.dominio import (
@@ -35,8 +36,8 @@ def resolver_biseccion(funcion, a, b, tolerancia=0.0001,
         raise ValueError("El intervalo debe cumplir a < b y tener ancho finito.")
     if tolerancia <= 0:
         raise ValueError("La tolerancia debe ser mayor que cero.")
-    if not limite.is_integer() or not 1 <= limite <= 1000:
-        raise ValueError("El máximo de iteraciones debe ser un entero entre 1 y 1000.")
+    if not limite.is_integer() or not 1 <= limite <= RAICES_ITER_MAX:
+        raise ValueError(f"El máximo de iteraciones debe ser un entero entre 1 y {RAICES_ITER_MAX}.")
     if not isinstance(criterio, str) or criterio not in CRITERIOS:
         raise ValueError("Seleccione un criterio: intervalo, relativo o residuo.")
 

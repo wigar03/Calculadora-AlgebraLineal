@@ -1,6 +1,7 @@
 """Newton-Raphson: historial sin redondeo y paradas explícitas."""
 
 import math
+from ..core.limites import RAICES_ITER_MAX
 
 from ..biseccion.expresiones import numero_real
 from ..regla_falsa.dominio import (
@@ -53,8 +54,8 @@ def resolver_newton(funcion, x0, tolerancia=1e-6, max_iteraciones=50, criterio="
     limite = numero_real(max_iteraciones, "El máximo de iteraciones")
     if tol <= 0:
         raise ValueError("La tolerancia debe ser mayor que cero.")
-    if not limite.is_integer() or not 1 <= limite <= 1000:
-        raise ValueError("El máximo de iteraciones debe ser un entero entre 1 y 1000.")
+    if not limite.is_integer() or not 1 <= limite <= RAICES_ITER_MAX:
+        raise ValueError(f"El máximo de iteraciones debe ser un entero entre 1 y {RAICES_ITER_MAX}.")
     if criterio not in ("absoluto", "relativo", "residuo"):
         raise ValueError("Criterio desconocido: use absoluto, relativo o residuo.")
     inicial = _evaluar(f, d, x)

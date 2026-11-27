@@ -2,6 +2,7 @@
 import math
 import re
 from fractions import Fraction
+from ..core.limites import ITERATIVOS_ITER_MAX
 
 from ..biseccion.expresiones import numero_real
 from .convergencia import (analizar_espectro, garantia_convergencia, medir_cambio,
@@ -40,8 +41,8 @@ def _opciones(metodo, tolerancia, max_iteraciones, criterio, reordenar):
             max_iteraciones = int(max_iteraciones)
         except ValueError:
             pass  # entero de miles de cifras: se rechaza con el mismo mensaje localizado
-    if type(max_iteraciones) is not int or not 1 <= max_iteraciones <= 10000:
-        raise ValueError("El máximo de iteraciones debe ser un entero decimal entre 1 y 10000; "
+    if type(max_iteraciones) is not int or not 1 <= max_iteraciones <= ITERATIVOS_ITER_MAX:
+        raise ValueError(f"El máximo de iteraciones debe ser un entero decimal entre 1 y {ITERATIVOS_ITER_MAX}; "
                          "escribe 100, sin decimales ni exponentes.")
     if criterio not in ("ambos", "cambio", "residuo"):
         raise ValueError("Criterio inválido: elige ambos, cambio o residuo.")

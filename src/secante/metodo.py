@@ -1,5 +1,6 @@
 """Secante con dos puntos manuales, historial y control de fallos numéricos."""
 import math
+from ..core.limites import RAICES_ITER_MAX
 from ..biseccion.expresiones import numero_real
 from ..regla_falsa.dominio import (
     ExpresionNumerica as Expresion, validar_condicion, raiz_admisible, verificar_raiz,
@@ -17,8 +18,8 @@ def resolver_secante(funcion, x0, x1, tolerancia=1e-6, max_iteraciones=50, crite
     limite = numero_real(max_iteraciones, "El máximo de iteraciones")
     if a == b:
         raise ValueError("Elija dos valores iniciales distintos.")
-    if tol <= 0 or not limite.is_integer() or not 1 <= limite <= 1000:
-        raise ValueError("Use tolerancia positiva y un máximo entero entre 1 y 1000.")
+    if tol <= 0 or not limite.is_integer() or not 1 <= limite <= RAICES_ITER_MAX:
+        raise ValueError(f"Use tolerancia positiva y un máximo entero entre 1 y {RAICES_ITER_MAX}.")
     if criterio not in ("absoluto", "relativo", "residuo"):
         raise ValueError("Use el criterio absoluto, relativo o residuo.")
     fa, fb = f(a), f(b)

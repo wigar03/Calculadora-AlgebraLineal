@@ -8,8 +8,8 @@ Por encima de n=12 se demuestra también el caso triangular: T^n=0 y rho=0.
 from fractions import Fraction as F
 from functools import reduce
 from math import gcd, isfinite, lcm
+from ..core.limites import ITERATIVOS_ESPECTRAL_MAX as LIMITE_ESPECTRAL
 
-LIMITE_ESPECTRAL = 12
 
 
 def matriz_iteracion(A, metodo):
@@ -136,7 +136,7 @@ def analizar_espectro(A):
     """Radios para mostrar y decisiones exactas separadas para cada método."""
     radios = {"jacobi": None, "gauss_seidel": None}
     estables = {"jacobi": None, "gauss_seidel": None}
-    calculo = "No calculado: diagonal nula o dimensión mayor que 12."
+    calculo = f"No calculado: diagonal nula o dimensión mayor que {LIMITE_ESPECTRAL}."
     n = len(A)
     diagonal_valida = all(A[i][i] != 0 for i in range(n))
     if n > LIMITE_ESPECTRAL and diagonal_valida and (
