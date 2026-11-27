@@ -144,6 +144,10 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
     // INC-033: selector de raíz y recomendación autorizados en los cuatro módulos.
     .replace(/^ *<!-- INC-033 -->\n[\s\S]*?^ *<!-- \/INC-033 -->\n/gm, '')
     .replace(/<!-- INC-033 -->[\s\S]*?<!-- \/INC-033 -->/g, '')
+    // INC-034 C-26: Inversa 1x1 y aviso junto a Cofactores autorizados.
+    .replace('id="inv-dim-n" min="1"', 'id="inv-dim-n" min="2"')
+    .replace('value="cofactores" aria-describedby="det-cofactores-limite"', 'value="cofactores"')
+    .replace(/^ *<p id="det-cofactores-limite" class="result-explanation" role="status" hidden>Cofactores admite matrices de orden hasta 6\. Para órdenes mayores se selecciona LU\.<\/p>\n/m, '')
     .replace(/\n  <link rel="stylesheet" href="iterativos\.css\?v=[0-9a-f]+">/, '')
     .replace(/\n  <link rel="stylesheet" href="impresion\.css(?:\?v=[0-9a-f]+)?" media="print">/, '')
     .replace(

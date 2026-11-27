@@ -75,6 +75,48 @@ test('los controles HTML permiten sistemas, inversas y determinantes de orden 5'
   }
 });
 
+test('INC-034 C-26: la vista invierte [a] y reconoce [0] singular en ambos métodos', async () => {
+  const html = readFileSync(require.resolve('../src/ui/web/index.html'), 'utf8');
+  assert.match(html, /id="inv-dim-n" min="1"/);
+  const { execFileSync } = require('node:child_process');
+  for (const metodo of ['gauss', 'gauss_jordan']) for (const valor of ['2/3', '0']) {
+    const { el, contexto: c, renderizados } = pagina();
+    el('inv-dim-n').value = '2'; c.cambiarDimInversa(-1);
+    assert.equal(Number(el('inv-dim-n').value), 1);
+    assert.equal(el('inv-matrix-grid').children.length, 1);
+    c.cambiarDimInversa(-1); assert.equal(Number(el('inv-dim-n').value), 1);
+    el('inv-a-0-0').value = valor; c.metodo = metodo;
+    c.fetch = async (_, opciones) => {
+      const data = JSON.parse(execFileSync('python', ['-c', 'import json,sys; from src.ui.web_server import calcular_respuesta; print(json.dumps(calcular_respuesta("/api/matrices/inversa",json.load(sys.stdin))[0]))'], { input: opciones.body, encoding: 'utf8' }));
+      assert.equal(data.es_invertible, valor !== '0');
+      if (valor !== '0') assert.deepEqual(data.matriz_inversa, [['3/2']]);
+      else assert.equal(data.matriz_inversa, null);
+      return { ok: true, json: async () => data };
+    };
+    await c.calcularInversaUI();
+    assert.match(el('inv-badge-status').innerText, valor === '0' ? /Singular/ : /Invertible/);
+    if (valor !== '0') assert.ok(renderizados.some(t => t.includes('\\frac{3}{2}')));
+  }
+});
+
+test('INC-034 C-26: Cofactores se desactiva para 7–8, selecciona LU y vuelve para 6', async () => {
+  const html = readFileSync(require.resolve('../src/ui/web/index.html'), 'utf8');
+  assert.match(html, /value="cofactores"[^>]*aria-describedby="det-cofactores-limite"/);
+  assert.match(html, /id="det-cofactores-limite"[^>]*hidden[^>]*>Cofactores[^<]*6/);
+  const { el, contexto: c } = pagina();
+  const cof = { value: 'cofactores', checked: true }, lu = { value: 'lu', checked: false };
+  c.document.querySelector = selector => selector.includes('value="cofactores"') ? cof : selector.includes('value="lu"') ? lu : (lu.checked ? lu : cof);
+  for (const n of [6, 7, 8, 6]) {
+    el('det-order-n').value = String(n); c.renderizarMatrizDeterminante();
+    assert.equal(cof.disabled, n > 6); assert.equal(el('det-cofactores-limite').hidden, n <= 6);
+    if (n > 6) {
+      assert.equal(lu.checked, true); assert.equal(cof.checked, false);
+      c.respuesta = { orden_n: n, es_invertible: true, determinante: '1', determinante_decimal: '1' };
+      await c.calcularDeterminanteUI(); assert.equal(c.enviado.datos.metodo, 'lu');
+    }
+  }
+});
+
 test('Limpiar determinante borra el resultado y restablece la insignia', () => {
   const { el, contexto: c } = pagina();
   vm.runInContext('mostrarToast = () => {}; actualizarEficienciaDeterminanteUI = () => {};', c);
