@@ -65,3 +65,13 @@ test('Newton presenta el aviso de raíz no certificada',()=>{
   const {nodos}=ejecutar('newton-raphson.js','resultado',res);
   assert.ok(nodos.get('result').textContent.includes(mensaje));
 });
+
+test('Regla Falsa muestra el aviso real incluso sin la señal de estancamiento',()=>{
+  const {execFileSync}=require('node:child_process');
+  const codigo="import json; from src.regla_falsa.metodo import resolver_regla_falsa; print(json.dumps(resolver_regla_falsa('x^3-1',0,3,tolerancia=20)))";
+  const res=JSON.parse(execFileSync('python',['-c',codigo],{cwd:path.join(__dirname,'..'),encoding:'utf8'}));
+  assert.equal(res.estancamiento,null);assert.equal(res.convergio,true);
+  const {nodos}=ejecutar('regla-falsa.js','renderizarResultado',res);
+  const avisos=buscar(nodos.get('rf-result'),n=>n.className==='rf-note');
+  assert.ok(avisos.some(n=>n.textContent===res.advertencias[0]));
+});

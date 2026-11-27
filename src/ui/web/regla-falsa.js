@@ -816,6 +816,10 @@
         const fijo = res.estancamiento.extremo === "xl" ? "x_l" : "x_u";
         nodos.push(crearMixto("p", `Estancamiento: $${fijo}$ permaneció fijo durante ${res.estancamiento.iteraciones} iteraciones seguidas. La curva es muy convexa o cóncava en el intervalo y la convergencia se vuelve unilateral y lenta.`, "rf-note"));
       }
+      for (const aviso of res.advertencias || []) {
+        const texto = typeof aviso === "string" ? aviso : aviso?.mensaje;
+        if (texto) nodos.push(crearMixto("p", texto, "rf-note"));
+      }
       const enlace = crear("button", "Ver la raíz en la gráfica", "rf-link");
       enlace.type = "button";
       enlace.addEventListener("click", () => panel.querySelector(".rf-graph-card").scrollIntoView({ block: "center", behavior: "smooth" }));
