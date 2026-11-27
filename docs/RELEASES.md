@@ -11,7 +11,7 @@
 | v1.0.0-rc.7 | 2026-11-23 | **prerelease publicada** (CI 45294856560 en verde) | etapa 5: correcciones halladas con herramientas reales |
 | v1.0.0 | 2026-11-24 | **release estable publicada** (CI 45309347449 en verde) | primera estable, sin firma y sin prueba en Excel (autorizado) |
 | v1.1.0 | 2026-11-27 | **release estable publicada** (CI 46053742806 en verde) | banco final 50-64, auditoría de coherencia, orden observado, condición y recomendación |
-| v1.2.0 | 2026-11-27 | release estable (pendiente de CI del tag) | propuestas de UX C-22…C-28 aprobadas (INC-034) |
+| v1.2.0 | 2026-11-27 | **release estable publicada** (CI 46068086321 en verde) | propuestas de UX C-22…C-28 aprobadas (INC-034) |
 
 ## v1.0.0-rc.2 — por qué y por qué con este número
 - **Motivo:** se completaron y verificaron tres módulos (analizador con notación del banco y diagnósticos, métodos
@@ -109,3 +109,9 @@
   C-28a). Corregidas ambas pruebas; las herramientas reales compilan e importan el documento nuevo.
 - **Sigue sin firma digital y sin prueba en Excel.** **Notas:** `docs/notas-v1.2.0.md`.
 
+- **Publicación:** https://github.com/wigar03/Calculadora-AlgebraLineal/releases/tag/v1.2.0 (release normal, `latest`).
+  Etiqueta en 5631a16; CI de `main` (46067652362) y del tag (46068086321) en verde en Linux, Windows y `externos`.
+  SHA-256 verificadas tras la CI y tras la descarga pública. En la CI: portable con 11 módulos y primer arranque en
+  frío de 35,6 s (dentro del margen de 120 s, INC-031); instalada y reinstalada 1,6 s.
+  En el equipo del integrador, Windows Application Control bloqueó el ejecutable nuevo sin firma; no se eludió
+  (limitación documentada de los ejecutables sin firma, como INC-022).
