@@ -148,6 +148,11 @@ La CI de Linux falló una vez con `BrokenPipe`: ante un cuerpo mayor de 256 KB e
 leerlo, y el cliente que aún enviaba recibía un cierre abrupto en lugar del mensaje del límite (reproducido también
 en Windows). Ahora se lee y descarta hasta 4 MiB antes de responder; prueba `tests/test_cuerpo_excesivo.py`.
 
+### INC-033 · 2026-11-27 · UX · APROBADA POR EL PROPIETARIO (en curso, Antigravity)
+Banco final, Parte III: los ejercicios 31, 36, 38 y 39 piden «raíz positiva» o «no trivial» y la Parte III pide
+«elija y justifique el método». Aprobados: (1) selector de condición de la raíz en los cuatro métodos, con los valores
+que ya admite el motor (`real`, `positiva`, `positiva_no_nula`); (2) recomendación razonada del método según los datos.
+
 ### INC-032 · 2026-11-27 · UX · APROBADA E IMPLEMENTADA (a9b5f11, en `Dev-Carbon`)
 Banco final, Parte VI (ejercicios 55–59): expresiones como 2A + B, A − 3B o A + B + C solo se resolvían encadenando
 operaciones y copiando a mano los resultados intermedios. El propietario aprobó la opción recomendada: un botón
