@@ -16,6 +16,23 @@
     const node=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
     const math=(s,display=true)=>{const n=node(display?"div":"span");renderLatexElement(n,s,display);return n;};
     const mix=(s)=>{const n=node("p");renderMixedLatex(n,s);return n;};
+    const recomendar=el("recommend"),consejo=el("recommendation");
+    let revisionConsejo=0;
+    document.getElementById("tab-secante").addEventListener("input",()=>{revisionConsejo++;consejo.replaceChildren();});
+    recomendar.addEventListener("click",async()=>{
+      const turno=++revisionConsejo;recomendar.disabled=true;consejo.textContent="Evaluando los datos…";
+      const datos=Object.fromEntries(Object.entries({funcion:el("function").value,a:el("a").value,b:el("b").value,
+        x0:el("x0").value,x1:el("x1").value,condicion:el("condition").value}).filter(([,v])=>String(v).trim()));
+      try{
+        const r=await fetch("/api/raices/recomendar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(datos)});
+        const d=await r.json();if(turno!==revisionConsejo)return;
+        if(!r.ok||d.error)throw Error(d.error||"No se pudo obtener la recomendación.");
+        const nombres={biseccion:"Bisección",regla_falsa:"Regla falsa",newton_raphson:"Newton-Raphson",secante:"Secante"};
+        consejo.replaceChildren(mix(`${d.recomendado?"Se sugiere "+nombres[d.recomendado]:"Sin recomendación"}. ${d.justificacion}`));
+        for(const m of d.metodos)consejo.append(mix(`${nombres[m.metodo]}: ${m.apto?"datos iniciales aptos":"revise los datos"}. ${m.motivos.join(" ")}`));
+      }catch(e){if(turno===revisionConsejo)consejo.textContent=e.message;}
+      finally{recomendar.disabled=false;}
+    });
     let funcion=null,puntos=[],vista=null,base=null,vistaBase=null,res=null,version=0,temporizador=null,marcando=null;
     const lienzo=document.createElementNS("http://www.w3.org/2000/svg","svg");
     Object.entries({viewBox:"0 0 600 330",role:"img",tabindex:"0","aria-label":"Función y rectas secantes. Use flechas para desplazar, más y menos para zoom e Inicio para restablecer."}).forEach(([k,v])=>lienzo.setAttribute(k,v));
@@ -30,7 +47,7 @@
       finally{if(requests.get(route)===c)requests.delete(route);}
     }
     async function run(form,fn){const b=form.querySelector('[type="submit"]');b.disabled=true;error("");try{await fn();}catch(e){if(e.name!=="AbortError")error(e.message);}finally{b.disabled=false;}}
-    const datos=()=>({funcion,x0:el("x0").value,x1:el("x1").value,tolerancia:el("tolerance").value,max_iteraciones:el("limit").value,criterio:document.querySelector('[name="sc-criterion"]:checked').value});
+    const datos=()=>({funcion,x0:el("x0").value,x1:el("x1").value,tolerancia:el("tolerance").value,max_iteraciones:el("limit").value,criterio:document.querySelector('[name="sc-criterion"]:checked').value,condicion:el("condition").value});
     function draw(){
       if(!vista)return;const e=G.crearEscala(vista),M=G.MARCO;
       const svg=(tag,a={},t)=>{const n=document.createElementNS("http://www.w3.org/2000/svg",tag);Object.entries(a).forEach(([k,v])=>n.setAttribute(k,v));if(t!==undefined)n.textContent=t;return n;};
@@ -58,7 +75,7 @@
     el("graph-form").addEventListener("submit",e=>{e.preventDefault();invalidate(1);run(e.currentTarget,async()=>{await graph(el("a").value,el("b").value);if(vista){base=[vista.xMin,vista.xMax];vistaBase={...vista};el("graph-controls").hidden=false;draw();}});});
     ["function","a","b"].forEach(id=>el(id).addEventListener("input",()=>invalidate(1)));
     ["x0","x1"].forEach(id=>el(id).addEventListener("input",()=>{invalidate(2);draw();}));
-    ["tolerance","limit"].forEach(id=>el(id).addEventListener("input",()=>invalidate(4)));
+    ["tolerance","limit","condition"].forEach(id=>el(id).addEventListener("input",()=>invalidate(4)));
     document.querySelectorAll('[name="sc-criterion"]').forEach(n=>n.addEventListener("change",()=>invalidate(4)));
     el("initial-form").addEventListener("submit",e=>{e.preventDefault();invalidate(2);run(e.currentTarget,async()=>{
       const d=await request("evaluar",{...datos(),tolerancia:1e-300});if(!d)return;res=d;el("card-3").hidden=false;el("first").replaceChildren();

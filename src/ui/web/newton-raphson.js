@@ -68,6 +68,23 @@
     return n;
   }
   document.addEventListener("DOMContentLoaded", () => {
+    const recomendar = el("recommend"), consejo = el("recommendation");
+    let revisionConsejo = 0;
+    document.getElementById("tab-newton-raphson").addEventListener("input", () => { revisionConsejo++; consejo.replaceChildren(); });
+    recomendar.addEventListener("click", async () => {
+      const turno = ++revisionConsejo; recomendar.disabled = true; consejo.textContent = "Evaluando los datos…";
+      const datos = Object.fromEntries(Object.entries({funcion: el("function").value, a: el("a").value,
+        b: el("b").value, x0: el("x0").value, condicion: el("condition").value}).filter(([,v]) => String(v).trim()));
+      try {
+        const r = await fetch("/api/raices/recomendar", {method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(datos)});
+        const d = await r.json(); if (turno !== revisionConsejo) return;
+        if (!r.ok || d.error) throw Error(d.error || "No se pudo obtener la recomendación.");
+        const nombres = {biseccion:"Bisección",regla_falsa:"Regla falsa",newton_raphson:"Newton-Raphson",secante:"Secante"};
+        consejo.replaceChildren(mixto("p", `${d.recomendado ? "Se sugiere "+nombres[d.recomendado] : "Sin recomendación"}. ${d.justificacion}`, "bis-help"));
+        for (const m of d.metodos) consejo.append(mixto("p", `${nombres[m.metodo]}: ${m.apto ? "datos iniciales aptos" : "revise los datos"}. ${m.motivos.join(" ")}`, "bis-help"));
+      } catch(e) { if (turno === revisionConsejo) consejo.textContent = e.message; }
+      finally { recomendar.disabled = false; }
+    });
     const estado = { funcion: null, preparado: null, inicial: null, resultado: null, puntos: [], vista: null, base: null, marcado: false, paso: 1 };
     const solicitudes = new Map();
     let revision = 0, temporizador;
@@ -276,14 +293,14 @@
     el("solve-form").addEventListener("submit",e=>{
       e.preventDefault(); limpiarResultado();
       ejecutar(e.currentTarget,async()=>{
-        const r=await pedir("resolver",{funcion:estado.funcion,x0:el("x0").value,tolerancia:el("tolerance").value,max_iteraciones:el("limit").value,criterio:document.querySelector('[name="nr-criterion"]:checked').value}); if(!r)return;
+        const r=await pedir("resolver",{funcion:estado.funcion,x0:el("x0").value,tolerancia:el("tolerance").value,max_iteraciones:el("limit").value,criterio:document.querySelector('[name="nr-criterion"]:checked').value,condicion:el("condition").value}); if(!r)return;
         estado.resultado=r; resultado(r); dibujar();
         window.ExportarUI?.registrar("tab-newton-raphson", r);
         const v=estado.vista;
         if(Math.min(r.x0,r.raiz)<v.xMin || Math.max(r.x0,r.raiz)>v.xMax){const a=Math.min(estado.base[0],r.x0,r.raiz),b=Math.max(estado.base[1],r.x0,r.raiz),m=(b-a)*.1; cambiarVista(a-m,b+m);}
       });
     });
-    ["tolerance","limit"].forEach(id=>el(id).addEventListener("input",()=>{cancelar();limpiarResultado();dibujar();}));
+    ["tolerance","limit","condition"].forEach(id=>el(id).addEventListener("input",()=>{cancelar();limpiarResultado();dibujar();}));
     document.querySelectorAll('[name="nr-criterion"]').forEach(n=>n.addEventListener("change",()=>{cancelar();limpiarResultado();dibujar();}));
     document.querySelectorAll("[data-nr-step]").forEach(b=>b.addEventListener("click",()=>el(`card-${b.dataset.nrStep}`).scrollIntoView({block:"start"})));
     document.querySelectorAll("[data-nr-example]").forEach(b=>b.addEventListener("click",()=>{
