@@ -14,9 +14,15 @@ from ..regla_falsa.intervalos import _rango
 
 
 def _restringido(f):
-    return any(isinstance(n, ast.Div) or isinstance(n, ast.Pow)
-               or isinstance(n, ast.Call) and n.func.id in
-               ("ln", "log", "sqrt", "tan", "asin", "acos") for n in ast.walk(f.arbol))
+    for n in ast.walk(f.arbol):
+        if isinstance(n, ast.Div) or isinstance(n, ast.Call) and n.func.id in (
+                "ln", "log", "sqrt", "tan", "asin", "acos"):
+            return True
+        if isinstance(n, ast.BinOp) and isinstance(n.op, ast.Pow):
+            if not (isinstance(n.right, ast.Constant) and n.right.value >= 0
+                    and float(n.right.value).is_integer()):
+                return True
+    return False
 
 
 def _intervalo(f, a, b, condicion):
@@ -68,7 +74,7 @@ def _newton(f, x, condicion):
         return False, [f"Newton no es práctico con esta semilla o derivada: {exc}"]
 
 
-def _secante(f, u, v, condicion, intervalo_continuo):
+def _secante(f, u, v, condicion):
     if u is None or v is None or u == v:
         return False, ["Faltan dos puntos distintos x0, x1 (o ambos extremos del intervalo)."]
     try:
@@ -82,8 +88,7 @@ def _secante(f, u, v, condicion, intervalo_continuo):
         if not math.isfinite(nuevo):
             return False, ["El primer paso de secante no es finito; cambie los puntos."]
         f(nuevo)
-        if not intervalo_continuo:
-            validar_continuidad(f, min(u, v), max(u, v))
+        validar_continuidad(f, min(u, v), max(u, v))
         return True, ["Primer paso evaluable; no requiere derivada.",
                       "Orden local esperado ≈ 1,618 en una raíz simple; los pasos pueden salir del dominio."]
     except ValueError as exc:
