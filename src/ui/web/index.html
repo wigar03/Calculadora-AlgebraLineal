@@ -376,17 +376,17 @@
                   <div class="dim-chip">
                     <span data-math>Filas ($m$):</span>
                     <div class="mini-stepper">
-                      <button type="button" onclick="cambiarDimMatA(-1, 0)"><i data-lucide="minus"></i></button>
+                      <button type="button" aria-label="Reducir filas de A" onclick="cambiarDimMatA(-1, 0)"><i data-lucide="minus"></i></button>
                       <input type="number" id="mat-a-m" min="1" max="8" value="2" onchange="renderizarMatrizA()">
-                      <button type="button" onclick="cambiarDimMatA(1, 0)"><i data-lucide="plus"></i></button>
+                      <button type="button" aria-label="Aumentar filas de A" onclick="cambiarDimMatA(1, 0)"><i data-lucide="plus"></i></button>
                     </div>
                   </div>
                   <div class="dim-chip">
                     <span data-math>Cols ($n$):</span>
                     <div class="mini-stepper">
-                      <button type="button" onclick="cambiarDimMatA(0, -1)"><i data-lucide="minus"></i></button>
+                      <button type="button" aria-label="Reducir columnas de A" onclick="cambiarDimMatA(0, -1)"><i data-lucide="minus"></i></button>
                       <input type="number" id="mat-a-n" min="1" max="8" value="3" onchange="renderizarMatrizA()">
-                      <button type="button" onclick="cambiarDimMatA(0, 1)"><i data-lucide="plus"></i></button>
+                      <button type="button" aria-label="Aumentar columnas de A" onclick="cambiarDimMatA(0, 1)"><i data-lucide="plus"></i></button>
                     </div>
                   </div>
                 </div>
@@ -402,17 +402,17 @@
                   <div class="dim-chip">
                     <span data-math>Filas ($r$):</span>
                     <div class="mini-stepper">
-                      <button type="button" onclick="cambiarDimMatB(-1, 0)"><i data-lucide="minus"></i></button>
+                      <button type="button" aria-label="Reducir filas de B" onclick="cambiarDimMatB(-1, 0)"><i data-lucide="minus"></i></button>
                       <input type="number" id="mat-b-r" min="1" max="8" value="3" onchange="renderizarMatrizB()">
-                      <button type="button" onclick="cambiarDimMatB(1, 0)"><i data-lucide="plus"></i></button>
+                      <button type="button" aria-label="Aumentar filas de B" onclick="cambiarDimMatB(1, 0)"><i data-lucide="plus"></i></button>
                     </div>
                   </div>
                   <div class="dim-chip">
                     <span data-math>Cols ($p$):</span>
                     <div class="mini-stepper">
-                      <button type="button" onclick="cambiarDimMatB(0, -1)"><i data-lucide="minus"></i></button>
+                      <button type="button" aria-label="Reducir columnas de B" onclick="cambiarDimMatB(0, -1)"><i data-lucide="minus"></i></button>
                       <input type="number" id="mat-b-r_col" min="1" max="8" value="2" onchange="renderizarMatrizB()">
-                      <button type="button" onclick="cambiarDimMatB(0, 1)"><i data-lucide="plus"></i></button>
+                      <button type="button" aria-label="Aumentar columnas de B" onclick="cambiarDimMatB(0, 1)"><i data-lucide="plus"></i></button>
                     </div>
                   </div>
                 </div>
@@ -817,7 +817,7 @@
               <p id="bis-keyboard-status" class="sr-only" role="status"></p>
               </div>
               <p id="bis-syntax" class="bis-help">Escriba con su teclado o use las teclas en pantalla. Seleccione una parte de la expresión para envolverla en una raíz, fracción o función. Use × para multiplicar. Ángulos en radianes.</p>
-              <details class="bis-syntax-reference"><summary>Consultar sintaxis y funciones disponibles</summary><p class="bis-help">En el campo de escritura, * representa multiplicación; ^ o **, potencias. Funciones: sin, cos, tan, exp, ln (natural), log (base 10), sqrt y abs. Constantes: pi y e. Las fracciones usan / y los decimales, punto.</p></details>
+              <details class="bis-syntax-reference"><summary>Consultar sintaxis y funciones disponibles</summary><p class="bis-help">En el campo de escritura, * representa multiplicación; ^ o **, potencias. Funciones: sin, cos, tan, asin, acos, atan, exp, ln (natural), log (base 10), sqrt y abs. Constantes: pi y e. Las fracciones usan / y los decimales, punto.</p></details>
               </div>
               <div class="bis-parameters">
               <div class="bis-interval-group">
@@ -972,7 +972,7 @@
                     <div id="rf-keyboard" class="bis-keyboard" role="group" aria-labelledby="rf-keyboard-label" hidden></div>
                     <p id="rf-keyboard-status" class="sr-only" role="status"></p>
                   </div>
-                  <p id="rf-syntax" class="bis-help">Use * para multiplicar y ^ para potencias. Funciones: sin, cos, tan, exp, ln (natural), log (base 10), sqrt y abs. Constantes: pi y e. Ángulos e inversas en radianes.</p>
+                  <p id="rf-syntax" class="bis-help">Use * para multiplicar y ^ para potencias. Funciones: sin, cos, tan, asin, acos, atan, exp, ln (natural), log (base 10), sqrt y abs. Constantes: pi y e. Ángulos e inversas en radianes.</p>
                 </div>
                 <fieldset class="rf-region">
                   <legend class="field-label">Región de interés</legend>
@@ -1270,8 +1270,8 @@
                   <div><label for="it-max-iter" class="field-label">Máximo de iteraciones</label><input id="it-max-iter" class="bis-input" type="number" min="1" max="10000" value="100" required></div>
                 </div>
                 <fieldset class="nr-criteria"><legend>Criterio de parada</legend>
-                  <label><input type="radio" name="it-criterion" value="ambos" checked><span data-math>Ambos: cambio $\|x^{(k)}-x^{(k-1)}\|_\infty$ y residuo relativo</span></label>
-                  <label><input type="radio" name="it-criterion" value="cambio"><span data-math>Cambio entre iteraciones $\|x^{(k)}-x^{(k-1)}\|_\infty &lt; \varepsilon$</span></label>
+                  <label><input type="radio" name="it-criterion" value="ambos" checked><span data-math>Ambos: cambio y residuo relativos $\le \varepsilon$</span></label>
+                  <label><input type="radio" name="it-criterion" value="cambio"><span data-math>Cambio relativo $\le \varepsilon$ y residuo relativo $\le \varepsilon$</span></label>
                   <label><input type="radio" name="it-criterion" value="residuo"><span data-math>Residuo relativo $\|r^{(k)}\|_\infty / (\|b\|_\infty+\|A\|_\infty\|x^{(k)}\|_\infty) \le \varepsilon$</span></label>
                 </fieldset>
                 <label class="it-checkbox"><input type="checkbox" id="it-reordenar"><span data-math>Reordenar ecuaciones (permutar filas de $A$ y $b$) para evitar ceros en la diagonal y buscar dominancia por filas.</span></label>
@@ -1307,7 +1307,7 @@
     </main>
 
     <!-- Modal para Notificaciones y Alertas -->
-    <div id="notification-toast" class="toast-container hidden">
+    <div id="notification-toast" role="status" aria-live="polite" class="toast-container hidden">
       <div id="toast-message" class="toast-content"></div>
     </div>
   </div>

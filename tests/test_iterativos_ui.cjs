@@ -122,6 +122,21 @@ const vm = require('node:vm');
 // Huella de index.html de la release v1.0.0-rc.2 (sin módulo 11, ?v= normalizados). Cambiarla exige revisar la UX.
 const HUELLA_SIN_MODULO_11 = '00c313d8e38776d46c827f91063b9bfe8ab6249024d652139a9b14a82a994f48';
 
+test('Carbon: controles y avisos accesibles, ayuda completa y criterio con residuo', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8');
+  const steppers = [...html.matchAll(/<div class="mini-stepper">([\s\S]*?)<\/div>/g)];
+  assert.equal(steppers.length, 4);
+  for (const [, bloque] of steppers) {
+    for (const [boton] of bloque.matchAll(/<button[^>]*>/g)) assert.match(boton, /aria-label="[^"]+"/);
+  }
+  assert.match(html, /id="notification-toast"[^>]*role="status"[^>]*aria-live="polite"/);
+  for (const [, ayuda] of html.matchAll(/Funciones: sin, cos, tan,([^<]*)/g)) {
+    for (const funcion of ['asin', 'acos', 'atan']) assert.ok(ayuda.includes(funcion));
+  }
+  const criterio = html.match(/name="it-criterion" value="cambio"><span data-math>([^<]+)<\/span>/)?.[1];
+  assert.match(criterio, /Cambio relativo/); assert.match(criterio, /residuo relativo/);
+});
+
 test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y valida el LaTeX nuevo', () => {
   const actual = fs.readFileSync(path.join(ROOT, 'src/ui/web/index.html'), 'utf8').replace(/\r\n/g, '\n');
   const normalizarV = s => s.replace(/\?v=[0-9a-f]+/g, '?v=HASH');
@@ -134,6 +149,10 @@ test('regresión: index.html conserva intactos los módulos de v1.0.0-rc.2 y val
     )
     // Índice de la portada actualizado a 11 módulos a petición del propietario (2026-11-24).
     .replace('Índice<br><span>01—11</span>', 'Índice<br><span>01—10</span>')
+    // C-17/C-21 autorizados: solo nombres accesibles, anuncio del toast y lista de funciones.
+    .replace(/ aria-label="(?:Reducir|Aumentar) (?:filas|columnas) de [AB]"(?= onclick="cambiarDimMat[AB]\()/g, '')
+    .replace('id="notification-toast" role="status" aria-live="polite"', 'id="notification-toast"')
+    .replaceAll('sin, cos, tan, asin, acos, atan, exp, ln (natural)', 'sin, cos, tan, exp, ln (natural)')
     .replace(/\n      <button class="nav-tab" data-tab="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n<button class="home-module" type="button" data-open-module="tab-iterativos">[\s\S]*?<\/button>/, '')
     .replace(/\n\n      <section id="tab-iterativos"[\s\S]*?<\/section>/, '')
