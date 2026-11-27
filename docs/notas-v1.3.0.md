@@ -7,7 +7,7 @@ Quedan completadas las mejoras aplazadas de la auditoría de coherencia.
 ## Gráficas en el plano
 
 Al resolver con dimensión 2, **Vectores**, **Combinación lineal** y **Ecuaciones** muestran una gráfica
-en $`\mathbb{R}^2`$ junto al procedimiento. En otras dimensiones, la gráfica permanece oculta.
+en $`ℝ^2`$ junto al procedimiento. En otras dimensiones, la gráfica permanece oculta.
 La escala se ajusta a los datos y muestra ejes con marcas y etiquetas.
 
 - **Vectores:** representa $`u`$, $`v`$ y el resultado con flechas desde el origen para suma, resta y

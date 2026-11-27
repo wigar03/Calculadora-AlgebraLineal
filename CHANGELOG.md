@@ -5,7 +5,7 @@
 Añade apoyo gráfico en el plano y completa los controles de Newton-Raphson,
 sin cambiar los resultados matemáticos de los once módulos.
 
-- Gráficas en $`\mathbb{R}^2`$ en Vectores, Combinación lineal y Ecuaciones con dos incógnitas;
+- Gráficas en $`ℝ^2`$ en Vectores, Combinación lineal y Ecuaciones con dos incógnitas;
   se muestran solo cuando la dimensión es 2.
 - Vectores: flechas de entrada y resultado, paralelogramo de la suma y ángulo en el producto punto.
 - Combinación lineal: descomposición punta-cola hasta el objetivo y relación de dependencia con objetivo cero.

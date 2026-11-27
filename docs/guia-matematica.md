@@ -6,7 +6,7 @@ Universidad Americana (UAM), Facultad de Ingeniería y Arquitectura (FIA).
 - Docente: Carlos Iván Argüello.
 - Grupo: Grupo 10.
 - Modalidad: Grupal con defensa/exposición individual.
-- Proyecto: PROGRAMA VECTORES: Operaciones Algebraicas en $`\mathbb{R}^n`$,
+- Proyecto: PROGRAMA VECTORES: Operaciones Algebraicas en $`ℝ^n`$,
   Combinación Lineal y Ecuaciones Matriciales.
 - Integrantes: William Antonio García García, Caleb Jordan Tardencilla Alvarado,
   Rafael Hernández Sánchez y Andrés Sebastián González Maradiaga.
@@ -17,7 +17,7 @@ Universidad Americana (UAM), Facultad de Ingeniería y Arquitectura (FIA).
 
 El proyecto permite resolver y analizar los siguientes problemas:
 
-1. **Operaciones vectoriales en $`\mathbb{R}^n`$** de dimensión arbitraria desconocida a priori.
+1. **Operaciones vectoriales en $`ℝ^n`$** de dimensión arbitraria desconocida a priori.
 2. **Evaluación de combinación lineal** para determinar rigurosamente si un vector $`b`$ pertenece al subespacio generado por un conjunto de vectores $`\{v_1, v_2, \dots, v_k\}`$.
 3. **Operaciones matriciales fundamentales**: adición, sustracción, producto por escalar, multiplicación de matrices $`A_{m \times n} \cdot B_{n \times p}`$ y transpuesta $`A^T`$ con análisis de simetría y propiedades.
 4. **Cálculo de la inversa de una matriz $`A^{-1}`$**: siguiendo el procedimiento analítico formal (matriz aumentada $`[A \mid I_n]`$, fórmula $`2 \times 2`$, métodos de Gauss y Gauss-Jordan, detección de matrices singulares y doble verificación $`A \cdot A^{-1} = I_n`$ y $`A^{-1} \cdot A = I_n`$).
@@ -56,17 +56,17 @@ columna cuando el ancho de la pantalla es de 480 píxeles o menos. Los módulos 
 de los controles de zoom y de los botones de limpieza.
 
 **Gráficas en el plano.** Vectores, Combinación lineal y Ecuaciones muestran apoyo gráfico en
-$`\mathbb{R}^2`$ solo cuando la dimensión es 2. Las gráficas son orientativas, tienen escala automática y
+$`ℝ^2`$ solo cuando la dimensión es 2. Las gráficas son orientativas, tienen escala automática y
 son visibles al imprimir. Las fracciones se aproximan solo para dibujar: el procedimiento, la verificación
 exacta y las exportaciones LaTeX y CSV se conservan.
 
-### Módulo 1: Operaciones Vectoriales en $`\mathbb{R}^n`$
+### Módulo 1: Operaciones Vectoriales en $`ℝ^n`$
 
-Un vector $`v \in \mathbb{R}^n`$ es una $`n`$-tupla ordenada de escalares: $`v = (v_1, v_2, \dots, v_n)`$. La calculadora admite $`1 \le n \le 20`$:
+Un vector $`v \in ℝ^n`$ es una $`n`$-tupla ordenada de escalares: $`v = (v_1, v_2, \dots, v_n)`$. La calculadora admite $`1 \le n \le 20`$:
 
 - **Suma Vectorial**: $`u + v = (u_1 + v_1, u_2 + v_2, \dots, u_n + v_n)`$, requiriendo $`\dim(u) = \dim(v) = n`$.
 - **Resta Vectorial**: $`u - v = u + (-1)v = (u_1 - v_1, \dots, u_n - v_n)`$.
-- **Multiplicación por Escalar**: $`c \cdot v = (c \cdot v_1, c \cdot v_2, \dots, c \cdot v_n)`$, para $`c \in \mathbb{R}`$.
+- **Multiplicación por Escalar**: $`c \cdot v = (c \cdot v_1, c \cdot v_2, \dots, c \cdot v_n)`$, para $`c \in ℝ`$.
 - **Producto Escalar Euclídeo (Producto Punto)**: $`\langle u, v \rangle = \sum_{i=1}^n u_i \cdot v_i`$.
 - **Norma al Cuadrado**: $`\|v\|^2 = \langle v, v \rangle = \sum_{i=1}^n v_i^2`$.
 
@@ -89,7 +89,7 @@ de los vectores escalados llega hasta $`b`$; en una familia de soluciones se dib
 fijando los parámetros libres a cero. Con $`b=0`$ y dependencia, la relación no trivial se representa
 como una cadena que regresa al origen. La conclusión se comprueba en el procedimiento exacto.
 
-Dado un conjunto de vectores $`S = \{v_1, v_2, \dots, v_k\} \subset \mathbb{R}^n`$ y un vector objetivo $`b \in \mathbb{R}^n`$, $`b`$ es combinación lineal de $`S`$ si existen escalares $`c_1, c_2, \dots, c_k \in \mathbb{R}`$ tales que:
+Dado un conjunto de vectores $`S = \{v_1, v_2, \dots, v_k\} \subset ℝ^n`$ y un vector objetivo $`b \in ℝ^n`$, $`b`$ es combinación lineal de $`S`$ si existen escalares $`c_1, c_2, \dots, c_k \in ℝ`$ tales que:
 
 ```math
 c_1 v_1 + c_2 v_2 + \dots + c_k v_k = b
@@ -129,7 +129,7 @@ El vector $`b`$ **no es combinación lineal** de los vectores de $`S`$ si el ran
 Cada matriz de entrada admite hasta 8 filas y 8 columnas, con al menos una de cada una.
 Para expresiones compuestas como `2A+B` o `A+B+C`, calcule una operación, pulse «Usar resultado como A» y continúe con la siguiente; se conservan las fracciones exactas y los valores de B y del escalar.
 
-Para matrices $`A, B \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un escalar $`k \in \mathbb{R}`$:
+Para matrices $`A, B \in \mathcal{M}_{m \times n}(ℝ)`$ y un escalar $`k \in ℝ`$:
 
 #### Adición y Sustracción
 Válida únicamente si ambas matrices tienen la misma dimensión:
@@ -145,7 +145,7 @@ La suma y resta se calculan componente a componente:
 ```
 
 #### Multiplicación por Escalar
-Para cualquier escalar real $`k \in \mathbb{R}`$:
+Para cualquier escalar real $`k \in ℝ`$:
 
 ```math
 (k \cdot A)_{ij} = k \cdot a_{ij}
@@ -171,7 +171,7 @@ c_{ij} = \sum_{k=1}^n a_{ik} \cdot b_{kj}
 ```
 
 #### Transpuesta de una Matriz $`A^T`$
-Dada una matriz $`A \in \mathcal{M}_{m \times n}(\mathbb{R})`$, su transpuesta $`A^T \in \mathcal{M}_{n \times m}(\mathbb{R})`$ intercambia ordenadamente sus filas por columnas:
+Dada una matriz $`A \in \mathcal{M}_{m \times n}(ℝ)`$, su transpuesta $`A^T \in \mathcal{M}_{n \times m}(ℝ)`$ intercambia ordenadamente sus filas por columnas:
 
 ```math
 (A^T)_{ji} = a_{ij}, \quad \forall \, 1 \le i \le m, \; 1 \le j \le n
@@ -252,7 +252,7 @@ coincidentes, una sola recta o todo el plano, según las restricciones. Un siste
 paralelas o rectas sin punto común. Las ecuaciones de coeficientes nulos se identifican como todo el plano
 o sin puntos, según su término independiente. El número de ecuaciones puede ser distinto de dos.
 
-Dada una matriz de coeficientes $`A \in \mathcal{M}_{m \times n}(\mathbb{R})`$ y un vector de términos independientes $`b \in \mathbb{R}^m`$, el sistema lineal se expresa en forma matricial compacta:
+Dada una matriz de coeficientes $`A \in \mathcal{M}_{m \times n}(ℝ)`$ y un vector de términos independientes $`b \in ℝ^m`$, el sistema lineal se expresa en forma matricial compacta:
 
 ```math
 A \cdot x = b
@@ -261,7 +261,7 @@ A \cdot x = b
 El proceso de análisis y resolución comprende:
 
 1. **Forma matricial explícita**: Se muestra $`A\cdot X=B`$ con la matriz de coeficientes, $`X=(x_1,\ldots,x_n)^T`$ y $`B=(b_1,\ldots,b_m)^T`$, también en la exportación LaTeX; no requiere que $`m=n`$ (ejercicios 50–54).
-2. **Matriz Aumentada**: Se construye $`[A \mid b] \in \mathcal{M}_{m \times (n+1)}(\mathbb{R})`$.
+2. **Matriz Aumentada**: Se construye $`[A \mid b] \in \mathcal{M}_{m \times (n+1)}(ℝ)`$.
 3. **Llamada Directa al Motor de la Semana #3**: Se invoca directamente el módulo de eliminación por renglones desarrollado en el proyecto anterior, obteniendo la matriz escalonada y reducida junto con el registro detallado de las operaciones elementales de fila (intercambio de filas, multiplicación por escalar y adición de múltiplos de otra fila).
 4. **Clasificación y Solución**: Aplicación rigurosa del Teorema de Rouché-Capelli para determinar si el sistema es Compatible Determinado (solución única), Compatible Indeterminado (infinitas soluciones con parámetros libres) o Incompatible (sin solución).
 5. **Comprobación Computacional del Residuo**: En sistemas consistentes con solución $`x_{\mathrm{sol}}`$, el programa comprueba computacionalmente que el vector residual sea exactamente cero:
@@ -276,13 +276,13 @@ El orden admitido es de 1 a 8 para LU y de 1 a 6 para cofactores.
 Al elegir un orden mayor que 6, la interfaz desactiva **Cofactores**, selecciona **LU** y explica el límite
 junto al control. Cofactores se reactiva al volver a orden 6 o inferior.
 
-Este módulo implementa el cálculo exacto del determinante $`|A|`$ o $`\det(A)`$ para cualquier matriz cuadrada $`A \in \mathcal{M}_{n \times n}(\mathbb{R})`$ mediante una pestaña interactiva dedicada dentro del servidor web de la aplicación, desarrollada 100% en Python estándar (sin librerías prohibidas como NumPy, SciPy o rutinas de `math`):
+Este módulo implementa el cálculo exacto del determinante $`|A|`$ o $`\det(A)`$ para cualquier matriz cuadrada $`A \in \mathcal{M}_{n \times n}(ℝ)`$ mediante una pestaña interactiva dedicada dentro del servidor web de la aplicación, desarrollada 100% en Python estándar (sin librerías prohibidas como NumPy, SciPy o rutinas de `math`):
 
 #### 1. Definición Formal y Significado Geométrico
 El determinante es un escalar único asociado a una matriz cuadrada que cuantifica el factor de dilatación o contracción del hipervolumen $`n`$-dimensional generado por los vectores fila o columna.
 - Para $`n = 1`$: $`\det([a]) = a`$.
-- Para $`n = 2`$: el valor absoluto $`|\det(A)|`$ representa el área del paralelogramo en $`\mathbb{R}^2`$; el signo de $`\det(A)`$ indica la orientación.
-- Para $`n = 3`$: $`|\det(A)|`$ representa el volumen del paralelepípedo en $`\mathbb{R}^3`$; el signo indica la orientación.
+- Para $`n = 2`$: el valor absoluto $`|\det(A)|`$ representa el área del paralelogramo en $`ℝ^2`$; el signo de $`\det(A)`$ indica la orientación.
+- Para $`n = 3`$: $`|\det(A)|`$ representa el volumen del paralelepípedo en $`ℝ^3`$; el signo indica la orientación.
 - Invertibilidad: $`\det(A) \neq 0 \iff`$ la matriz $`A`$ es no singular (invertible, rango completo $`\mathrm{rg}(A) = n`$). Si $`\det(A) = 0`$, la matriz es singular (filas linealmente dependientes, sin matriz inversa).
 
 #### 2. Método de Expansión por Cofactores (Teorema de Laplace)

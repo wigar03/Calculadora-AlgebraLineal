@@ -16,7 +16,7 @@ La misma interfaz funciona en el navegador y en una aplicación de escritorio.
 
 | Área | Herramientas |
 |---|---|
-| Vectores | Suma, resta, escalar y producto punto; $`1 \le n \le 20`$. |
+| Vectores | Suma, resta, escalar y producto punto; dimensión $`n`$: $`1 \le n \le 20`$. |
 | Combinación lineal | Pertenencia e independencia mediante rangos, relación, despeje y verificación algebraica; hasta 10 vectores de dimensión 15. |
 | Matrices | Suma, resta, escalar, producto y transpuesta; hasta 8 filas y 8 columnas. |
 | Inversa | Gauss y Gauss-Jordan, singularidad y verificación; orden 1–6. |
@@ -35,7 +35,7 @@ y residuo. Las gráficas son orientativas y no demuestran continuidad ni converg
 Puedes copiar LaTeX, exportar CSV para hojas de cálculo en español e imprimir o guardar como PDF.
 En Matrices, «Usar resultado como A» permite encadenar operaciones como `2A+B` o `A+B+C` conservando fracciones exactas.
 
-La [versión 1.3.0](docs/notas-v1.3.0.md) añade gráficas en $`\mathbb{R}^2`$ en Vectores, Combinación lineal y
+La [versión 1.3.0](docs/notas-v1.3.0.md) añade gráficas en $`ℝ^2`$ en Vectores, Combinación lineal y
 Ecuaciones con dos incógnitas: flechas, descomposición punta-cola, rectas e intersecciones. Newton-Raphson muestra
 el porcentaje de zoom y reescala el eje vertical al enfocar la raíz. Las gráficas son orientativas y visibles al
 imprimir; se conservan los resultados matemáticos y las exportaciones LaTeX y CSV.
