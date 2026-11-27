@@ -30,7 +30,9 @@ from src.core.ejecucion import (ErrorEjecucion, Supervisor, clasificar_error,
                                 serializar, supervisor_compartido)
 from src.procedimientos import adjuntar
 
-from src.core.arithmetic import parse_number, format_number, formatear_vector, formatear_matriz
+from src.core.arithmetic import (
+    parse_number, format_number, formatear_vector, formatear_matriz, validar_vector_numerico,
+)
 from src.vectores.operaciones import (
     suma_vectores,
     resta_vectores,
@@ -72,7 +74,7 @@ def _validar_literal(valor):
     texto = str(valor).replace("_", "")
     if any(len(m.group()) > limites.DIGITOS_MAX for m in re.finditer(r"\d+", texto)):
         raise limites.LimiteExcedido(f"Cada entero admite como máximo {limites.DIGITOS_MAX} dígitos.")
-    for exponente in re.finditer(r"[eE]([+-]?\d+)", texto):
+    for exponente in re.finditer(r"(?:\d|\.)[eE]([+-]?\d+)", texto):
         digitos = exponente[1].lstrip("+-0") or "0"
         if len(digitos) > len(str(limites.EXPONENTE_MAX)) or int(digitos) > limites.EXPONENTE_MAX:
             raise limites.LimiteExcedido(f"El exponente debe tener valor absoluto ≤ {limites.EXPONENTE_MAX}.")
@@ -127,7 +129,8 @@ def validar_peticion(ruta, cuerpo):
     elif ruta.endswith("/determinante"):
         max_matriz = limites.DETERMINANTE_MAX
         matriz = cuerpo.get("A")
-        if (cuerpo.get("metodo", "lu") == "cofactores" and isinstance(matriz, list)
+        metodo_det = str(cuerpo.get("metodo", "lu")).strip().lower()
+        if (metodo_det in ("cofactores", "laplace", "cofactor") and isinstance(matriz, list)
                 and len(matriz) > limites.COFACTORES_MAX):
             raise limites.LimiteExcedido(f"Cofactores admite orden máximo {limites.COFACTORES_MAX}. "
                                          "Seleccione LU para esta matriz.")
@@ -138,9 +141,10 @@ def validar_peticion(ruta, cuerpo):
         for clave in ("A", "B"):
             if clave in cuerpo:
                 _validar_lista(cuerpo[clave], clave, max_matriz, max_matriz)
-        for clave in ("b", "x0"):
-            if clave in cuerpo and cuerpo[clave] is not None:
-                _validar_lista(cuerpo[clave], clave, max_matriz)
+        if "b" in cuerpo:
+            _validar_lista(cuerpo["b"], "b", max_matriz)
+        if "x0" in cuerpo and (modulo != "iterativos" or cuerpo["x0"] is not None):
+            _validar_lista(cuerpo["x0"], "x0", max_matriz)
     if modulo == "vectores":
         max_vector = limites.COMBINACION_N_MAX if ruta.endswith("/combinacion") else limites.VECTOR_MAX
         for clave in ("u", "v", "b"):
@@ -428,9 +432,11 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
     # ==============================================================================
     def _handle_vectores_operar(self, body):
         op = body.get("operacion", "")
-        u = [parse_number(x) for x in body.get("u", [])]
-        v = [parse_number(x) for x in body.get("v", [])]
-        c = parse_number(body.get("c", "1"))
+        if op not in ("suma", "resta", "escalar_u", "producto_punto"):
+            raise ValueError(f"Operación vectorial desconocida: '{op}'")
+        u = validar_vector_numerico(body.get("u", []), maximo=limites.VECTOR_MAX)
+        v = validar_vector_numerico(body.get("v", []), maximo=limites.VECTOR_MAX) if op != "escalar_u" else []
+        c = parse_number(body.get("c", "1")) if op == "escalar_u" else None
 
         desglose = []
         if op == "suma":
@@ -620,7 +626,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         A = body.get("A", [])
         metodo = body.get("metodo", "gauss_jordan")
         if metodo not in ("gauss_jordan", "gauss"):
-            metodo = "gauss_jordan"
+            raise ValueError("Método inválido: elija gauss_jordan o gauss.")
 
         res = calcular_inversa_matriz(A, metodo=metodo)
 
@@ -788,8 +794,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         b = numero_real(body.get("b"), "b")
         if a >= b or not math.isfinite(b - a):
             raise ValueError("El intervalo debe cumplir a < b y tener ancho finito.")
-        cantidad = int(body.get("cantidad", 201))
-        cantidad = max(2, min(2000, cantidad))
+        cantidad = _entero_acotado("La cantidad de puntos", body.get("cantidad", 201), limites.PUNTOS_GRAFICA_MAX, 2)
         puntos = muestrear_funcion(funcion, a, b, cantidad)
         self._send_json({"grafica": puntos})
 
@@ -814,10 +819,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         b = numero_real(body.get("b"), "El límite superior de la región")
         if a >= b or not math.isfinite(b - a):
             raise ValueError("La región debe cumplir a < b y tener ancho finito.")
-        try:
-            cantidad = max(2, min(2000, int(body.get("cantidad", 401))))
-        except (TypeError, ValueError) as exc:
-            raise ValueError("La cantidad de puntos debe ser un número entero.") from exc
+        cantidad = _entero_acotado("La cantidad de puntos", body.get("cantidad", 401), limites.PUNTOS_GRAFICA_MAX, 2)
         self._send_json({
             "funcion": f.texto, "funcion_latex": f.latex(), "intervalo": [a, b],
             "grafica": muestrear_funcion(f.texto, a, b, cantidad),
@@ -851,7 +853,7 @@ class AlgebraLinearHandler(SimpleHTTPRequestHandler):
         self._send_json(res)
 
     def _handle_eficiencia_determinante(self, body):
-        n = int(body.get("n", 3))
+        n = _entero_acotado("El orden n", body.get("n", 3), limites.EFICIENCIA_N_MAX)
         A = body.get("A", None)
         analisis = analizar_eficiencia_determinante(A if A else n)
 
