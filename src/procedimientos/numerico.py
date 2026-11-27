@@ -262,8 +262,16 @@ def _formula_iter(metodo):
             if metodo == "gauss_seidel" else r"x_i^{(k+1)} = \frac{1}{a_{ii}}\left(b_i - \sum_{j \ne i} a_{ij} x_j^{(k)}\right)")
 
 
-def _paso_analisis(a):
+def _paso_analisis(a, nombre=""):
     tex, det = [], list(a.get("razones") or ())
+    if "diagonal_nula" in a:
+        det.append("Diagonal nula: " + ("sí." if a["diagonal_nula"] else "no."))
+    orden = a.get("reordenamiento") or {}
+    if orden:
+        det.append("Reordenamiento: " + ("aplicado." if orden.get("aplicado") else "no aplicado."))
+        det.append("Orden de ecuaciones: " + ", ".join(str(i + 1) for i in orden.get("permutacion", ())) + ".")
+        if orden.get("motivo"):
+            det.append(orden["motivo"])
     if a.get("rango"):
         tex.append(f"\\operatorname{{rg}}(A) = {a['rango']['A']},\\quad \\operatorname{{rg}}([A\\mid b]) = {a['rango']['aumentada']}")
     if a.get("radio_espectral"):
@@ -273,7 +281,8 @@ def _paso_analisis(a):
         row = (f["i"] if isinstance(f.get("i"), int) else idx) + 1
         op = ">" if f.get("cumple") else r"\le"
         det.append(f"Fila {row}: $|a_{{{row},{row}}}| = {_num(f['diagonal'])} {op} \\sum_{{j\\ne {row}}} |a_{{{row},j}}| = {_num(f['suma'])}$.")
-    return paso("Análisis del sistema y convergencia", f"Garantía: {a.get('garantia', 'no_asegurada')}.", latex=tex, detalles=det)
+    titulo = f"{nombre}: Análisis del sistema y convergencia" if nombre else "Análisis del sistema y convergencia"
+    return paso(titulo, f"Garantía: {a.get('garantia', 'no_asegurada')}.", latex=tex, detalles=det)
 
 
 def _pasos_iter(res, prefijo=""):
@@ -336,7 +345,10 @@ def adaptar_comparar_iterativos(res, _cuerpo):
     j, gs = res["jacobi"], res["gauss_seidel"]
     kj = j["iteraciones"][-1]["k"] if j.get("iteraciones") else 0
     kg = gs["iteraciones"][-1]["k"] if gs.get("iteraciones") else 0
-    pasos_out = ([_paso_analisis(j["analisis"])] if j.get("analisis") else []) + _pasos_iter(j, "Jacobi") + _pasos_iter(gs, "Gauss-Seidel")
+    pasos_out = [_paso_analisis(j["analisis"], "Jacobi")] if j.get("analisis") else []
+    if gs.get("analisis") and gs["analisis"] != j.get("analisis"):
+        pasos_out.append(_paso_analisis(gs["analisis"], "Gauss-Seidel"))
+    pasos_out += _pasos_iter(j, "Jacobi") + _pasos_iter(gs, "Gauss-Seidel")
     if res.get("resumen"):
         pasos_out.append(paso("Resumen comparativo", res["resumen"]))
     avisos = ([f"Jacobi: {j.get('mensaje', '')}"] if not j.get("convergio") else []) + ([f"Gauss-Seidel: {gs.get('mensaje', '')}"] if not gs.get("convergio") else [])

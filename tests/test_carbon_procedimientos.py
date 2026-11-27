@@ -35,3 +35,25 @@ class TestProcedimientosCarbon(unittest.TestCase):
         self.assertTrue(res["advertencias"])
         avisos = adjuntar("/api/regla-falsa/resolver", res, {})["procedimiento"]["avisos"]
         self.assertTrue(all(aviso in avisos for aviso in res["advertencias"]))
+
+    def test_analisis_exporta_orden_y_diagonal_nula(self):
+        from src.iterativos.resolver import resolver_iterativo
+        for ordenar in (False, True):
+            with self.subTest(reordenar=ordenar):
+                res = resolver_iterativo([[0, 3], [2, 1]], [3, 3], "jacobi", reordenar=ordenar)
+                proc = adjuntar("/api/iterativos/resolver", res, {})["procedimiento"]
+                detalles = " ".join(proc["pasos"][0]["detalles"])
+                self.assertIn("Diagonal nula: " + ("no" if ordenar else "sí"), detalles)
+                self.assertIn("Orden de ecuaciones: " + ("2, 1" if ordenar else "1, 2"), detalles)
+                self.assertIn(res["analisis"]["reordenamiento"]["motivo"], detalles)
+
+    def test_comparar_exporta_garantia_sdp_de_gauss_seidel(self):
+        from src.iterativos.resolver import comparar_metodos
+        res = comparar_metodos([[1, .75, .75], [.75, 1, .75], [.75, .75, 1]], [1, 1, 1],
+                               max_iteraciones=4)
+        proc = adjuntar("/api/iterativos/comparar", res, {})["procedimiento"]
+        analisis_gs = [p for p in proc["pasos"] if "Gauss-Seidel" in p["titulo"]
+                       and "Análisis" in p["titulo"]]
+        self.assertEqual(len(analisis_gs), 1)
+        self.assertIn("demostrada", analisis_gs[0]["texto"])
+        self.assertIn("Matriz simétrica definida positiva verificada exactamente.", analisis_gs[0]["detalles"])
