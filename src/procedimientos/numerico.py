@@ -66,6 +66,13 @@ def _convergencia(res):
                  detalles=[obs["explicacion"]])]
 
 
+def _condicion(res):
+    nombres = {"real": "Cualquier raíz real", "positiva": "Raíz positiva (x > 0)",
+               "positiva_no_nula": "Raíz positiva no nula (x > 0)"}
+    return [{"etiqueta": r"\text{Condición}",
+             "latex": r"\text{" + nombres[res.get("condicion", "real")] + "}"}]
+
+
 @registrar("/api/biseccion/resolver")
 def adaptar_biseccion(res, _cuerpo):
     a0, b0 = res["intervalo_inicial"]
@@ -84,7 +91,7 @@ def adaptar_biseccion(res, _cuerpo):
         "biseccion", "Método de bisección",
         entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
                  {"etiqueta": "[a, b]", "latex": f"[{_num(a0)},\\; {_num(b0)}]"},
-                 {"etiqueta": r"\varepsilon", "latex": f"{_num(tol)}{suf}"}],
+                 {"etiqueta": r"\varepsilon", "latex": f"{_num(tol)}{suf}"}] + _condicion(res),
         pasos=[paso("Fórmula y criterio de parada", MOTIVOS_BISECCION.get(res["motivo"], res["motivo"]),
                     latex=[r"c = \frac{a + b}{2}"],
                     detalles=[f"Criterio: {crit}. Tolerancia: ${_num(tol)}{suf}$."])] + _convergencia(res),
@@ -173,7 +180,7 @@ def adaptar_regla_falsa(res, _cuerpo):
         "regla_falsa", "Método de regla falsa",
         entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
                  {"etiqueta": "[x_l, x_u]", "latex": f"[{_num(xl0)},\\; {_num(xu0)}]"},
-                 {"etiqueta": r"\varepsilon_s", "latex": f"{_num(res['tolerancia'])}\\,\\%"}],
+                 {"etiqueta": r"\varepsilon_s", "latex": f"{_num(res['tolerancia'])}\\,\\%"}] + _condicion(res),
         pasos=[paso("Fórmula de la regla falsa", MOTIVOS_RF.get(res["motivo"], res["motivo"]),
                     latex=[r"x_r = x_u - \frac{f(x_u)(x_l - x_u)}{f(x_l) - f(x_u)}"])] + _convergencia(res),
         resultado=[{"etiqueta": "x_r", "latex": _num(res["raiz"])},
@@ -220,7 +227,7 @@ def adaptar_newton(res, _cuerpo):
         "newton_raphson", "Método de Newton-Raphson",
         entrada=[{"etiqueta": "f(x)", "latex": fl}, {"etiqueta": "f'(x)", "latex": dl},
                  {"etiqueta": "x_0", "latex": _num(res["x0"])},
-                 {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}],
+                 {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}] + _condicion(res),
         pasos=pasos_out + _convergencia(res),
         resultado=[{"etiqueta": "x_n", "latex": _num(res["raiz"])},
                    {"etiqueta": "|f(x_n)|", "latex": _num(res["residuo"])},
@@ -254,7 +261,7 @@ def adaptar_secante(res, _cuerpo):
         "secante", "Método de la secante",
         entrada=[{"etiqueta": "f(x)", "latex": res.get("funcion_latex") or str(res.get("funcion", ""))},
                  {"etiqueta": "x_0", "latex": _num(x0)}, {"etiqueta": "x_1", "latex": _num(x1)},
-                 {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}],
+                 {"etiqueta": r"\varepsilon", "latex": _num(res["tolerancia"])}] + _condicion(res),
         pasos=pasos_out + _convergencia(res),
         resultado=[{"etiqueta": "x_n", "latex": _num(res["raiz"])},
                    {"etiqueta": "|f(x_n)|", "latex": _num(res["residuo"])},

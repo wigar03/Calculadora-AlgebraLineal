@@ -62,8 +62,10 @@ def _newton(f, x, condicion):
                 pass
         if abs(df) <= 1e-8*max(escala, 1e-300)/max(1., abs(x)):
             return False, ["Derivada nula o pequeña: posible raíz múltiple si f y f' son pequeñas; cambie x0."]
-        if fx == 0 and not raiz_admisible(x, condicion):
-            return False, ["La semilla es una raíz excluida por la condición; cambie x0."]
+        if fx == 0:
+            return False, ["La semilla ya se evalúa como cero; verifique su admisibilidad antes de iterar."
+                           if raiz_admisible(x, condicion) else
+                           "La semilla es una raíz excluida por la condición; cambie x0."]
         nuevo = x-fx/df
         if not math.isfinite(nuevo):
             return False, ["El primer paso de Newton no es finito; cambie x0."]
@@ -81,6 +83,8 @@ def _secante(f, u, v, condicion):
         fu, fv = f(u), f(v)
         if any(fx == 0 and not raiz_admisible(x, condicion) for x, fx in ((u, fu), (v, fv))):
             return False, ["Uno de los puntos es la raíz excluida x = 0; cambie los puntos iniciales."]
+        if fu == 0 or fv == 0:
+            return False, ["Un punto ya se evalúa como cero; verifique esa raíz antes de iterar."]
         den = fv-fu
         if not math.isfinite(den) or abs(den) <= 1e-12*max(abs(fu), abs(fv), 1e-300):
             return False, ["Las evaluaciones son iguales o demasiado próximas; cambie los puntos."]
