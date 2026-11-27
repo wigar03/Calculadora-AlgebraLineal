@@ -14,6 +14,7 @@ function crearContextoApp(errorMsg) {
   const nodo = (tag = 'div') => ({
     tagName: String(tag).toUpperCase(), className: '', style: {}, children: [], value: '1',
     textContent: '', innerText: '', addEventListener() {}, querySelectorAll() { return []; },
+    setAttribute(k, v) { this[k] = String(v); },
     set innerHTML(v) {
       asignacionesHtml.push(String(v));
       this._html = String(v);
@@ -55,6 +56,7 @@ test('los seis manejadores de error de app.js muestran HTML del servidor como te
     assert.equal(box.children.length, 1, `${fn} debe construir la tarjeta con nodos DOM`);
     const card = box.children[0];
     assert.equal(card.className, 'latex-equation-card');
+    assert.equal(card.role, 'alert');
     assert.equal(card.style.borderColor, 'rgba(225,29,72,0.4)');
     assert.equal(card.children.length, 2);
     const [header, parrafo] = card.children;
