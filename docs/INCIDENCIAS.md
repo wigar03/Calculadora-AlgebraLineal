@@ -148,6 +148,13 @@ La CI de Linux falló una vez con `BrokenPipe`: ante un cuerpo mayor de 256 KB e
 leerlo, y el cliente que aún enviaba recibía un cierre abrupto en lugar del mensaje del límite (reproducido también
 en Windows). Ahora se lee y descarta hasta 4 MiB antes de responder; prueba `tests/test_cuerpo_excesivo.py`.
 
+### INC-034 · 2026-11-27 · UX · APROBADA POR EL PROPIETARIO (lotes 1 y 2 de C-22…C-28)
+Aprobadas las propuestas de la auditoría de coherencia: lote 1 = C-27 (aviso en el resultado de las casillas vacías
+tomadas como 0, sin exigir escribirlo), C-26 (Inversa n ≥ 1; «Cofactores» desactivado con explicación para n > 6), C-22
+(vista previa de f(x) en Newton y Secante), C-24 (iconos y botones unificados en 07-11) y C-28a (exportar «Solo analizar
+matriz»); lote 2 = C-25 (áreas táctiles de 44 px y una columna bajo 480 px) y C-23 parcial («Enfocar raíz» en Regla
+falsa y coordenadas bajo el cursor en Bisección). Aplazado: C-28b (gráficas en R²), zoom % y reescalado en Newton.
+
 ### INC-033 · 2026-11-27 · UX · APROBADA E IMPLEMENTADA (Codex 2; Antigravity sin cuota)
 Banco final, Parte III: los ejercicios 31, 36, 38 y 39 piden «raíz positiva» o «no trivial» y la Parte III pide
 «elija y justifique el método». Aprobados: (1) selector de condición de la raíz en los cuatro métodos, con los valores
